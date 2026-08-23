@@ -192,16 +192,33 @@ const [users, setUsers] = useState<any[]>([]);
         {activeTab === 'security' && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-2xl">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Смена пароля</h3>
-            <form className="space-y-4">
+            {passwordMsg.text && (
+              <div className={`mb-4 p-3 rounded text-sm ${passwordMsg.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                {passwordMsg.text}
+              </div>
+            )}
+            <form className="space-y-4" onSubmit={handleChangePassword}>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Текущий пароль</label>
-                <input type="password" placeholder="••••••••" className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none" />
+                <input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none" 
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Новый пароль</label>
-                <input type="password" placeholder="••••••••" className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none" />
+                <input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none" 
+                />
               </div>
-              <button type="button" className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700">
+              <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700">
                 Сохранить
               </button>
             </form>
