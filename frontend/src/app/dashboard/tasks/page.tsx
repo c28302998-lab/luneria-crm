@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Plus, CheckCircle, Clock, Search, Upload, FileText } from 'lucide-react';
+import { Plus, CheckCircle, Clock, Search, Upload, FileText, MessageCircle } from 'lucide-react';
 
 interface Task {
   id: number;
@@ -23,6 +23,9 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [allComments, setAllComments] = useState<any[]>([]);
+  const [expandedComments, setExpandedComments] = useState<Record<number, boolean>>({});
+  const [newComment, setNewComment] = useState<Record<number, string>>({});
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -35,12 +38,14 @@ export default function TasksPage() {
 
   const fetchData = async () => {
     try {
-      const [tasksRes, usersRes] = await Promise.all([
+      const [tasksRes, usersRes, commentsRes] = await Promise.all([
         api.get('/tasks/'),
-        api.get('/users/')
+        api.get('/users/'),
+        api.get('/comments/task')
       ]);
       setTasks(tasksRes.data);
       setUsers(usersRes.data);
+      setAllComments(commentsRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -51,6 +56,23 @@ export default function TasksPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+
+  const handleAddComment = async (taskId: number) => {
+    const text = newComment[taskId];
+    if (!text?.trim()) return;
+    try {
+      await api.post(`/comments/task/${taskId}`, { text });
+      setNewComment(prev => ({...prev, [taskId]: ''}));
+      fetchData();
+    } catch(err) {
+      alert('Ошибка добавления комментария');
+    }
+  };
+
+  const toggleComments = (taskId: number) => {
+    setExpandedComments(prev => ({...prev, [taskId]: !prev[taskId]}));
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,6 +195,12 @@ export default function TasksPage() {
             </label>
           </div>
           
+          
+          <button onClick={() => toggleComments(task.id)} className="flex items-center text-xs font-medium text-gray-500 hover:text-indigo-600">
+            <MessageCircle className="w-4 h-4 mr-1" />
+            {allComments.filter(c => c.entity_id === task.id).length}
+          </button>
+          
           {task.status !== 'COMPLETED' && (
             <button 
               onClick={() => handleComplete(task.id)}
@@ -183,6 +211,41 @@ export default function TasksPage() {
             </button>
           )}
         </div>
+        
+        {expandedComments[task.id] && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="space-y-3 mb-3 max-h-40 overflow-y-auto">
+              {allComments.filter(c => c.entity_id === task.id).length === 0 ? (
+                 <p className="text-xs text-gray-400 text-center">Нет комментариев</p>
+              ) : (
+                allComments.filter(c => c.entity_id === task.id).map(c => (
+                  <div key={c.id} className="bg-gray-50 p-2 rounded-md">
+                    <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+                      <span className="font-medium text-gray-700">{c.user?.name || `Пользователь #${c.user_id}`}</span>
+                      <span>{new Date(c.created_at).toLocaleString('ru-RU')}</span>
+                    </div>
+                    <p className="text-xs text-gray-800">{c.text}</p>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                value={newComment[task.id] || ''}
+                onChange={(e) => setNewComment(prev => ({...prev, [task.id]: e.target.value}))}
+                placeholder="Комментарий..."
+                className="flex-1 border border-gray-200 rounded text-xs px-2 py-1 focus:outline-none focus:border-indigo-500"
+              />
+              <button 
+                onClick={() => handleAddComment(task.id)}
+                className="bg-indigo-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-indigo-700"
+              >
+                Отправить
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   };

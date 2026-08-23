@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
-from app.models.models import User, Task
+from app.models.models import User, Task, Notification
 from app.schemas.schemas import Task as TaskSchema, TaskCreate, TaskUpdate
 from app.core.dependencies import get_current_user, RoleChecker
 from app.crud.audit import log_audit
@@ -26,8 +26,15 @@ def read_tasks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), c
 def create_task(task_in: TaskCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
     task = Task(**task_in.dict(), creator_id=current_user.id)
     db.add(task)
+    
     db.commit()
     db.refresh(task)
+    
+    # Send notification
+    notif = Notification(user_id=task.assigned_user_id, title="Новая задача", message=f"Вам назначена новая задача: {task.title}")
+    db.add(notif)
+    db.commit()
+
     log_audit(db, current_user.id, "CREATE", "Task", task.id, {"title": task.title, "assigned_to": task.assigned_user_id})
     return task
 
@@ -43,8 +50,15 @@ def update_task(task_id: int, task_in: TaskUpdate, db: Session = Depends(get_db)
     for key, value in task_in.dict(exclude_unset=True).items():
         setattr(task, key, value)
         
+    
     db.commit()
     db.refresh(task)
+    
+    # Send notification
+    notif = Notification(user_id=task.assigned_user_id, title="Новая задача", message=f"Вам назначена новая задача: {task.title}")
+    db.add(notif)
+    db.commit()
+
     log_audit(db, current_user.id, "UPDATE", "Task", task.id, task_in.dict(exclude_unset=True))
     return task
 

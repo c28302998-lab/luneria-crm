@@ -185,3 +185,15 @@ class AuditLog(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User")
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+    id = Column(Integer, primary_key=True, index=True)
+    entity_type = Column(String, index=True) # "CANDIDATE" or "TASK"
+    entity_id = Column(Integer, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    text = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")

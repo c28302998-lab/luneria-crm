@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { ArrowLeft, Clock, Upload, FileText, Download } from 'lucide-react';
+import { ArrowLeft, Clock, Upload, FileText, Download, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/store/auth';
 
@@ -39,6 +39,8 @@ export default function CandidateDetailPage() {
   const { user } = useAuth();
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [loading, setLoading] = useState(true);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState('');
   const [statusLoading, setStatusLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -68,10 +70,14 @@ export default function CandidateDetailPage() {
     }
   };
 
-  const fetchCandidate = async () => {
+const fetchCandidate = async () => {
     try {
-      const { data } = await api.get(`/candidates/${id}`);
-      setCandidate(data);
+      const [candRes, commRes] = await Promise.all([
+        api.get(`/candidates/${id}`),
+        api.get(`/comments/candidate/${id}`)
+      ]);
+      setCandidate(candRes.data);
+      setComments(commRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -91,6 +97,19 @@ export default function CandidateDetailPage() {
     } catch (err) {
       console.error(err);
       alert('Ошибка при изменении статуса. Проверьте права.');
+    }
+  };
+
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    try {
+      await api.post(`/comments/candidate/${id}`, { text: newComment });
+      setNewComment('');
+      fetchCandidate();
+    } catch(err) {
+      alert('Ошибка при добавлении комментария');
     }
   };
 
@@ -229,6 +248,43 @@ export default function CandidateDetailPage() {
           </div>
         </div>
       </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+          <MessageCircle className="w-5 h-5 mr-2 text-gray-400" />
+          Внутренние комментарии
+        </h3>
+        
+        <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2">
+          {comments.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-4">Нет комментариев. Будьте первым!</p>
+          ) : (
+            comments.map(c => (
+              <div key={c.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="font-semibold text-sm text-gray-900">{c.user?.name || `Пользователь #${c.user_id}`}</span>
+                  <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString('ru-RU')}</span>
+                </div>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{c.text}</p>
+              </div>
+            ))
+          )}
+        </div>
+        
+        <form onSubmit={handleAddComment} className="flex space-x-2">
+          <input 
+            type="text" 
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Написать комментарий (виден только команде)..."
+            className="flex-1 rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none"
+          />
+          <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition">
+            Отправить
+          </button>
+        </form>
+      </div>
+
     </div>
   );
 }

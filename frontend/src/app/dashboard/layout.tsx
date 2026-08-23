@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, Users, Briefcase, 
   Settings, LogOut, DollarSign, CheckSquare, 
-  FileBarChart, MessageSquare, Shield, Activity
+  FileBarChart, MessageSquare, Shield, Activity, Bell
 } from 'lucide-react';
 
 const getNavigation = (role: string) => {
@@ -78,9 +78,12 @@ export default function DashboardLayout({
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
+
     const fetchUnread = async () => {
       try {
         const { data } = await api.get('/messages/');
@@ -88,12 +91,33 @@ export default function DashboardLayout({
         setUnreadCount(count);
       } catch (err) {}
     };
+    
+    const fetchNotifications = async () => {
+      try {
+        const { data } = await api.get('/notifications/');
+        setNotifications(data);
+      } catch (err) {}
+    };
+
     fetchUnread();
+    fetchNotifications();
     
     // Poll every 10 seconds for new messages
-    const interval = setInterval(fetchUnread, 10000);
+    const interval = setInterval(() => {
+      fetchUnread();
+      fetchNotifications();
+    }, 10000);
+
     return () => clearInterval(interval);
   }, [user]);
+
+
+  const markNotificationRead = async (id: number) => {
+    try {
+      await api.patch(`/notifications/${id}/read`);
+      setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch(err) {}
+  };
 
   if (!user) return null;
 
@@ -158,7 +182,39 @@ export default function DashboardLayout({
           <h1 className="text-lg font-medium text-gray-900">
             {navigation.find(n => n.href === pathname)?.name || 'Dashboard'}
           </h1>
-          {/* Notifications can go here */}
+          
+          <div className="relative">
+            <button 
+              onClick={() => setIsNotifOpen(!isNotifOpen)}
+              className="p-2 text-gray-400 hover:text-gray-500 relative"
+            >
+              <Bell className="w-6 h-6" />
+              {notifications.filter(n => !n.is_read).length > 0 && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+              )}
+            </button>
+            
+            {isNotifOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50 max-h-[400px] overflow-y-auto">
+                <h3 className="px-4 py-2 font-semibold text-gray-900 border-b border-gray-100">Уведомления</h3>
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-gray-500">Нет новых уведомлений</div>
+                ) : (
+                  notifications.map(n => (
+                    <div 
+                      key={n.id} 
+                      onClick={() => markNotificationRead(n.id)}
+                      className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0 ${!n.is_read ? 'bg-indigo-50/50' : 'opacity-70'}`}
+                    >
+                      <h4 className={`text-sm font-medium ${!n.is_read ? 'text-indigo-900' : 'text-gray-900'}`}>{n.title}</h4>
+                      <p className="text-xs text-gray-500 mt-1">{n.message}</p>
+                      <span className="text-[10px] text-gray-400 mt-2 block">{new Date(n.created_at).toLocaleString('ru-RU')}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         </header>
         <main className="flex-1 overflow-y-auto p-6">
           {children}
