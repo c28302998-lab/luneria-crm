@@ -47,3 +47,31 @@ def update_task(task_id: int, task_in: TaskUpdate, db: Session = Depends(get_db)
     db.refresh(task)
     log_audit(db, current_user.id, "UPDATE", "Task", task.id, task_in.dict(exclude_unset=True))
     return task
+
+
+UPLOAD_DIR = "uploads/tasks"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@router.post("/{task_id}/files")
+def upload_file(
+    task_id: int, 
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    task = db.query(Task).filter(Task.id == task_id, Task.is_deleted == False).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+        
+    file_path = os.path.join(UPLOAD_DIR, f"{task_id}_{file.filename}")
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    file_url = f"/uploads/tasks/{task_id}_{file.filename}"
+    
+    files_list = list(task.files) if task.files else []
+    files_list.append(file_url)
+    task.files = files_list
+    
+    db.commit()
+    return {"ok": True, "url": file_url}

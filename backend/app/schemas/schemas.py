@@ -140,6 +140,7 @@ class Expense(ExpenseBase):
     id: int
     date: datetime
     created_by: int
+    files: list = []
     class Config:
         from_attributes = True
 

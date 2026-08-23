@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Plus, CheckCircle, Clock, Search } from 'lucide-react';
+import { Plus, CheckCircle, Clock, Search, Upload, FileText } from 'lucide-react';
 
 interface Task {
   id: number;
@@ -13,6 +13,7 @@ interface Task {
   deadline: string | null;
   status: string;
   assigned_user_id: number;
+  files?: string[];
 }
 
 export default function TasksPage() {
@@ -78,6 +79,21 @@ export default function TasksPage() {
     }
   }
 
+
+  const handleFileUpload = async (taskId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      await api.post(`/tasks/${taskId}/files`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('Ошибка при загрузке файла');
+    }
+  };
+
   const getAssigneeName = (id: number) => {
     const assignedUser = users.find(u => u.id === id);
     return assignedUser ? assignedUser.name : `Пользователь #${id}`;
@@ -118,11 +134,45 @@ export default function TasksPage() {
           </div>
         )}
         
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+        
           <div className="flex items-center text-xs text-gray-500">
             <Clock className="w-4 h-4 mr-1" />
             {task.status}
           </div>
+          
+        {task.files && task.files.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 mb-2">ПРИКРЕПЛЕННЫЕ ФАЙЛЫ:</p>
+            <div className="flex flex-col gap-1">
+              {task.files.map((fileUrl: string, idx: number) => {
+                const fileName = fileUrl.split('/').pop() || `Файл ${idx+1}`;
+                return (
+                  <a key={idx} href={api.defaults.baseURL?.replace('/api/v1', '') + fileUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 p-1.5 rounded-md">
+                    <FileText className="w-3 h-3 mr-1" />
+                    {fileName.substring(fileName.indexOf('_')+1)}
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
+        <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-xs text-gray-500">
+              <Clock className="w-4 h-4 mr-1" />
+              {task.status}
+            </div>
+            
+            <label className="flex items-center cursor-pointer text-xs font-medium text-gray-500 hover:text-indigo-600">
+              <Upload className="w-4 h-4 mr-1" />
+              Прикрепить
+              <input type="file" className="hidden" onChange={(e) => {
+                if(e.target.files && e.target.files[0]) handleFileUpload(task.id, e.target.files[0]);
+              }} />
+            </label>
+          </div>
+          
           {task.status !== 'COMPLETED' && (
             <button 
               onClick={() => handleComplete(task.id)}

@@ -35,6 +35,7 @@ class Candidate(Base, SoftDeleteMixin):
     notes = Column(String)
     status = Column(String, default="NEW")
     files = Column(JSON, default=list)
+    files = Column(JSON, default=list)
     admin_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -120,6 +121,7 @@ class Expense(Base, SoftDeleteMixin):
     amount = Column(Float)
     date = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey("users.id"))
+    files = Column(JSON, default=list)
     
     creator = relationship("User")
 
@@ -133,6 +135,7 @@ class Task(Base, SoftDeleteMixin):
     assigned_user_id = Column(Integer, ForeignKey("users.id"))
     creator_id = Column(Integer, ForeignKey("users.id"))
     status = Column(String, default="NEW")
+    files = Column(JSON, default=list)
 
     assigned_user = relationship("User", foreign_keys=[assigned_user_id])
     creator = relationship("User", foreign_keys=[creator_id])

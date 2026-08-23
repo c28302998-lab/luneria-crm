@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Plus, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Upload, FileText } from 'lucide-react';
 
 interface Payment {
   id: number;
@@ -15,6 +15,7 @@ interface Payment {
   amount_admin: number;
   date: string;
   status: string;
+  files?: string[];
 }
 
 interface Expense {
@@ -23,6 +24,7 @@ interface Expense {
   amount: number;
   date: string;
   created_by: number;
+  files?: string[];
 }
 
 export default function FinancePage() {
@@ -138,6 +140,25 @@ export default function FinancePage() {
     }
   };
 
+
+  const handlePaymentFileUpload = async (id: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      await api.post(`/payments/${id}/files`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      fetchData();
+    } catch (err) { alert('Ошибка при загрузке чека'); }
+  };
+
+  const handleExpenseFileUpload = async (id: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      await api.post(`/payments/expenses/${id}/files`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      fetchData();
+    } catch (err) { alert('Ошибка при загрузке чека'); }
+  };
+
   const getPartnerName = (id: number) => partners.find(p => p.id === id)?.company_name || `Партнер #${id}`;
 
   return (
@@ -230,6 +251,8 @@ export default function FinancePage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Работнику</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Админу</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Чеки</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Чеки</th>
                       {user?.role === 'OWNER' && (
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
                       )}
@@ -248,14 +271,28 @@ export default function FinancePage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.amount_worker}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.amount_admin}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(p.date).toLocaleDateString('ru-RU')}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {p.files && p.files.length > 0 && (
+                            <div className="flex flex-col gap-1 mb-2">
+                              {p.files.map((fileUrl: string, idx: number) => (
+                                <a key={idx} href={api.defaults.baseURL?.replace('/api/v1', '') + fileUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs text-indigo-600 hover:underline">
+                                  <FileText className="w-3 h-3 mr-1" /> Чек {idx+1}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </td>
                         {user?.role === 'OWNER' && (
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button 
-                              onClick={() => handleDeletePayment(p.id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Удалить
-                            </button>
+                            <div className="flex items-center justify-end space-x-3">
+                              <label className="cursor-pointer text-indigo-600 hover:text-indigo-900 flex items-center">
+                                <Upload className="w-4 h-4 mr-1" /> Загрузить
+                                <input type="file" className="hidden" onChange={(ev) => {
+                                  if(ev.target.files && ev.target.files[0]) handlePaymentFileUpload(p.id, ev.target.files[0]);
+                                }} />
+                              </label>
+                              <button onClick={() => handleDeletePayment(p.id)} className="text-red-600 hover:text-red-900">Удалить</button>
+                            </div>
                           </td>
                         )}
                       </tr>
@@ -285,6 +322,8 @@ export default function FinancePage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Причина (Описание)</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Сумма</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Чеки</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Чеки</th>
                       {user?.role === 'OWNER' && (
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
                       )}
@@ -297,14 +336,28 @@ export default function FinancePage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{e.reason}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">-${e.amount}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(e.date).toLocaleDateString('ru-RU')}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {e.files && e.files.length > 0 && (
+                            <div className="flex flex-col gap-1 mb-2">
+                              {e.files.map((fileUrl: string, idx: number) => (
+                                <a key={idx} href={api.defaults.baseURL?.replace('/api/v1', '') + fileUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs text-indigo-600 hover:underline">
+                                  <FileText className="w-3 h-3 mr-1" /> Чек {idx+1}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </td>
                         {user?.role === 'OWNER' && (
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button 
-                              onClick={() => handleDeleteExpense(e.id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Удалить
-                            </button>
+                            <div className="flex items-center justify-end space-x-3">
+                              <label className="cursor-pointer text-indigo-600 hover:text-indigo-900 flex items-center">
+                                <Upload className="w-4 h-4 mr-1" /> Загрузить
+                                <input type="file" className="hidden" onChange={(ev) => {
+                                  if(ev.target.files && ev.target.files[0]) handleExpenseFileUpload(e.id, ev.target.files[0]);
+                                }} />
+                              </label>
+                              <button onClick={() => handleDeleteExpense(e.id)} className="text-red-600 hover:text-red-900">Удалить</button>
+                            </div>
                           </td>
                         )}
                       </tr>

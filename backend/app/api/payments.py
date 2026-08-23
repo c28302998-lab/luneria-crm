@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+import os
+import shutil
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -102,3 +104,59 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user:
     log_audit(db, current_user.id, "DELETE", "Expense", expense_id, {})
     db.commit()
     return {"status": "success"}
+
+
+UPLOAD_DIR_EXPENSES = "uploads/expenses"
+os.makedirs(UPLOAD_DIR_EXPENSES, exist_ok=True)
+
+@router.post("/expenses/{expense_id}/files")
+def upload_expense_file(
+    expense_id: int, 
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(RoleChecker(["OWNER", "FINANCE"]))
+):
+    expense = db.query(Expense).filter(Expense.id == expense_id, Expense.is_deleted == False).first()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+        
+    file_path = os.path.join(UPLOAD_DIR_EXPENSES, f"{expense_id}_{file.filename}")
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    file_url = f"/uploads/expenses/{expense_id}_{file.filename}"
+    
+    files_list = list(expense.files) if expense.files else []
+    files_list.append(file_url)
+    expense.files = files_list
+    
+    db.commit()
+    return {"ok": True, "url": file_url}
+
+
+UPLOAD_DIR_PAYMENTS = "uploads/payments"
+os.makedirs(UPLOAD_DIR_PAYMENTS, exist_ok=True)
+
+@router.post("/{payment_id}/files")
+def upload_payment_file(
+    payment_id: int, 
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(RoleChecker(["OWNER", "FINANCE"]))
+):
+    payment = db.query(Payment).filter(Payment.id == payment_id, Payment.is_deleted == False).first()
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+        
+    file_path = os.path.join(UPLOAD_DIR_PAYMENTS, f"{payment_id}_{file.filename}")
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    file_url = f"/uploads/payments/{payment_id}_{file.filename}"
+    
+    files_list = list(payment.files) if payment.files else []
+    files_list.append(file_url)
+    payment.files = files_list
+    
+    db.commit()
+    return {"ok": True, "url": file_url}

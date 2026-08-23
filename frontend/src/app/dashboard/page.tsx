@@ -3,10 +3,12 @@
 import { useAuth } from '@/store/auth';
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import * as XLSX from 'xlsx';
 import { Clock, Users, Briefcase, CheckCircle, TrendingUp, DollarSign, Activity } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [rawData, setRawData] = useState<any>(null);
   const [stats, setStats] = useState({
     candidates: 0,
     inTraining: 0,
@@ -22,6 +24,52 @@ export default function DashboardPage() {
   const [finances, setFinances] = useState({ revenue: 0, payouts: 0 });
   const [logs, setLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
+
+  const generateExcelReport = () => {
+    if (!rawData) return;
+    const wb = XLSX.utils.book_new();
+
+    // 1. Finances
+    const finStats = rawData.payments;
+    const finWs = XLSX.utils.json_to_sheet([
+      { "Показатель": "Выручка компании", "Сумма ($)": finStats.company_revenue || 0 },
+      { "Показатель": "Ожидаемые выплаты", "Сумма ($)": (finStats.worker_revenue || 0) + (finStats.admin_revenue || 0) },
+      { "Показатель": "Расходы (Расстраты)", "Сумма ($)": finStats.total_expenses || 0 },
+      { "Показатель": "Чистая прибыль", "Сумма ($)": finStats.net_profit || 0 }
+    ]);
+    XLSX.utils.book_append_sheet(wb, finWs, "Финансы");
+
+    // 2. Candidates
+    const candWs = XLSX.utils.json_to_sheet(rawData.candidates.map((c: any) => ({
+      "ID": c.id,
+      "Имя": c.name,
+      "Контакты": c.contact_info,
+      "Статус": c.status,
+      "Дата регистрации": new Date(c.created_at).toLocaleDateString()
+    })));
+    XLSX.utils.book_append_sheet(wb, candWs, "Кандидаты");
+
+    // 3. Workers
+    const workWs = XLSX.utils.json_to_sheet(rawData.workers.map((w: any) => ({
+      "ID": w.id,
+      "Имя": w.user?.full_name || 'Без имени',
+      "Специализация": w.specialization,
+      "Доля (%)": w.share_percentage
+    })));
+    XLSX.utils.book_append_sheet(wb, workWs, "Работники");
+
+    // 4. Tasks
+    const taskWs = XLSX.utils.json_to_sheet(rawData.tasks.map((t: any) => ({
+      "ID": t.id,
+      "Название": t.title,
+      "Приоритет": t.priority,
+      "Статус": t.status
+    })));
+    XLSX.utils.book_append_sheet(wb, taskWs, "Задачи");
+
+    XLSX.writeFile(wb, `Luneria_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -52,6 +100,7 @@ export default function DashboardPage() {
         const payouts = (statsFinRes.data.worker_revenue || 0) + (statsFinRes.data.admin_revenue || 0);
         setFinances({ revenue, payouts });
 
+        setRawData({ candidates: candRes.data, workers: workRes.data, tasks: tasksRes.data, payments: statsFinRes.data });
         setStats({
           candidates: activeCandidates.length,
           inTraining: candRes.data.filter((c: any) => c.status === 'IN_PROGRESS').length,
@@ -252,7 +301,7 @@ export default function DashboardPage() {
                   <p className="text-2xl font-bold mt-1 text-white">${finances.payouts.toLocaleString()}</p>
                 </div>
                 
-                <button onClick={() => alert('Отчет формируется. Эта функция будет доступна в следующем глобальном обновлении CRM!')} className="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition font-medium mt-4">
+                <button onClick={generateExcelReport} className="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition font-medium mt-4">
                   Сформировать отчет
                 </button>
               </div>
