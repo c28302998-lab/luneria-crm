@@ -1,6 +1,5 @@
 import sys
 import os
-sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), 'backend')))
 
 from app.db.database import SessionLocal, engine, Base
 from app.models.models import User, Candidate, Worker, Partner, Payment, Task
