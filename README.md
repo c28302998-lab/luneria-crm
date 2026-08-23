@@ -60,3 +60,4 @@ Frontend будет доступен по адресу: http://localhost:3000
 ```bash
 ./run.sh
 ```
+ 
