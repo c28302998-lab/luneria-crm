@@ -70,3 +70,23 @@ def read_user_me(
     Get current user.
     """
     return current_user
+
+from pydantic import BaseModel
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.post("/change-password")
+def change_password(
+    data: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from app.core.security import get_password_hash
+    if not verify_password(data.current_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Текущий пароль неверен")
+    
+    current_user.password_hash = get_password_hash(data.new_password)
+    db.commit()
+    return {"ok": True}

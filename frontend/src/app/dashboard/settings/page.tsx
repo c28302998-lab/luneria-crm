@@ -8,8 +8,32 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   
-  const [users, setUsers] = useState<any[]>([]);
+const [users, setUsers] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
+
+  const handleChangePassword = async (e: any) => {
+    e.preventDefault();
+    setPasswordMsg({ type: '', text: '' });
+    if (!currentPassword || !newPassword) {
+      setPasswordMsg({ type: 'error', text: 'Заполните все поля' });
+      return;
+    }
+    try {
+      await api.post('/auth/change-password', {
+        current_password: currentPassword,
+        new_password: newPassword
+      });
+      setPasswordMsg({ type: 'success', text: 'Пароль успешно изменен' });
+      setCurrentPassword('');
+      setNewPassword('');
+    } catch (err: any) {
+      setPasswordMsg({ type: 'error', text: err.response?.data?.detail || 'Ошибка при смене пароля' });
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'users' && user?.role === 'OWNER') {
