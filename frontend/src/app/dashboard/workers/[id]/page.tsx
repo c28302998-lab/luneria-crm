@@ -69,6 +69,18 @@ export default function WorkerDetailPage() {
     }
   };
 
+
+  const handleAdminChange = async (newAdminId: string) => {
+    if (!worker) return;
+    try {
+      await api.patch(`/workers/${worker.id}/admin`, null, { params: { admin_id: newAdminId } });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('Ошибка при изменении администратора. Убедитесь, что у вас есть права.');
+    }
+  };
+
   const handlePartnerChange = async (partnerId: string) => {
     if (!worker) return;
     try {
@@ -130,9 +142,21 @@ export default function WorkerDetailPage() {
             </div>
             <div className="flex justify-between items-center border-b border-gray-100 pb-2">
               <span className="text-gray-500 text-sm">Ответственный Администратор:</span>
-              <span className="font-medium text-gray-900 text-sm">
-                {adminAssigned ? adminAssigned.name : `Пользователь #${worker.admin_id}`}
-              </span>
+              {isOwner ? (
+                <select 
+                  value={worker.admin_id || ''}
+                  onChange={(e) => handleAdminChange(e.target.value)}
+                  className="font-medium text-gray-900 text-sm border-gray-300 rounded-md py-1 pl-2 pr-8 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                >
+                  {admins.map(a => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <span className="font-medium text-gray-900 text-sm">
+                  {adminAssigned ? adminAssigned.name : `Пользователь #${worker.admin_id}`}
+                </span>
+              )}
             </div>
             <div className="flex justify-between items-center border-b border-gray-100 pb-2">
               <span className="text-gray-500 text-sm">Назначенный Партнер:</span>

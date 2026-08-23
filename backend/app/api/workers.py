@@ -81,6 +81,23 @@ def update_worker_partner(worker_id: int, partner_id: int, db: Session = Depends
     log_audit(db, current_user.id, "UPDATE", "Worker", worker.id, {"partner_id": partner_id})
     return worker
 
+
+@router.patch("/{worker_id}/admin", response_model=WorkerSchema)
+def update_worker_admin(worker_id: int, admin_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
+    worker = db.query(Worker).filter(Worker.is_deleted == False).filter(Worker.id == worker_id).first()
+    if not worker:
+        raise HTTPException(status_code=404, detail="Worker not found")
+        
+    worker.admin_id = admin_id
+    # Also update the linked candidate to keep it consistent
+    if worker.candidate:
+        worker.candidate.admin_id = admin_id
+        
+    db.commit()
+    db.refresh(worker)
+    log_audit(db, current_user.id, "UPDATE", "Worker", worker.id, {"admin_id": admin_id})
+    return worker
+
 @router.delete("/{worker_id}")
 def delete_worker(worker_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
     worker = db.query(Worker).filter(Worker.is_deleted == False).filter(Worker.id == worker_id).first()
