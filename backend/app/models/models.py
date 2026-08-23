@@ -34,6 +34,7 @@ class Candidate(Base, SoftDeleteMixin):
     source = Column(String)
     notes = Column(String)
     status = Column(String, default="NEW")
+    files = Column(JSON, default=list)
     admin_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -82,6 +83,7 @@ class Worker(Base, SoftDeleteMixin):
     __tablename__ = "workers"
     id = Column(Integer, primary_key=True, index=True)
     candidate_id = Column(Integer, ForeignKey("candidates.id"))
+    files = Column(JSON, default=list)
     admin_id = Column(Integer, ForeignKey("users.id"))
     partner_id = Column(Integer, ForeignKey("partners.id"), nullable=True)
     status = Column(String, default="ACTIVE")
@@ -96,6 +98,7 @@ class Payment(Base, SoftDeleteMixin):
     __tablename__ = "payments"
     id = Column(Integer, primary_key=True, index=True)
     worker_id = Column(Integer, ForeignKey("workers.id"))
+    files = Column(JSON, default=list)
     admin_id = Column(Integer, ForeignKey("users.id"))
     partner_id = Column(Integer, ForeignKey("partners.id"))
     amount = Column(Float)
@@ -137,6 +140,7 @@ class Task(Base, SoftDeleteMixin):
 class Report(Base, SoftDeleteMixin):
     __tablename__ = "reports"
     id = Column(Integer, primary_key=True, index=True)
+    files = Column(JSON, default=list)
     admin_id = Column(Integer, ForeignKey("users.id"))
     type = Column(String)
     data = Column(JSON)

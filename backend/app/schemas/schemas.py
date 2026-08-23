@@ -12,6 +12,7 @@ class CandidateBase(BaseModel):
     age: Optional[int] = None
     source: Optional[str] = None
     notes: Optional[str] = None
+    files: List[str] = []
 
 class CandidateCreate(CandidateBase):
     pass

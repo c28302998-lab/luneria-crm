@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Plus, CheckCircle, Clock } from 'lucide-react';
+import { Plus, CheckCircle, Clock, Search } from 'lucide-react';
 
 interface Task {
   id: number;
@@ -20,6 +20,8 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -87,7 +89,12 @@ export default function TasksPage() {
 
   const renderTaskCard = (task: Task) => {
     const isOverdue = task.deadline && new Date(task.deadline) < now && task.status !== 'COMPLETED';
-    return (
+    const filteredTasks = tasks.filter(t => 
+    (statusFilter === 'ALL' || t.status === statusFilter) &&
+    (t.title?.toLowerCase().includes(search.toLowerCase()) || t.description?.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  return (
       <div key={task.id} className={`bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition ${isOverdue ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
         <div className="flex justify-between items-start mb-4">
           <h3 className="text-lg font-medium text-gray-900 line-clamp-2">{task.title}</h3>
@@ -130,6 +137,11 @@ export default function TasksPage() {
     );
   };
 
+  const filteredTasks = tasks.filter(t => 
+    (statusFilter === 'ALL' || t.status === statusFilter) &&
+    (t.title?.toLowerCase().includes(search.toLowerCase()) || t.description?.toLowerCase().includes(search.toLowerCase()))
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -148,7 +160,7 @@ export default function TasksPage() {
 
       {loading ? (
         <div className="p-8 text-center text-gray-500">Загрузка...</div>
-      ) : tasks.length === 0 ? (
+      ) : filteredTasks.length === 0 ? (
         <div className="p-8 text-center text-gray-500 bg-white rounded-xl shadow-sm border border-gray-200">
           <p>Задач пока нет</p>
         </div>

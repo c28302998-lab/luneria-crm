@@ -100,14 +100,17 @@ export default function DashboardLayout({
   const navigation = getNavigation(user.role);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <span className="text-xl font-bold text-indigo-600">Luneria</span>
+      <div className="w-64 bg-[#0f172a] text-slate-300 border-r border-slate-800 flex flex-col shadow-2xl z-10 relative">
+        <div className="h-16 flex items-center px-6 border-b border-slate-800">
+          <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-indigo-500/30">
+            <span className="text-white font-bold text-lg">L</span>
+          </div>
+          <span className="text-xl font-bold text-white tracking-wide">Luneria</span>
         </div>
         
-        <div className="flex-1 overflow-y-auto py-4">
+        <div className="flex-1 overflow-y-auto py-6">
           <nav className="space-y-1 px-3">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
@@ -116,13 +119,9 @@ export default function DashboardLayout({
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                    isActive 
-                      ? 'bg-indigo-50 text-indigo-600' 
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all ${isActive ? 'bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}
                 >
-                  <item.icon className={`mr-3 flex-shrink-0 h-5 w-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
+                  <item.icon className={`mr-3 flex-shrink-0 h-5 w-5 ${isActive ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
                   <span className="flex-1">{item.name}</span>
                   {isMessages && unreadCount > 0 && (
                     <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
@@ -145,7 +144,7 @@ export default function DashboardLayout({
             </div>
             <button 
               onClick={logout}
-              className="ml-auto text-gray-400 hover:text-gray-500"
+              className="ml-auto text-slate-500 hover:text-white transition-colors"
             >
               <LogOut className="h-5 w-5" />
             </button>

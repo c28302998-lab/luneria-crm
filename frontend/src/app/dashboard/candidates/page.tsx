@@ -21,6 +21,7 @@ export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -70,7 +71,7 @@ export default function CandidatesPage() {
   };
 
   const filteredCandidates = candidates.filter(c => 
-    c.status !== 'WORKER' && (
+    c.status !== 'WORKER' && (statusFilter === 'ALL' || c.status === statusFilter) && (
       c.first_name?.toLowerCase().includes(search.toLowerCase()) ||
       c.telegram?.toLowerCase().includes(search.toLowerCase())
     )
@@ -104,10 +105,17 @@ export default function CandidatesPage() {
               className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
-          <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
-            <Filter className="h-4 w-4 mr-2 text-gray-500" />
-            Фильтры
-          </button>
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+          >
+            <option value="ALL">Все статусы</option>
+            <option value="NEW">Новый</option>
+            <option value="IN_PROGRESS">В работе</option>
+            <option value="APPROVED">Одобрен</option>
+            <option value="REJECTED">Отказ</option>
+          </select>
         </div>
 
         {loading ? (
@@ -137,8 +145,17 @@ export default function CandidatesPage() {
                       <div className="text-xs">{c.email}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {c.status}
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        c.status === 'NEW' ? 'bg-purple-100 text-purple-800' :
+                        c.status === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-800' :
+                        c.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                        c.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {c.status === 'NEW' ? 'Новый' :
+                         c.status === 'IN_PROGRESS' ? 'В работе' :
+                         c.status === 'APPROVED' ? 'Одобрен' :
+                         c.status === 'REJECTED' ? 'Отказ' : c.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

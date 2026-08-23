@@ -132,3 +132,45 @@ def delete_candidate(candidate_id: int, db: Session = Depends(get_db), current_u
     log_audit(db, current_user.id, "DELETE", "Candidate", candidate_id, {})
     db.commit()
     return {"status": "success"}
+
+import os
+import shutil
+from fastapi import UploadFile, File
+
+UPLOAD_DIR = "uploads/candidates"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@router.post("/{candidate_id}/files")
+def upload_file(
+    candidate_id: int, 
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    candidate = db.query(Candidate).filter(Candidate.id == candidate_id, Candidate.is_deleted == False).first()
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+        
+    # Security: Admins can only upload to their candidates, Owners/Curators to any
+    if current_user.role == "ADMIN" and candidate.admin_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+
+    # Save file
+    file_path = os.path.join(UPLOAD_DIR, f"{candidate_id}_{file.filename}")
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    # URL to access the file (served as static files)
+    file_url = f"/uploads/candidates/{candidate_id}_{file.filename}"
+    
+    # Update candidate files array
+    files_list = list(candidate.files) if candidate.files else []
+    files_list.append(file_url)
+    
+    # Needs this to detect JSON mutation in SQLAlchemy
+    candidate.files = files_list
+    
+    db.commit()
+    db.refresh(candidate)
+    
+    return {"ok": True, "url": file_url}

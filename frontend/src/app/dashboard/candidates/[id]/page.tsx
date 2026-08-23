@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, Upload, FileText, Download } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/store/auth';
 
@@ -28,6 +28,7 @@ interface Candidate {
   created_at: string;
   history: CandidateHistory[];
   admin_id: number;
+  files: string[];
 }
 
 const STATUSES = ['NEW', 'IN_PROGRESS', 'APPROVED', 'REJECTED'];
@@ -38,6 +39,34 @@ export default function CandidateDetailPage() {
   const { user } = useAuth();
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    setUploading(true);
+    setUploadError('');
+    try {
+      const res = await api.post(`/candidates/${id}/files`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      // reload candidate
+      fetchCandidate();
+    } catch (err: any) {
+      console.error(err);
+      setUploadError('Ошибка загрузки файла');
+    } finally {
+      setUploading(false);
+      // Reset input
+      e.target.value = '';
+    }
+  };
 
   const fetchCandidate = async () => {
     try {
@@ -147,6 +176,38 @@ export default function CandidateDetailPage() {
               
               {!candidate.history?.length && (
                 <div className="pl-6 text-sm text-gray-500">История пуста.</div>
+              )}
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Документы и резюме</h3>
+              <label className="cursor-pointer inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md text-sm hover:bg-indigo-100 transition">
+                <Upload className="h-4 w-4 mr-2" />
+                {uploading ? 'Загрузка...' : 'Загрузить файл'}
+                <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+              </label>
+            </div>
+            {uploadError && <div className="text-red-500 text-sm mb-3">{uploadError}</div>}
+            
+            <div className="space-y-3">
+              {(!candidate.files || candidate.files.length === 0) ? (
+                <div className="text-sm text-gray-500 text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">
+                  Нет прикрепленных файлов
+                </div>
+              ) : (
+                candidate.files.map((fileUrl, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg bg-gray-50">
+                    <div className="flex items-center space-x-3 overflow-hidden">
+                      <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                      <span className="text-sm text-gray-700 truncate">{fileUrl.split('/').pop()}</span>
+                    </div>
+                    <a href={process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') + fileUrl} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-indigo-600 transition">
+                      <Download className="h-4 w-4" />
+                    </a>
+                  </div>
+                ))
               )}
             </div>
           </div>
