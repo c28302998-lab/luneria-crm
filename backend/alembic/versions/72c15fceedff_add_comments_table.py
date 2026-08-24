@@ -27,6 +27,21 @@ def upgrade() -> None:
     op.add_column('reports', sa.Column('files', sa.JSON(), nullable=True))
     op.add_column('tasks', sa.Column('files', sa.JSON(), nullable=True))
     op.add_column('workers', sa.Column('files', sa.JSON(), nullable=True))
+    
+    op.create_table('comments',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('entity_type', sa.String(), nullable=True),
+    sa.Column('entity_id', sa.Integer(), nullable=True),
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('text', sa.String(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_comments_entity_id'), 'comments', ['entity_id'], unique=False)
+    op.create_index(op.f('ix_comments_entity_type'), 'comments', ['entity_type'], unique=False)
+    op.create_index(op.f('ix_comments_id'), 'comments', ['id'], unique=False)
+
     # ### end Alembic commands ###
 
 
