@@ -8,6 +8,20 @@ from app.core.security import get_password_hash
 def seed():
     # CREATE TABLES
     Base.metadata.create_all(bind=engine)
+    from sqlalchemy import text
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE payments ADD COLUMN IF NOT EXISTS files JSON;"))
+            conn.execute(text("ALTER TABLE reports ADD COLUMN IF NOT EXISTS files JSON;"))
+            conn.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS files JSON;"))
+            conn.execute(text("ALTER TABLE workers ADD COLUMN IF NOT EXISTS files JSON;"))
+            conn.execute(text("ALTER TABLE expenses ADD COLUMN IF NOT EXISTS files JSON;"))
+            conn.execute(text("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS files JSON;"))
+            conn.execute(text("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR;"))
+            conn.commit()
+    except Exception as e:
+        print("Error altering tables:", e)
+
     
     db = SessionLocal()
     
