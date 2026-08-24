@@ -20,6 +20,7 @@ export default function TrainingPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ title: '', content: '' });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -41,9 +42,20 @@ export default function TrainingPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/materials/', formData);
+      const res = await api.post('/materials/', formData);
+      const newMaterialId = res.data.id;
+      
+      for (const file of selectedFiles) {
+        const fd = new FormData();
+        fd.append('file', file);
+        await api.post(`/materials/${newMaterialId}/files`, fd, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+
       setIsModalOpen(false);
       setFormData({ title: '', content: '' });
+      setSelectedFiles([]);
       fetchMaterials();
     } catch (err) {
       alert('Ошибка при создании материала');
@@ -82,7 +94,7 @@ export default function TrainingPage() {
         <h2 className="text-2xl font-semibold text-gray-900">Обучающие материалы</h2>
         {canEdit && (
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => { setIsModalOpen(true); setSelectedFiles([]); setFormData({ title: '', content: '' }); }}
             className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -201,6 +213,22 @@ export default function TrainingPage() {
                 />
               </div>
               
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Прикрепить файлы</label>
+                <input 
+                  type="file" 
+                  multiple
+                  onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))}
+                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                />
+                {selectedFiles.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-500 flex flex-col space-y-1">
+                    {selectedFiles.map((f, i) => (
+                      <span key={i}>- {f.name}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
                 <button 
                   type="button" 
