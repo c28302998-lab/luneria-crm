@@ -1,3 +1,5 @@
+import os, shutil
+from fastapi import UploadFile, File
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
@@ -31,7 +33,7 @@ def create_task(task_in: TaskCreate, db: Session = Depends(get_db), current_user
     db.refresh(task)
     
     # Send notification
-    notif = Notification(user_id=task.assigned_user_id, title="Новая задача", message=f"Вам назначена новая задача: {task.title}")
+    notif = Notification(user_id=task.assigned_user_id, type="Новая задача", message=f"Вам назначена новая задача: {task.title}")
     db.add(notif)
     db.commit()
 
@@ -55,7 +57,7 @@ def update_task(task_id: int, task_in: TaskUpdate, db: Session = Depends(get_db)
     db.refresh(task)
     
     # Send notification
-    notif = Notification(user_id=task.assigned_user_id, title="Новая задача", message=f"Вам назначена новая задача: {task.title}")
+    notif = Notification(user_id=task.assigned_user_id, type="Новая задача", message=f"Вам назначена новая задача: {task.title}")
     db.add(notif)
     db.commit()
 

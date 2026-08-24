@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from app.api import (
     users, candidates, workers, partners, payments, tasks, 
-    trainings, reports, notifications, messages, audit_logs, search
+    trainings, reports, notifications, messages, audit_logs, search, comments
 )
 
 api_router = APIRouter()
@@ -17,3 +17,5 @@ api_router.include_router(notifications.router, prefix="/notifications", tags=["
 api_router.include_router(messages.router, prefix="/messages", tags=["messages"])
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["audit-logs"])
 api_router.include_router(search.router, prefix="/search", tags=["search"])
+
+api_router.include_router(comments.router, prefix="/comments", tags=["comments"])

@@ -206,7 +206,7 @@ export default function DashboardLayout({
                       onClick={() => markNotificationRead(n.id)}
                       className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0 ${!n.is_read ? 'bg-indigo-50/50' : 'opacity-70'}`}
                     >
-                      <h4 className={`text-sm font-medium ${!n.is_read ? 'text-indigo-900' : 'text-gray-900'}`}>{n.title}</h4>
+                      <h4 className={`text-sm font-medium ${!n.is_read ? 'text-indigo-900' : 'text-gray-900'}`}>{n.type}</h4>
                       <p className="text-xs text-gray-500 mt-1">{n.message}</p>
                       <span className="text-[10px] text-gray-400 mt-2 block">{new Date(n.created_at).toLocaleString('ru-RU')}</span>
                     </div>
