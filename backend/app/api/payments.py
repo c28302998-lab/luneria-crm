@@ -1,3 +1,4 @@
+import uuid
 import os, shutil
 from fastapi import UploadFile, File
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
@@ -7,7 +8,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
-from app.models.models import User, Payment, Worker, Expense
+from app.models.models import FileUpload, User, Payment, Worker, Expense
 from app.schemas.schemas import Payment as PaymentSchema, PaymentCreate, Expense as ExpenseSchema, ExpenseCreate
 from app.core.dependencies import get_current_user, RoleChecker
 from app.crud.audit import log_audit

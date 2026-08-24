@@ -1,9 +1,10 @@
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
-from app.models.models import User, Candidate, CandidateHistory
+from app.models.models import FileUpload, User, Candidate, CandidateHistory
 from app.schemas.schemas import Candidate as CandidateSchema, CandidateCreate, CandidateUpdate, CandidateWithHistory
 from app.core.dependencies import get_current_user, RoleChecker
 from app.crud.audit import log_audit

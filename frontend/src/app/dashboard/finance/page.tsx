@@ -275,7 +275,7 @@ export default function FinancePage() {
                           {p.files && p.files.length > 0 && (
                             <div className="flex flex-col gap-1 mb-2">
                               {p.files.map((fileUrl: string, idx: number) => (
-                                <a key={idx} href={api.defaults.baseURL?.replace('/api/v1', '') + fileUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs text-indigo-600 hover:underline">
+                                <a key={idx} href={(api.defaults.baseURL || '') + fileUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs text-indigo-600 hover:underline">
                                   <FileText className="w-3 h-3 mr-1" /> Чек {idx+1}
                                 </a>
                               ))}
@@ -340,7 +340,7 @@ export default function FinancePage() {
                           {e.files && e.files.length > 0 && (
                             <div className="flex flex-col gap-1 mb-2">
                               {e.files.map((fileUrl: string, idx: number) => (
-                                <a key={idx} href={api.defaults.baseURL?.replace('/api/v1', '') + fileUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs text-indigo-600 hover:underline">
+                                <a key={idx} href={(api.defaults.baseURL || '') + fileUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs text-indigo-600 hover:underline">
                                   <FileText className="w-3 h-3 mr-1" /> Чек {idx+1}
                                 </a>
                               ))}

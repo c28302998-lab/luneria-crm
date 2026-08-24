@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, JSON, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, JSON, Boolean, LargeBinary
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.database import Base
@@ -219,3 +219,11 @@ class Source(Base, SoftDeleteMixin):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     creator = relationship("User")
+
+class FileUpload(Base):
+    __tablename__ = "file_uploads"
+    id = Column(String, primary_key=True, index=True) # UUID
+    filename = Column(String)
+    content_type = Column(String)
+    data = Column(LargeBinary)
+    created_at = Column(DateTime, default=datetime.utcnow)

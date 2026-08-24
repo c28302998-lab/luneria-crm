@@ -224,7 +224,7 @@ const fetchCandidate = async () => {
                       <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
                       <span className="text-sm text-gray-700 truncate">{fileUrl.split('/').pop()}</span>
                     </div>
-                    <a href={process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') + fileUrl} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-indigo-600 transition">
+                    <a href={(process.env.NEXT_PUBLIC_API_URL || '') + fileUrl} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-indigo-600 transition">
                       <Download className="h-4 w-4" />
                     </a>
                   </div>

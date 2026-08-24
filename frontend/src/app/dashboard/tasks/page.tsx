@@ -196,7 +196,7 @@ export default function TasksPage() {
               {task.files.map((fileUrl: string, idx: number) => {
                 const fileName = fileUrl.split('/').pop() || `Файл ${idx+1}`;
                 return (
-                  <a key={idx} href={api.defaults.baseURL?.replace('/api/v1', '') + fileUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 p-1.5 rounded-md">
+                  <a key={idx} href={(api.defaults.baseURL || '') + fileUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 p-1.5 rounded-md">
                     <FileText className="w-3 h-3 mr-1" />
                     {fileName.substring(fileName.indexOf('_')+1)}
                   </a>

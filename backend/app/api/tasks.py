@@ -1,3 +1,4 @@
+import uuid
 import os, shutil
 from fastapi import UploadFile, File
 from fastapi import APIRouter, Depends, HTTPException
@@ -5,7 +6,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
-from app.models.models import User, Task, Notification
+from app.models.models import FileUpload, User, Task, Notification
 from app.schemas.schemas import Task as TaskSchema, TaskCreate, TaskUpdate
 from app.core.dependencies import get_current_user, RoleChecker
 from app.crud.audit import log_audit
@@ -79,11 +80,16 @@ def upload_file(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
         
-    file_path = os.path.join(UPLOAD_DIR, f"{task_id}_{file.filename}")
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    file_id = str(uuid.uuid4())
+    file_record = FileUpload(
+        id=file_id,
+        filename=file.filename,
+        content_type=file.content_type,
+        data=file.file.read()
+    )
+    db.add(file_record)
         
-    file_url = f"/uploads/tasks/{task_id}_{file.filename}"
+    file_url = f"/files/{file_id}"
     
     files_list = list(task.files) if task.files else []
     files_list.append(file_url)

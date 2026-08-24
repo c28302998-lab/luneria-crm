@@ -1,10 +1,11 @@
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
 import os, shutil
 
 from app.db.database import get_db
-from app.models.models import User, Material
+from app.models.models import FileUpload, User, Material
 from app.schemas.schemas import Material as MaterialSchema, MaterialCreate, MaterialUpdate
 from app.core.dependencies import get_current_user, RoleChecker
 from app.crud.audit import log_audit
@@ -63,11 +64,16 @@ def upload_file(
     if not material:
         raise HTTPException(status_code=404, detail="Material not found")
         
-    file_path = os.path.join(UPLOAD_DIR, f"{material_id}_{file.filename}")
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    file_id = str(uuid.uuid4())
+    file_record = FileUpload(
+        id=file_id,
+        filename=file.filename,
+        content_type=file.content_type,
+        data=file.file.read()
+    )
+    db.add(file_record)
         
-    file_url = f"/uploads/materials/{material_id}_{file.filename}"
+    file_url = f"/files/{file_id}"
     
     files_list = list(material.files) if material.files else []
     files_list.append(file_url)
