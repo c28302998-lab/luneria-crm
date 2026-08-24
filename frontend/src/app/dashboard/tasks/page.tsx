@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Plus, CheckCircle, Clock, Search, Upload, FileText, MessageCircle } from 'lucide-react';
+import { Plus, CheckCircle, Clock, Search, Upload, FileText, MessageCircle, Trash2 } from 'lucide-react';
 
 interface Task {
   id: number;
@@ -96,6 +96,18 @@ export default function TasksPage() {
     }
   };
 
+  
+  const handleDeleteTask = async (taskId: number) => {
+    if (!confirm('Вы уверены, что хотите удалить эту задачу?')) return;
+    try {
+      await api.delete(`/tasks/${taskId}`);
+      fetchData();
+    } catch (err) {
+      alert('Ошибка при удалении задачи');
+      console.error(err);
+    }
+  };
+
   const handleComplete = async (taskId: number) => {
     try {
       await api.put(`/tasks/${taskId}`, { status: 'COMPLETED' });
@@ -140,13 +152,24 @@ export default function TasksPage() {
       <div key={task.id} className={`bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition ${isOverdue ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
         <div className="flex justify-between items-start mb-4">
           <h3 className="text-lg font-medium text-gray-900 line-clamp-2">{task.title}</h3>
-          <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
-            task.priority === 'HIGH' ? 'bg-red-100 text-red-700' :
-            task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
-            'bg-blue-100 text-blue-700'
-          }`}>
-            {task.priority}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
+              task.priority === 'HIGH' ? 'bg-red-100 text-red-700' :
+              task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-blue-100 text-blue-700'
+            }`}>
+              {task.priority}
+            </span>
+            {user?.role === 'OWNER' && (
+              <button 
+                onClick={() => handleDeleteTask(task.id)}
+                className="text-gray-400 hover:text-red-600 transition"
+                title="Удалить задачу"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
         <p className="text-sm text-gray-500 mb-4 line-clamp-3">{task.description}</p>
         

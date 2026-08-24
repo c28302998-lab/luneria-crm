@@ -91,3 +91,14 @@ def upload_file(
     
     db.commit()
     return {"ok": True, "url": file_url}
+
+@router.delete("/{task_id}")
+def delete_task(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
+    task = db.query(Task).filter(Task.is_deleted == False).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+        
+    task.is_deleted = True
+    db.commit()
+    log_audit(db, current_user.id, "DELETE", "Task", task.id, {"title": task.title})
+    return {"ok": True}
