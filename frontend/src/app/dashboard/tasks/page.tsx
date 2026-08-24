@@ -38,14 +38,18 @@ export default function TasksPage() {
 
   const fetchData = async () => {
     try {
-      const [tasksRes, usersRes, commentsRes] = await Promise.all([
+      const [tasksRes, usersRes] = await Promise.all([
         api.get('/tasks/'),
-        api.get('/users/'),
-        api.get('/comments/task')
+        api.get('/users/')
       ]);
       setTasks(tasksRes.data);
       setUsers(usersRes.data);
-      setAllComments(commentsRes.data);
+      try {
+        const commentsRes = await api.get('/comments/task');
+        setAllComments(commentsRes.data);
+      } catch (commErr) {
+        console.error("Failed to load comments", commErr);
+      }
     } catch (err) {
       console.error(err);
     } finally {

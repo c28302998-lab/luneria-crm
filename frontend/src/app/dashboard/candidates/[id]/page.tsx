@@ -72,12 +72,14 @@ export default function CandidateDetailPage() {
 
 const fetchCandidate = async () => {
     try {
-      const [candRes, commRes] = await Promise.all([
-        api.get(`/candidates/${id}`),
-        api.get(`/comments/candidate/${id}`)
-      ]);
+      const candRes = await api.get(`/candidates/${id}`);
       setCandidate(candRes.data);
-      setComments(commRes.data);
+      try {
+        const commRes = await api.get(`/comments/candidate/${id}`);
+        setComments(commRes.data);
+      } catch (commErr) {
+        console.error("Failed to load comments", commErr);
+      }
     } catch (err) {
       console.error(err);
     } finally {
