@@ -76,8 +76,10 @@ export default function WorkersPage() {
   const filteredWorkers = workers.filter(w => {
     const c = candidatesMap[w.candidate_id];
     if (!c) return true;
-    return c.first_name.toLowerCase().includes(search.toLowerCase()) || 
-           c.telegram.toLowerCase().includes(search.toLowerCase());
+    const fName = c.first_name || '';
+    const tGram = c.telegram || '';
+    return fName.toLowerCase().includes(search.toLowerCase()) || 
+           tGram.toLowerCase().includes(search.toLowerCase());
   });
 
   return (
