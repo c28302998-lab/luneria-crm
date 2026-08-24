@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Users, Briefcase, 
   Settings, LogOut, DollarSign, CheckSquare, 
   FileBarChart, MessageSquare, Shield, Activity, Bell
-} from 'lucide-react';
+, GraduationCap} from 'lucide-react';
 
 const getNavigation = (role: string) => {
   const base = [
