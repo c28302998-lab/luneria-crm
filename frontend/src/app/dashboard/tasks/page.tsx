@@ -282,6 +282,15 @@ export default function TasksPage() {
     (t.title?.toLowerCase().includes(search.toLowerCase()) || t.description?.toLowerCase().includes(search.toLowerCase()))
   );
 
+
+  const assignableUsers = users.filter(u => {
+    if (user?.role === 'OWNER') return true;
+    if (user?.role === 'CURATOR') {
+      return u.role === 'ADMIN' && u.curator_id === user.id;
+    }
+    return false;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -360,7 +369,7 @@ export default function TasksPage() {
                   className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none"
                 >
                   <option value="" disabled>Выберите пользователя...</option>
-                  {users.map(u => (
+                  {assignableUsers.map(u => (
                     <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
                   ))}
                 </select>
