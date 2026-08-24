@@ -197,3 +197,14 @@ class Comment(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User")
+
+class Material(Base, SoftDeleteMixin):
+    __tablename__ = "materials"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    content = Column(String)
+    files = Column(JSON, default=list)
+    created_by = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    creator = relationship("User")

@@ -243,3 +243,24 @@ class Comment(CommentBase):
 
     class Config:
         from_attributes = True
+
+class MaterialBase(BaseModel):
+    title: str
+    content: str
+    files: List[str] = []
+
+class MaterialCreate(MaterialBase):
+    pass
+
+class MaterialUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    files: Optional[List[str]] = None
+
+class Material(MaterialBase):
+    id: int
+    created_by: int
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
