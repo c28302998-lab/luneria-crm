@@ -142,7 +142,7 @@ export default function TrainingPage() {
                         {m.files.map((fileUrl, idx) => (
                           <a 
                             key={idx} 
-                            href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${fileUrl}`}
+                            href={api.defaults.baseURL?.replace('/api/v1', '') + fileUrl}
                             target="_blank" rel="noreferrer"
                             className="flex items-center px-3 py-1.5 bg-white border border-gray-200 rounded-md text-xs hover:border-indigo-500 transition"
                           >
