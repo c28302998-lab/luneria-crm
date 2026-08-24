@@ -91,7 +91,10 @@ export default function SourcesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-gray-900">Источники и Шаблоны</h2>
+                <div>
+          <h2 className="text-2xl font-semibold text-gray-900">Источники и Шаблоны</h2>
+          <p className="text-sm text-gray-500 mt-1">Если хотите добавить источник, пишите Owner'у в личные сообщения на сайте.</p>
+        </div>
         {canEdit && (
           <button 
             onClick={() => { setIsModalOpen(true); setSelectedFiles([]); setFormData({ title: '', content: '' }); }}
