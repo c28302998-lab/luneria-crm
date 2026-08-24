@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Users, Briefcase, 
   Settings, LogOut, DollarSign, CheckSquare, 
   FileBarChart, MessageSquare, Shield, Activity, Bell
-, GraduationCap} from 'lucide-react';
+, GraduationCap, Globe} from 'lucide-react';
 
 const getNavigation = (role: string) => {
   const base = [
@@ -25,6 +25,7 @@ const getNavigation = (role: string) => {
       { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
       { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
+      { name: 'Источники', href: '/dashboard/sources', icon: Globe },
       { name: 'Партнеры', href: '/dashboard/partners', icon: Briefcase },
       { name: 'Финансы', href: '/dashboard/finance', icon: DollarSign },
       { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
@@ -42,6 +43,7 @@ const getNavigation = (role: string) => {
       { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
       { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
+      { name: 'Источники', href: '/dashboard/sources', icon: Globe },
       { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
       { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
       { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
@@ -54,6 +56,7 @@ const getNavigation = (role: string) => {
       { name: 'Мои Кандидаты', href: '/dashboard/candidates', icon: Users },
       { name: 'Мои Работники', href: '/dashboard/workers', icon: Briefcase },
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
+      { name: 'Источники', href: '/dashboard/sources', icon: Globe },
       { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
       { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
       { name: 'Настройки', href: '/dashboard/settings', icon: Settings },

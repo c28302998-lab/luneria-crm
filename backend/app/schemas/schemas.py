@@ -264,3 +264,24 @@ class Material(MaterialBase):
     
     class Config:
         from_attributes = True
+
+class SourceBase(BaseModel):
+    title: str
+    content: str
+    files: List[str] = []
+
+class SourceCreate(SourceBase):
+    pass
+
+class SourceUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    files: Optional[List[str]] = None
+
+class Source(SourceBase):
+    id: int
+    created_by: int
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True

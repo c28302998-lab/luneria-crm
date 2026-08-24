@@ -208,3 +208,14 @@ class Material(Base, SoftDeleteMixin):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     creator = relationship("User")
+
+class Source(Base, SoftDeleteMixin):
+    __tablename__ = "sources"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    content = Column(String)
+    files = Column(JSON, default=list)
+    created_by = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    creator = relationship("User")
