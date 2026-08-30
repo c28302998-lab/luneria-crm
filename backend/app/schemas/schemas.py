@@ -333,3 +333,19 @@ class Attendance(AttendanceBase):
     
     class Config:
         from_attributes = True
+
+class UserShiftBase(BaseModel):
+    pass
+
+class UserShift(BaseModel):
+    id: int
+    user_id: int
+    date: date
+    start_time: datetime
+    end_time: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+        
+class UserShiftWithUser(UserShift):
+    user: User

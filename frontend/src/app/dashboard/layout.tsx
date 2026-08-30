@@ -10,7 +10,8 @@ import {
   Settings, LogOut, DollarSign, CheckSquare, 
   FileBarChart, MessageSquare, Shield, Activity, Bell
 , GraduationCap, Globe} from 'lucide-react';
-import { ClipboardCheck } from 'lucide-react';
+import { ClipboardCheck, Clock } from 'lucide-react';
+import ShiftButton from '@/components/ShiftButton';
 
 const getNavigation = (role: string) => {
   const base = [
@@ -25,6 +26,7 @@ const getNavigation = (role: string) => {
       { name: 'Администраторы', href: '/dashboard/admins', icon: Users },
       { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
       { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
+      { name: 'Рабочее время', href: '/dashboard/work-logs', icon: Clock },
       { name: 'Контроль', href: '/dashboard/attendance', icon: ClipboardCheck },
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
       { name: 'Источники', href: '/dashboard/sources', icon: Globe },
@@ -193,7 +195,8 @@ export default function DashboardLayout({
             {navigation.find(n => n.href === pathname)?.name || 'Dashboard'}
           </h1>
           
-          <div className="relative">
+          <ShiftButton />
+            <div className="relative">
             <button 
               onClick={() => setIsNotifOpen(!isNotifOpen)}
               className="p-2 text-gray-400 hover:text-gray-500 relative"

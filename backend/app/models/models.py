@@ -252,3 +252,13 @@ class Attendance(Base):
     is_present = Column(Boolean, default=False)
     updated_by = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class UserShift(Base):
+    __tablename__ = "user_shifts"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    date = Column(Date, default=datetime.utcnow().date)
+    start_time = Column(DateTime, default=datetime.utcnow)
+    end_time = Column(DateTime, nullable=True)
+    
+    user = relationship("User")

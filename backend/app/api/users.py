@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.db.database import get_db
 from app.models.models import User
@@ -85,3 +85,50 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_user: User 
     log_audit(db, current_user.id, "DELETE", "User", user.id, {"is_deleted": True})
     db.commit()
     return {"ok": True}
+
+from app.models.models import UserShift
+from app.schemas.schemas import UserShift as UserShiftSchema, UserShiftWithUser
+from datetime import datetime, date
+
+@router.get("/shifts/current", response_model=Optional[UserShiftSchema])
+def get_current_shift(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    shift = db.query(UserShift).filter(
+        UserShift.user_id == current_user.id,
+        UserShift.end_time == None
+    ).order_by(UserShift.start_time.desc()).first()
+    return shift
+
+@router.post("/shifts/start", response_model=UserShiftSchema)
+def start_shift(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # Check if already has active shift
+    existing = db.query(UserShift).filter(UserShift.user_id == current_user.id, UserShift.end_time == None).first()
+    if existing:
+        return existing
+        
+    shift = UserShift(
+        user_id=current_user.id,
+        date=datetime.utcnow().date(),
+        start_time=datetime.utcnow()
+    )
+    db.add(shift)
+    db.commit()
+    db.refresh(shift)
+    return shift
+
+@router.post("/shifts/end", response_model=UserShiftSchema)
+def end_shift(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    shift = db.query(UserShift).filter(UserShift.user_id == current_user.id, UserShift.end_time == None).first()
+    if not shift:
+        raise HTTPException(status_code=400, detail="No active shift")
+        
+    shift.end_time = datetime.utcnow()
+    db.commit()
+    db.refresh(shift)
+    return shift
+
+@router.get("/shifts/all", response_model=List[UserShiftWithUser])
+def get_all_shifts(target_date: date = None, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
+    query = db.query(UserShift)
+    if target_date:
+        query = query.filter(UserShift.date == target_date)
+    return query.order_by(UserShift.start_time.desc()).all()
