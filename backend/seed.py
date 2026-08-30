@@ -19,9 +19,16 @@ def seed():
                 # Update existing nulls
                 conn.execute(text(f"UPDATE {table} SET files = '[]' WHERE files IS NULL;"))
             
+
             conn.execute(text("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR;"))
+            
+            # Add new columns for attendance and shift
+            conn.execute(text("ALTER TABLE workers ADD COLUMN IF NOT EXISTS shift VARCHAR;"))
+            conn.execute(text("ALTER TABLE workers ADD COLUMN IF NOT EXISTS account_info VARCHAR;"))
+            
             # Note: sources and materials are created by create_all()
             conn.commit()
+
     except Exception as e:
         print("Error altering tables:", e)
 
