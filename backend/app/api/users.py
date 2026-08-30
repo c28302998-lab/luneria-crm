@@ -94,14 +94,14 @@ from datetime import datetime, date
 def get_current_shift(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     shift = db.query(UserShift).filter(
         UserShift.user_id == current_user.id,
-        UserShift.end_time == None
+        UserShift.end_time.is_(None)
     ).order_by(UserShift.start_time.desc()).first()
     return shift
 
 @router.post("/shifts/start", response_model=UserShiftSchema)
 def start_shift(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Check if already has active shift
-    existing = db.query(UserShift).filter(UserShift.user_id == current_user.id, UserShift.end_time == None).first()
+    existing = db.query(UserShift).filter(UserShift.user_id == current_user.id, UserShift.end_time.is_(None)).first()
     if existing:
         return existing
         
@@ -117,14 +117,18 @@ def start_shift(db: Session = Depends(get_db), current_user: User = Depends(get_
 
 @router.post("/shifts/end", response_model=UserShiftSchema)
 def end_shift(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    shift = db.query(UserShift).filter(UserShift.user_id == current_user.id, UserShift.end_time == None).first()
-    if not shift:
+    shifts = db.query(UserShift).filter(UserShift.user_id == current_user.id, UserShift.end_time.is_(None)).all()
+    if not shifts:
         raise HTTPException(status_code=400, detail="No active shift")
         
-    shift.end_time = datetime.utcnow()
+    last_shift = None
+    for shift in shifts:
+        shift.end_time = datetime.utcnow()
+        last_shift = shift
+        
     db.commit()
-    db.refresh(shift)
-    return shift
+    db.refresh(last_shift)
+    return last_shift
 
 @router.get("/shifts/all", response_model=List[UserShiftWithUser])
 def get_all_shifts(target_date: date = None, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
