@@ -87,6 +87,8 @@ class Worker(Base, SoftDeleteMixin):
     files = Column(JSON, default=list)
     admin_id = Column(Integer, ForeignKey("users.id"))
     partner_id = Column(Integer, ForeignKey("partners.id"), nullable=True)
+    shift = Column(String, nullable=True)
+    account_info = Column(String, nullable=True)
     status = Column(String, default="ACTIVE")
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -226,4 +228,27 @@ class FileUpload(Base):
     filename = Column(String)
     content_type = Column(String)
     data = Column(LargeBinary)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class AccountRequest(Base, SoftDeleteMixin):
+    __tablename__ = "account_requests"
+    id = Column(Integer, primary_key=True, index=True)
+    candidate_id = Column(Integer, ForeignKey("candidates.id"))
+    admin_id = Column(Integer, ForeignKey("users.id"))
+    admin_telegram = Column(String)
+    comment = Column(String)
+    status = Column(String, default="PENDING")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    candidate = relationship("Candidate")
+    admin = relationship("User")
+
+from sqlalchemy import Date
+class Attendance(Base):
+    __tablename__ = "attendance"
+    id = Column(Integer, primary_key=True, index=True)
+    worker_id = Column(Integer, ForeignKey("workers.id"))
+    date = Column(Date)
+    is_present = Column(Boolean, default=False)
+    updated_by = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)

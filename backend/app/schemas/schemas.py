@@ -95,16 +95,22 @@ class WorkerBase(BaseModel):
 class WorkerCreate(WorkerBase):
     candidate_id: int
     partner_id: Optional[int] = None
+    shift: Optional[str] = None
+    account_info: Optional[str] = None
 
 class WorkerUpdate(BaseModel):
     status: Optional[str] = None
     partner_id: Optional[int] = None
+    shift: Optional[str] = None
+    account_info: Optional[str] = None
 
 class Worker(WorkerBase):
     id: int
     candidate_id: int
     admin_id: int
     partner_id: Optional[int] = None
+    shift: Optional[str] = None
+    account_info: Optional[str] = None
     created_at: datetime
     class Config:
         from_attributes = True
@@ -281,6 +287,48 @@ class SourceUpdate(BaseModel):
 class Source(SourceBase):
     id: int
     created_by: int
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class AccountRequestCreate(BaseModel):
+    candidate_id: int
+    admin_telegram: str
+    comment: str
+
+class AccountRequestUpdate(BaseModel):
+    status: str
+
+class AccountRequestResponse(BaseModel):
+    id: int
+    candidate_id: int
+    admin_id: int
+    admin_telegram: str
+    comment: str
+    status: str
+    created_at: datetime
+    
+    # We can include partial candidate and admin data
+    candidate: Optional[CandidateBase] = None
+    admin: Optional[User] = None
+
+    class Config:
+        from_attributes = True
+
+from datetime import date
+
+class AttendanceBase(BaseModel):
+    worker_id: int
+    date: date
+    is_present: bool
+
+class AttendanceCreate(AttendanceBase):
+    pass
+
+class Attendance(AttendanceBase):
+    id: int
+    updated_by: int
     created_at: datetime
     
     class Config:

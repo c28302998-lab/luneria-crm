@@ -10,6 +10,7 @@ import {
   Settings, LogOut, DollarSign, CheckSquare, 
   FileBarChart, MessageSquare, Shield, Activity, Bell
 , GraduationCap, Globe} from 'lucide-react';
+import { ClipboardCheck } from 'lucide-react';
 
 const getNavigation = (role: string) => {
   const base = [
@@ -24,6 +25,7 @@ const getNavigation = (role: string) => {
       { name: 'Администраторы', href: '/dashboard/admins', icon: Users },
       { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
       { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
+      { name: 'Контроль', href: '/dashboard/attendance', icon: ClipboardCheck },
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
       { name: 'Источники', href: '/dashboard/sources', icon: Globe },
       { name: 'Партнеры', href: '/dashboard/partners', icon: Briefcase },
@@ -42,6 +44,7 @@ const getNavigation = (role: string) => {
       { name: 'Администраторы', href: '/dashboard/admins', icon: Users },
       { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
       { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
+      { name: 'Контроль', href: '/dashboard/attendance', icon: ClipboardCheck },
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
       { name: 'Источники', href: '/dashboard/sources', icon: Globe },
       { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
@@ -55,6 +58,7 @@ const getNavigation = (role: string) => {
       ...base,
       { name: 'Мои Кандидаты', href: '/dashboard/candidates', icon: Users },
       { name: 'Мои Работники', href: '/dashboard/workers', icon: Briefcase },
+      { name: 'Контроль', href: '/dashboard/attendance', icon: ClipboardCheck },
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
       { name: 'Источники', href: '/dashboard/sources', icon: Globe },
       { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },

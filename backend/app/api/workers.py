@@ -109,3 +109,29 @@ def delete_worker(worker_id: int, db: Session = Depends(get_db), current_user: U
     log_audit(db, current_user.id, "DELETE", "Worker", worker_id, {})
     db.commit()
     return {"status": "success"}
+
+@router.patch("/{worker_id}/info", response_model=WorkerSchema)
+def update_worker_info(
+    worker_id: int, 
+    shift: str = None, 
+    account_info: str = None, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    worker = db.query(Worker).filter(Worker.id == worker_id, Worker.is_deleted == False).first()
+    if not worker:
+        raise HTTPException(status_code=404, detail="Worker not found")
+        
+    if current_user.role == "CURATOR":
+        raise HTTPException(status_code=403, detail="Curators cannot edit info")
+    if current_user.role == "ADMIN" and worker.admin_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only edit info for your own workers")
+        
+    if shift is not None:
+        worker.shift = shift
+    if account_info is not None:
+        worker.account_info = account_info
+        
+    db.commit()
+    db.refresh(worker)
+    return worker
