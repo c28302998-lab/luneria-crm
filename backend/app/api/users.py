@@ -130,6 +130,17 @@ def end_shift(db: Session = Depends(get_db), current_user: User = Depends(get_cu
     db.refresh(last_shift)
     return last_shift
 
+
+@router.delete("/shifts/{shift_id}")
+def delete_shift(shift_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
+    shift = db.query(UserShift).filter(UserShift.id == shift_id).first()
+    if not shift:
+        raise HTTPException(status_code=404, detail="Shift not found")
+    
+    db.delete(shift)
+    db.commit()
+    return {"message": "Shift deleted"}
+
 @router.get("/shifts/all", response_model=List[UserShiftWithUser])
 def get_all_shifts(target_date: date = None, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
     query = db.query(UserShift)

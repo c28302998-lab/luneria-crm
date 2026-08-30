@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Clock } from 'lucide-react';
+import { Clock, Trash2 } from 'lucide-react';
 
 export default function WorkLogsPage() {
   const { user } = useAuth();
@@ -20,6 +20,18 @@ export default function WorkLogsPage() {
       console.error('Failed to fetch shifts', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  const handleDelete = async (shiftId: number) => {
+    if (!confirm('Удалить эту смену?')) return;
+    try {
+      await api.delete(`/users/shifts/${shiftId}`);
+      setShifts(shifts.filter(s => s.id !== shiftId));
+    } catch (err) {
+      alert('Ошибка при удалении');
+      console.error(err);
     }
   };
 
@@ -62,6 +74,7 @@ export default function WorkLogsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Начало</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Конец</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -89,6 +102,15 @@ export default function WorkLogsPage() {
                         В работе
                       </span>
                     )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button 
+                      onClick={() => handleDelete(shift.id)}
+                      className="text-red-600 hover:text-red-900 transition-colors"
+                      title="Удалить смену"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
                   </td>
                 </tr>
               ))}
