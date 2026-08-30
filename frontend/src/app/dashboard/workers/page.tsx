@@ -117,7 +117,9 @@ export default function WorkersPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Контакты</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Админ</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Партнер</th>
+                  {user?.role === 'OWNER' && (
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Партнер</th>
+                  )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Переведен</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
                 </tr>
@@ -150,9 +152,11 @@ export default function WorkersPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {adminName || `ID #${w.admin_id}`}
                       </td>
+                      {user?.role === 'OWNER' && (
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {w.partner_id ? `Партнер #${w.partner_id}` : 'Не назначен'}
                       </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(w.created_at).toLocaleDateString('ru-RU')}
                       </td>

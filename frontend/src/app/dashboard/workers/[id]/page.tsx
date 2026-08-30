@@ -176,6 +176,7 @@ export default function WorkerDetailPage() {
                 </span>
               )}
             </div>
+            {isOwner && (
             <div className="flex justify-between items-center border-b border-gray-100 pb-2">
               <span className="text-gray-500 text-sm">Назначенный Партнер:</span>
               {isOwner ? (
@@ -195,6 +196,7 @@ export default function WorkerDetailPage() {
                 </span>
               )}
             </div>
+            )}
             <div className="flex justify-between">
               <span className="text-gray-500 text-sm">Дата перевода:</span>
               <span className="font-medium text-gray-900 text-sm">{new Date(worker.created_at).toLocaleDateString('ru-RU')}</span>
