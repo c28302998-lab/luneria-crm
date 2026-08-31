@@ -113,6 +113,15 @@ def run_migrations(db: Session = Depends(get_db)):
         db.rollback()
         return {"error": str(e)}
 
+
+@router.get("/debug-emails")
+def debug_emails(db: Session = Depends(get_db)):
+    try:
+        res = db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name = 'account_emails'")).fetchall()
+        return {"columns": [row[0] for row in res]}
+    except Exception as e:
+        return {"error": str(e)}
+
 @router.get("/debug-schema")
 def debug_schema(db: Session = Depends(get_db)):
     try:
