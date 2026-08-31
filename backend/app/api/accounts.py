@@ -38,7 +38,7 @@ def get_accounts(db: Session = Depends(get_db), current_user: User = Depends(get
         
     return query.all()
 
-@router.patch("/{acc_id}", response_model=AccountResponse)
+@router.patch("/{acc_id:int}", response_model=AccountResponse)
 def update_account(acc_id: int, update: AccountUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     acc = db.query(Account).filter(Account.id == acc_id).first()
     if not acc:
@@ -75,7 +75,7 @@ def update_account(acc_id: int, update: AccountUpdate, db: Session = Depends(get
     db.refresh(acc)
     return acc
 
-@router.delete("/{acc_id}")
+@router.delete("/{acc_id:int}")
 def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
     acc = db.query(Account).filter(Account.id == acc_id).first()
     if not acc:
