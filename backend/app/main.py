@@ -33,6 +33,13 @@ def health_check():
 
 @app.get("/api/v1/run-seed")
 def run_seed_endpoint():
-    import seed
-    seed.init_db()
-    return {"status": "Database seeded successfully!"}
+    try:
+        import sys
+        import os
+        sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+        import seed
+        seed.init_db()
+        return {"status": "Database seeded successfully!"}
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
