@@ -322,7 +322,6 @@ class AccountRequestResponse(BaseModel):
     created_at: datetime
     
     admin: Optional[User] = None
-    partner: Optional[Any] = None # Or PartnerBase if defined
 
     class Config:
         from_attributes = True
