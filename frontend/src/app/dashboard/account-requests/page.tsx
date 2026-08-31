@@ -62,9 +62,9 @@ export default function AccountRequestsPage() {
     }
   };
 
-  const handleUpdateStatus = async (id: number, status: string, partner_id?: number) => {
+  const handleUpdateStatus = async (id: number, status: string, partner_id?: number, issued_account_name?: string) => {
     try {
-      await api.patch(`/account-requests/${id}/status`, { status, partner_id });
+      await api.patch(`/account-requests/${id}/status`, { status, partner_id, issued_account_name });
       fetchData();
     } catch (err) {
       alert('Ошибка при обновлении статуса');
@@ -139,6 +139,11 @@ export default function AccountRequestsPage() {
                       Партнер: {partners.find(p => p.id === req.partner_id)?.company_name || 'Неизвестно'}
                     </div>
                   )}
+                  {req.issued_account_name && (
+                    <div className="text-xs text-green-700 font-medium mt-1">
+                      Аккаунт: {req.issued_account_name}
+                    </div>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   {(user?.role === 'OWNER' || user?.role === 'CURATOR') && req.status === 'PENDING' && (
@@ -157,7 +162,10 @@ export default function AccountRequestsPage() {
                   )}
                   {(user?.role === 'OWNER' || user?.role === 'CURATOR') && req.status === 'ACCEPTED' && (
                     <button
-                      onClick={() => handleUpdateStatus(req.id, 'ISSUED')}
+                      onClick={() => {
+                        const accName = prompt('Введите имя выданного аккаунта:');
+                        if (accName) handleUpdateStatus(req.id, 'ISSUED', undefined, accName);
+                      }}
                       className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 flex items-center ml-auto"
                     >
                       <CheckCircle2 className="w-3 h-3 mr-1" />

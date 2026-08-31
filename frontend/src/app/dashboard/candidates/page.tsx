@@ -24,6 +24,18 @@ export default function CandidatesPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMyRequestsOpen, setIsMyRequestsOpen] = useState(false);
+  const [myRequests, setMyRequests] = useState<any[]>([]);
+  
+  const openMyRequests = async () => {
+    try {
+      const { data } = await api.get('/account-requests/');
+      setMyRequests(data);
+      setIsMyRequestsOpen(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
   
@@ -124,13 +136,21 @@ export default function CandidatesPage() {
         
         <div className="flex gap-3">
           {user?.role === 'ADMIN' && (
-            <button 
-              onClick={() => openRequestModal()}
-              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-            >
-              <Key className="h-4 w-4 mr-2" />
-              Создать заявку
-            </button>
+            <>
+              <button 
+                onClick={openMyRequests}
+                className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition"
+              >
+                Мои заявки
+              </button>
+              <button 
+                onClick={() => openRequestModal()}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+              >
+                <Key className="h-4 w-4 mr-2" />
+                Новая заявка
+              </button>
+            </>
           )}
           {(user?.role === 'ADMIN' || user?.role === 'OWNER') && (
             <button 
@@ -218,7 +238,7 @@ export default function CandidatesPage() {
                           onClick={() => openRequestModal(c)}
                           className="text-green-600 hover:text-green-900"
                         >
-                          + Заявка
+                          Зарегистрировать аккаунт
                         </button>
                       )}
                       <Link href={`/dashboard/candidates/${c.id}`} className="text-indigo-600 hover:text-indigo-900">
@@ -289,6 +309,50 @@ export default function CandidatesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* My Requests Modal */}
+      {isMyRequestsOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900">Мои заявки на аккаунты</h3>
+              <button onClick={() => setIsMyRequestsOpen(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              {myRequests.length === 0 ? (
+                <div className="text-center text-gray-500 py-8">У вас еще нет заявок</div>
+              ) : (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Дата</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Кандидат</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Тип</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Статус</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Выданный аккаунт</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {myRequests.map(req => (
+                      <tr key={req.id}>
+                        <td className="px-4 py-3 text-sm text-gray-500">{new Date(req.created_at).toLocaleDateString('ru-RU')}</td>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{req.candidate_name}</td>
+                        <td className="px-4 py-3 text-sm text-gray-500">{req.account_type}</td>
+                        <td className="px-4 py-3 text-sm">
+                          {req.status === 'PENDING' ? <span className="text-yellow-600">Ожидает</span> : 
+                           req.status === 'ACCEPTED' ? <span className="text-blue-600">В работе</span> : 
+                           <span className="text-green-600 font-bold">Выдано</span>}
+                        </td>
+                        <td className="px-4 py-3 text-sm font-medium text-green-700">{req.issued_account_name || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         </div>
       )}
