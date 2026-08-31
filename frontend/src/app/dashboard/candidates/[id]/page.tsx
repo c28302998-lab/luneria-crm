@@ -32,6 +32,12 @@ interface Candidate {
 }
 
 const STATUSES = ['NEW', 'IN_PROGRESS', 'APPROVED', 'REJECTED'];
+const STATUS_LABELS: Record<string, string> = {
+  NEW: 'Новый',
+  IN_PROGRESS: 'В работе',
+  APPROVED: 'Одобрен',
+  REJECTED: 'Отказ'
+};
 
 export default function CandidateDetailPage() {
   const { id } = useParams();
@@ -103,6 +109,17 @@ const fetchCandidate = async () => {
   };
 
 
+    const handleDeleteComment = async (commentId: number) => {
+    if (!confirm('Удалить заметку?')) return;
+    try {
+      await api.delete(`/comments/${commentId}`);
+      const { data } = await api.get(`/comments/candidate/${id}`);
+      setComments(data);
+    } catch (err) {
+      alert('Ошибка при удалении заметки');
+    }
+  };
+
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -143,12 +160,12 @@ const fetchCandidate = async () => {
         {canEdit ? (
           <div className="flex items-center space-x-3">
             <select 
-              value={candidate.status}
+              value={STATUS_LABELS[candidate.status] || candidate.status}
               onChange={(e) => handleStatusChange(e.target.value)}
               className="px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               {STATUSES.map(s => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>
               ))}
             </select>
             <button 
@@ -160,7 +177,7 @@ const fetchCandidate = async () => {
           </div>
         ) : (
           <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-            {candidate.status}
+            {STATUS_LABELS[candidate.status] || candidate.status}
           </span>
         )}
       </div>
@@ -265,7 +282,12 @@ const fetchCandidate = async () => {
               <div key={c.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                 <div className="flex justify-between items-start mb-1">
                   <span className="font-semibold text-sm text-gray-900">{c.user?.name || `Пользователь #${c.user_id}`}</span>
-                  <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString('ru-RU')}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString('ru-RU')}</span>
+                    {user?.role === 'OWNER' && (
+                      <button onClick={() => handleDeleteComment(c.id)} className="text-red-500 hover:text-red-700 text-xs">Удалить</button>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm text-gray-700 whitespace-pre-wrap">{c.text}</p>
               </div>
