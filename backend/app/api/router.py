@@ -22,5 +22,6 @@ api_router.include_router(comments.router, prefix="/comments", tags=["comments"]
 api_router.include_router(materials.router, prefix="/materials", tags=["materials"])
 api_router.include_router(sources.router, prefix="/sources", tags=["sources"])
 api_router.include_router(files.router, prefix="/files", tags=["files"])
-api_router.include_router(account_requests, accounts.router, prefix="/account-requests", tags=["account_requests, accounts"])
+api_router.include_router(account_requests.router, prefix="/account-requests", tags=["account_requests"])
 api_router.include_router(attendance.router, prefix="/attendance", tags=["attendance"])
+api_router.include_router(accounts.router, prefix="/accounts", tags=["accounts"])
