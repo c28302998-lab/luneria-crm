@@ -10,6 +10,7 @@ export default function AccountsPage() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [workers, setWorkers] = useState<any[]>([]);
   const [partners, setPartners] = useState<any[]>([]);
+  const [candidates, setCandidates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -21,14 +22,16 @@ export default function AccountsPage() {
 
   const fetchData = async () => {
     try {
-      const [accRes, wRes, pRes] = await Promise.all([
+      const [accRes, wRes, pRes, cRes] = await Promise.all([
         api.get('/accounts/'),
         api.get('/workers/'),
-        api.get('/partners/')
+        api.get('/partners/'),
+        api.get('/candidates/')
       ]);
       setAccounts(accRes.data);
       setWorkers(wRes.data);
       setPartners(pRes.data);
+      setCandidates(cRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -140,6 +143,8 @@ export default function AccountsPage() {
             {accounts.map((acc) => {
               const worker = workers.find(w => w.id === acc.worker_id);
               const partner = partners.find(p => p.id === acc.partner_id);
+              const workerCandidate = worker ? candidates.find(c => c.id === worker.candidate_id) : null;
+              const workerName = workerCandidate ? `${workerCandidate.first_name} ${workerCandidate.last_name}`.trim() : 'Worker';
               
               return (
                 <tr key={acc.id} className="hover:bg-gray-50/50 transition-colors">
@@ -148,7 +153,7 @@ export default function AccountsPage() {
                     <div className="text-gray-500">{acc.login}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {worker ? `${worker.first_name || 'Worker'} (Админ: ID ${worker.admin_id})` : 'Не закреплен'}
+                    {worker ? `${workerName} (Админ: ID ${worker.admin_id})` : 'Не закреплен'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {partner ? partner.company_name : 'Не выбран'}
@@ -226,9 +231,11 @@ export default function AccountsPage() {
                   onChange={(e) => setFormData({...formData, worker_id: e.target.value})}
                 >
                   <option value="">-- Не назначен --</option>
-                  {workers.map(w => (
-                    <option key={w.id} value={w.id}>{w.first_name || 'Worker'} (Админ: ID {w.admin_id})</option>
-                  ))}
+                  {workers.map(w => {
+                    const c = candidates.find(cand => cand.id === w.candidate_id);
+                    const name = c ? `${c.first_name} ${c.last_name}`.trim() : 'Worker';
+                    return <option key={w.id} value={w.id}>{name} (Админ: ID {w.admin_id})</option>
+                  })}
                 </select>
               </div>
 
