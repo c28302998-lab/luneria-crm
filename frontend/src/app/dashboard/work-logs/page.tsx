@@ -88,10 +88,10 @@ export default function WorkLogsPage() {
                     {shift.user?.role}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(shift.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    {new Date(shift.start_time.endsWith('Z') ? shift.start_time : shift.start_time + 'Z').toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {shift.end_time ? new Date(shift.end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}
+                    {shift.end_time ? new Date(shift.end_time.endsWith('Z') ? shift.end_time : shift.end_time + 'Z').toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {shift.end_time ? (
