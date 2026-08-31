@@ -89,6 +89,30 @@ def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: Use
 
 from sqlalchemy import text
 
+
+@router.get("/run-migrations")
+def run_migrations(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("ALTER TABLE accounts ADD COLUMN IF NOT EXISTS account_number VARCHAR;"))
+        db.commit()
+        db.execute(text('''
+            CREATE TABLE IF NOT EXISTS account_emails (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR NOT NULL,
+                account_id INTEGER REFERENCES accounts(id),
+                linked_account_name VARCHAR,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_deleted BOOLEAN DEFAULT FALSE
+            )
+        '''))
+        db.commit()
+        db.execute(text("ALTER TABLE account_emails ADD COLUMN IF NOT EXISTS linked_account_name VARCHAR;"))
+        db.commit()
+        return {"status": "ok"}
+    except Exception as e:
+        db.rollback()
+        return {"error": str(e)}
+
 @router.get("/debug-schema")
 def debug_schema(db: Session = Depends(get_db)):
     try:
