@@ -65,6 +65,13 @@ def seed():
                 )
             '''))
             print("account_emails table ensured")
+
+        try:
+            conn.execute(text("ALTER TABLE account_emails ADD COLUMN IF NOT EXISTS linked_account_name VARCHAR;"))
+            print("account_emails linked_account_name added")
+        except Exception as e:
+            print(f"Migration error: {e}")
+
         except Exception as e:
             print(f"Migration error for account_emails: {e}")
 

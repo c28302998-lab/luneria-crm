@@ -395,6 +395,7 @@ class AccountResponse(AccountBase):
 class AccountEmailBase(BaseModel):
     email: str
     account_id: Optional[int] = None
+    linked_account_name: Optional[str] = None
 
 class AccountEmailCreate(AccountEmailBase):
     pass

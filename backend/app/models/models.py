@@ -293,6 +293,7 @@ class AccountEmail(Base, SoftDeleteMixin):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)
+    linked_account_name = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     account = relationship("Account")
