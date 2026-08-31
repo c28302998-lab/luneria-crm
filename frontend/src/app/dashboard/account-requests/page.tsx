@@ -118,7 +118,7 @@ export default function AccountRequestsPage() {
           <Key className="w-6 h-6 text-indigo-600" />
           Заявки на аккаунты
         </h1>
-        {(user?.role === 'ADMIN' || user?.role === 'CURATOR') && (
+        {(user?.role === 'ADMIN' || user?.role === 'CURATOR' || user?.role === 'OWNER') && (
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
