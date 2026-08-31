@@ -24,6 +24,46 @@ export default function CandidatesPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
+  
+  const [reqFormData, setReqFormData] = useState({
+    candidate_name: '',
+    age: '',
+    account_type: '',
+    candidate_nickname: '',
+    candidate_tg: '',
+    questionnaire: ''
+  });
+
+  const openRequestModal = (c: any) => {
+    setSelectedCandidate(c);
+    setReqFormData({
+      candidate_name: c.first_name || '',
+      age: c.age?.toString() || '',
+      account_type: '',
+      candidate_nickname: '',
+      candidate_tg: c.telegram || '',
+      questionnaire: ''
+    });
+    setIsRequestModalOpen(true);
+  };
+
+  const handleCreateRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.post('/account-requests/', {
+        ...reqFormData,
+        candidate_id: selectedCandidate?.id || null,
+        admin_nickname: user?.name || 'Админ'
+      });
+      setIsRequestModalOpen(false);
+      alert('Заявка успешно создана! Вы можете отследить ее в разделе "Заявки на аккаунт".');
+    } catch (err) {
+      alert('Ошибка при создании заявки');
+    }
+  };
+
   const [formData, setFormData] = useState({
     first_name: '',
     telegram: '',
@@ -161,7 +201,15 @@ export default function CandidatesPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(c.created_at).toLocaleDateString('ru-RU')}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-4">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end space-x-4">
+                      {user?.role === 'ADMIN' && (
+                        <button
+                          onClick={() => openRequestModal(c)}
+                          className="text-green-600 hover:text-green-900"
+                        >
+                          + Заявка
+                        </button>
+                      )}
                       <Link href={`/dashboard/candidates/${c.id}`} className="text-indigo-600 hover:text-indigo-900">
                         Открыть
                       </Link>
@@ -230,6 +278,68 @@ export default function CandidatesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Account Request Modal */}
+      {isRequestModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900">Заявка на аккаунт для: {selectedCandidate?.first_name}</h3>
+              <button onClick={() => setIsRequestModalOpen(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <form id="reqForm" onSubmit={handleCreateRequest} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Имя кандидата/Ник *</label>
+                    <input required type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" 
+                      value={reqFormData.candidate_name} onChange={e => setReqFormData({...reqFormData, candidate_name: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Возраст *</label>
+                    <input required type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" 
+                      value={reqFormData.age} onChange={e => setReqFormData({...reqFormData, age: e.target.value})} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Акаунт ТГ+OМ *</label>
+                    <input required type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Например: TG+OM"
+                      value={reqFormData.account_type} onChange={e => setReqFormData({...reqFormData, account_type: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ник кандидата (если есть)</label>
+                    <input type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" 
+                      value={reqFormData.candidate_nickname} onChange={e => setReqFormData({...reqFormData, candidate_nickname: e.target.value})} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">ТГ основной кандидата *</label>
+                  <input required type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" 
+                    value={reqFormData.candidate_tg} onChange={e => setReqFormData({...reqFormData, candidate_tg: e.target.value})} />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Анкета кандидата *</label>
+                  <textarea required rows={4} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" 
+                    value={reqFormData.questionnaire} onChange={e => setReqFormData({...reqFormData, questionnaire: e.target.value})} />
+                </div>
+              </form>
+            </div>
+
+            <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end gap-3">
+              <button type="button" onClick={() => setIsRequestModalOpen(false)} className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Отмена
+              </button>
+              <button type="submit" form="reqForm" className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
+                Создать заявку
+              </button>
+            </div>
           </div>
         </div>
       )}
