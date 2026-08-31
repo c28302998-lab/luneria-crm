@@ -67,7 +67,7 @@ export default function AccountRequestsPage() {
       await api.patch(`/account-requests/${id}/status`, { status, partner_id, issued_account_name });
       fetchData();
     } catch (err) {
-      alert('Ошибка при обновлении статуса');
+      alert((err as any).response?.data?.detail || 'Ошибка при обновлении статуса');
     }
   };
 
@@ -149,7 +149,7 @@ export default function AccountRequestsPage() {
                   {(user?.role === 'OWNER' || user?.role === 'CURATOR') && req.status === 'PENDING' && (
                     <div className="flex items-center justify-end gap-2">
                       <select 
-                        className="border border-gray-300 rounded text-xs px-2 py-1"
+                        className="border border-gray-300 rounded text-xs px-2 py-1 w-[150px] truncate"
                         onChange={(e) => handleUpdateStatus(req.id, 'ACCEPTED', parseInt(e.target.value))}
                         defaultValue=""
                       >
