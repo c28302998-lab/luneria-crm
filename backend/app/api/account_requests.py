@@ -40,34 +40,44 @@ def get_requests(db: Session = Depends(get_db), current_user: User = Depends(get
 
 @router.patch("/{req_id}/status", response_model=AccountRequestResponse)
 def update_status(req_id: int, update: AccountRequestUpdate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
-    req = db.query(AccountRequest).filter(AccountRequest.id == req_id).first()
-    if not req:
-        raise HTTPException(status_code=404, detail="Request not found")
+    try:
+            req = db.query(AccountRequest).filter(AccountRequest.id == req_id).first()
+            if not req:
+                raise HTTPException(status_code=404, detail="Request not found")
+                
+            if update.status:
+                req.status = update.status
+                # Если статус меняется на ISSUED и есть кандидат, автоматически переводим его в работники
+                if update.status == "ISSUED" and req.candidate_id:
+                    existing_worker = db.query(Worker).filter(Worker.candidate_id == req.candidate_id).first()
+                    if not existing_worker:
+                        worker = Worker(
+                            candidate_id=req.candidate_id,
+                            admin_id=req.admin_id,
+                            partner_id=req.partner_id
+                        )
+                        db.add(worker)
+                        candidate = db.query(Candidate).filter(Candidate.id == req.candidate_id).first()
+                        if candidate:
+                            candidate.status = "WORKER"
         
-    if update.status:
-        req.status = update.status
-        # Если статус меняется на ISSUED и есть кандидат, автоматически переводим его в работники
-        if update.status == "ISSUED" and req.candidate_id:
-            existing_worker = db.query(Worker).filter(Worker.candidate_id == req.candidate_id).first()
-            if not existing_worker:
-                worker = Worker(
-                    candidate_id=req.candidate_id,
-                    admin_id=req.admin_id,
-                    partner_id=req.partner_id
-                )
-                db.add(worker)
-                candidate = db.query(Candidate).filter(Candidate.id == req.candidate_id).first()
-                if candidate:
-                    candidate.status = "WORKER"
-
-    if update.partner_id is not None:
-        req.partner_id = update.partner_id
-    if update.issued_account_name is not None:
-        req.issued_account_name = update.issued_account_name
-        
-    db.commit()
-    db.refresh(req)
-    return req
+            if update.partner_id is not None:
+                req.partner_id = update.partner_id
+            if update.issued_account_name is not None:
+                req.issued_account_name = update.issued_account_name
+                
+            db.commit()
+            db.refresh(req)
+            # Manual serialization to catch Pydantic errors
+            try:
+                resp = AccountRequestResponse.from_orm(req)
+                return resp
+            except Exception as e:
+                raise Exception(f"Serialization error: {str(e)}")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 @router.delete("/{req_id}")
 def delete_request(req_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
