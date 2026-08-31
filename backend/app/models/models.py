@@ -278,6 +278,7 @@ class Account(Base, SoftDeleteMixin):
     __tablename__ = "accounts"
     id = Column(Integer, primary_key=True, index=True)
     login = Column(String, index=True)
+    account_number = Column(String, nullable=True)
     worker_id = Column(Integer, ForeignKey("workers.id"), nullable=True)
     partner_id = Column(Integer, ForeignKey("partners.id"), nullable=True)
     issued_at = Column(DateTime, nullable=True)
@@ -286,3 +287,12 @@ class Account(Base, SoftDeleteMixin):
 
     worker = relationship("Worker")
     partner = relationship("Partner")
+
+class AccountEmail(Base, SoftDeleteMixin):
+    __tablename__ = "account_emails"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    account = relationship("Account")

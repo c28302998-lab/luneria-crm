@@ -4,8 +4,8 @@ from typing import List
 from datetime import datetime
 
 from app.db.database import get_db
-from app.models.models import Account, User, Worker
-from app.schemas.schemas import AccountCreate, AccountUpdate, AccountResponse
+from app.models.models import Account, User, Worker, AccountEmail
+from app.schemas.schemas import AccountCreate, AccountUpdate, AccountResponse, AccountEmailCreate, AccountEmailResponse
 from app.core.dependencies import get_current_user, RoleChecker
 from sqlalchemy import desc
 
@@ -15,6 +15,7 @@ router = APIRouter()
 def create_account(acc_in: AccountCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
     acc = Account(
         login=acc_in.login,
+        account_number=acc_in.account_number,
         worker_id=acc_in.worker_id,
         partner_id=acc_in.partner_id,
         status=acc_in.status,
@@ -59,6 +60,8 @@ def update_account(acc_id: int, update: AccountUpdate, db: Session = Depends(get
         # Owner / Curator can do anything
         if update.login is not None:
             acc.login = update.login
+        if update.account_number is not None:
+            acc.account_number = update.account_number
         if update.worker_id is not None:
             acc.worker_id = update.worker_id
         if update.partner_id is not None:
@@ -79,5 +82,27 @@ def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: Use
         raise HTTPException(status_code=404, detail="Account not found")
         
     acc.is_deleted = True
+    db.commit()
+    return {"message": "Deleted"}
+
+
+@router.get("/emails", response_model=List[AccountEmailResponse])
+def get_emails(db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
+    return db.query(AccountEmail).filter(AccountEmail.is_deleted == False).order_by(desc(AccountEmail.created_at)).all()
+
+@router.post("/emails", response_model=AccountEmailResponse)
+def create_email(email_in: AccountEmailCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
+    email = AccountEmail(email=email_in.email, account_id=email_in.account_id)
+    db.add(email)
+    db.commit()
+    db.refresh(email)
+    return email
+
+@router.delete("/emails/{email_id}")
+def delete_email(email_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
+    email = db.query(AccountEmail).filter(AccountEmail.id == email_id).first()
+    if not email:
+        raise HTTPException(status_code=404, detail="Email not found")
+    email.is_deleted = True
     db.commit()
     return {"message": "Deleted"}

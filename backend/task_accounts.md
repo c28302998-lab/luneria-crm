@@ -1,0 +1,15 @@
+- [ ] Backend: Models
+  - [ ] Add `account_number` to `Account`.
+  - [ ] Create `AccountEmail` model.
+- [ ] Backend: Schemas
+  - [ ] Update `Account` schemas with `account_number`.
+  - [ ] Create `AccountEmail` schemas.
+- [ ] Backend: API
+  - [ ] Update `accounts.py` logic.
+  - [ ] Add endpoints for `AccountEmail` (`/emails`).
+- [ ] Backend: Seed
+  - [ ] Add `ALTER TABLE accounts ADD COLUMN account_number`.
+  - [ ] Add `CREATE TABLE account_emails`.
+- [ ] Frontend: UI
+  - [ ] Add tabs in `accounts/page.tsx`.
+  - [ ] Update modals.

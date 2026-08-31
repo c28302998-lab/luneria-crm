@@ -367,6 +367,7 @@ class UserShiftWithUser(UserShift):
 
 class AccountBase(BaseModel):
     login: str
+    account_number: Optional[str] = None
     worker_id: Optional[int] = None
     partner_id: Optional[int] = None
     issued_at: Optional[datetime] = None
@@ -377,6 +378,7 @@ class AccountCreate(AccountBase):
 
 class AccountUpdate(BaseModel):
     login: Optional[str] = None
+    account_number: Optional[str] = None
     worker_id: Optional[int] = None
     partner_id: Optional[int] = None
     status: Optional[str] = None
@@ -387,5 +389,19 @@ class AccountResponse(AccountBase):
     
     
 
+    class Config:
+        from_attributes = True
+
+class AccountEmailBase(BaseModel):
+    email: str
+    account_id: Optional[int] = None
+
+class AccountEmailCreate(AccountEmailBase):
+    pass
+
+class AccountEmailResponse(AccountEmailBase):
+    id: int
+    created_at: datetime
+    
     class Config:
         from_attributes = True

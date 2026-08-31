@@ -48,6 +48,27 @@ def seed():
         except Exception as e:
             print(f"Migration error for accounts: {e}")
 
+        try:
+            conn.execute(text("ALTER TABLE accounts ADD COLUMN IF NOT EXISTS account_number VARCHAR;"))
+            print("accounts account_number added")
+        except Exception as e:
+            print(f"Migration error: {e}")
+
+        try:
+            conn.execute(text('''
+                CREATE TABLE IF NOT EXISTS account_emails (
+                    id SERIAL PRIMARY KEY,
+                    email VARCHAR NOT NULL,
+                    account_id INTEGER REFERENCES accounts(id),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_deleted BOOLEAN DEFAULT FALSE
+                )
+            '''))
+            print("account_emails table ensured")
+        except Exception as e:
+            print(f"Migration error for account_emails: {e}")
+
+
 
             
             # Add new columns for attendance and shift
