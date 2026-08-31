@@ -61,7 +61,6 @@ const getNavigation = (role: string) => {
     return [
       ...base,
       { name: 'Мои Кандидаты', href: '/dashboard/candidates', icon: Users },
-      { name: 'Заявки на аккаунт', href: '/dashboard/account-requests', icon: Key },
       { name: 'Мои Работники', href: '/dashboard/workers', icon: Briefcase },
       { name: 'Контроль', href: '/dashboard/attendance', icon: ClipboardCheck },
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },

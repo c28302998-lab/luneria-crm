@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Key } from 'lucide-react';
 import Link from 'next/link';
 
 interface Candidate {
@@ -36,14 +36,14 @@ export default function CandidatesPage() {
     questionnaire: ''
   });
 
-  const openRequestModal = (c: any) => {
-    setSelectedCandidate(c);
+  const openRequestModal = (c?: any) => {
+    setSelectedCandidate(c || null);
     setReqFormData({
-      candidate_name: c.first_name || '',
-      age: c.age?.toString() || '',
+      candidate_name: c?.first_name || '',
+      age: c?.age?.toString() || '',
       account_type: '',
       candidate_nickname: '',
-      candidate_tg: c.telegram || '',
+      candidate_tg: c?.telegram || '',
       questionnaire: ''
     });
     setIsRequestModalOpen(true);
@@ -122,15 +122,26 @@ export default function CandidatesPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-gray-900">Кандидаты</h2>
         
-        {(user?.role === 'ADMIN' || user?.role === 'OWNER') && (
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Добавить
-          </button>
-        )}
+        <div className="flex gap-3">
+          {user?.role === 'ADMIN' && (
+            <button 
+              onClick={() => openRequestModal()}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+            >
+              <Key className="h-4 w-4 mr-2" />
+              Создать заявку
+            </button>
+          )}
+          {(user?.role === 'ADMIN' || user?.role === 'OWNER') && (
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Добавить
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -286,7 +297,7 @@ export default function CandidatesPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Заявка на аккаунт для: {selectedCandidate?.first_name}</h3>
+              <h3 className="text-lg font-medium text-gray-900">Заявка на аккаунт {selectedCandidate ? `для: ${selectedCandidate.first_name}` : ''}</h3>
               <button onClick={() => setIsRequestModalOpen(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
             </div>
             
