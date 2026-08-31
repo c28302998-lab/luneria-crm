@@ -122,6 +122,12 @@ def debug_emails(db: Session = Depends(get_db)):
     except Exception as e:
         return {"error": str(e)}
 
+
+@router.get("/debug-file")
+def debug_file():
+    with open("app/schemas/schemas.py", "r") as f:
+        return {"content": f.read()}
+
 @router.get("/debug-schema")
 def debug_schema(db: Session = Depends(get_db)):
     try:
