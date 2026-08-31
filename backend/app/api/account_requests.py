@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
-from app.models.models import User, AccountRequest, Candidate
+from app.models.models import User, AccountRequest, Candidate, Worker
 from app.schemas.schemas import AccountRequestCreate, AccountRequestUpdate, AccountRequestResponse
 from app.core.dependencies import get_current_user, RoleChecker
 from sqlalchemy import desc
