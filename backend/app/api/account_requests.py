@@ -80,7 +80,7 @@ def update_status(req_id: int, update: AccountRequestUpdate, db: Session = Depen
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 @router.delete("/{req_id}")
-def delete_request(req_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
+def delete_request(req_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
     req = db.query(AccountRequest).filter(AccountRequest.id == req_id).first()
     if not req:
         raise HTTPException(status_code=404, detail="Request not found")

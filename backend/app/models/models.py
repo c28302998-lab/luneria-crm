@@ -273,3 +273,16 @@ class UserShift(Base):
     end_time = Column(DateTime, nullable=True)
     
     user = relationship("User")
+
+class Account(Base, SoftDeleteMixin):
+    __tablename__ = "accounts"
+    id = Column(Integer, primary_key=True, index=True)
+    login = Column(String, index=True)
+    worker_id = Column(Integer, ForeignKey("workers.id"), nullable=True)
+    partner_id = Column(Integer, ForeignKey("partners.id"), nullable=True)
+    issued_at = Column(DateTime, nullable=True)
+    status = Column(String, default="FREE") # FREE, ISSUED, IN_PROGRESS, ISSUE, NEEDS_REPLACEMENT, RETURNED
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    worker = relationship("Worker")
+    partner = relationship("Partner")

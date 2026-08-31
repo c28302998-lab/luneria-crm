@@ -364,3 +364,28 @@ class UserShift(BaseModel):
         
 class UserShiftWithUser(UserShift):
     user: User
+
+class AccountBase(BaseModel):
+    login: str
+    worker_id: Optional[int] = None
+    partner_id: Optional[int] = None
+    issued_at: Optional[datetime] = None
+    status: str = "FREE"
+
+class AccountCreate(AccountBase):
+    pass
+
+class AccountUpdate(BaseModel):
+    login: Optional[str] = None
+    worker_id: Optional[int] = None
+    partner_id: Optional[int] = None
+    status: Optional[str] = None
+
+class AccountResponse(AccountBase):
+    id: int
+    created_at: datetime
+    
+    
+
+    class Config:
+        from_attributes = True

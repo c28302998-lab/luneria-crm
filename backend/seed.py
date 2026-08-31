@@ -31,6 +31,24 @@ def seed():
             conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS partner_id INTEGER;"))
             conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS issued_account_name VARCHAR;"))
 
+        try:
+            conn.execute(text('''
+                CREATE TABLE IF NOT EXISTS accounts (
+                    id SERIAL PRIMARY KEY,
+                    login VARCHAR NOT NULL,
+                    worker_id INTEGER REFERENCES workers(id),
+                    partner_id INTEGER REFERENCES partners(id),
+                    issued_at TIMESTAMP,
+                    status VARCHAR DEFAULT 'FREE',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_deleted BOOLEAN DEFAULT FALSE
+                )
+            '''))
+            print("accounts table ensured")
+        except Exception as e:
+            print(f"Migration error for accounts: {e}")
+
+
             
             # Add new columns for attendance and shift
             conn.execute(text("ALTER TABLE workers ADD COLUMN IF NOT EXISTS shift VARCHAR;"))
