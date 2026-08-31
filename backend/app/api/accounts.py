@@ -90,68 +90,10 @@ def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: Use
 from sqlalchemy import text
 
 
-@router.get("/run-migrations")
-def run_migrations(db: Session = Depends(get_db)):
-    try:
-        db.execute(text("ALTER TABLE accounts ADD COLUMN IF NOT EXISTS account_number VARCHAR;"))
-        db.commit()
-        db.execute(text('''
-            CREATE TABLE IF NOT EXISTS account_emails (
-                id SERIAL PRIMARY KEY,
-                email VARCHAR NOT NULL,
-                account_id INTEGER REFERENCES accounts(id),
-                linked_account_name VARCHAR,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                is_deleted BOOLEAN DEFAULT FALSE
-            )
-        '''))
-        db.commit()
-        db.execute(text("ALTER TABLE account_emails ADD COLUMN IF NOT EXISTS linked_account_name VARCHAR;"))
-        db.commit()
-        return {"status": "ok"}
-    except Exception as e:
-        db.rollback()
-        return {"error": str(e)}
-
-
-@router.get("/debug-emails")
-def debug_emails(db: Session = Depends(get_db)):
-    try:
-        res = db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name = 'account_emails'")).fetchall()
-        return {"columns": [row[0] for row in res]}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@router.get("/debug-file")
-def debug_file():
-    with open("app/schemas/schemas.py", "r") as f:
-        return {"content": f.read()}
-
-@router.get("/debug-schema")
-def debug_schema(db: Session = Depends(get_db)):
-    try:
-        res = db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name = 'accounts'")).fetchall()
-        return {"columns": [row[0] for row in res]}
-    except Exception as e:
-        return {"error": str(e)}
-
 @router.get("/emails", response_model=List[AccountEmailResponse])
 def get_emails(db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
     return db.query(AccountEmail).filter(AccountEmail.is_deleted == False).order_by(desc(AccountEmail.created_at)).all()
 
-
-@router.post("/debug-emails")
-def debug_create_email(email_in: AccountEmailCreate, db: Session = Depends(get_db)):
-    try:
-        email = AccountEmail(email=email_in.email, account_id=email_in.account_id, linked_account_name=email_in.linked_account_name)
-        db.add(email)
-        db.commit()
-        db.refresh(email)
-        return email
-    except Exception as e:
-        db.rollback()
-        return {"error": str(e)}
 
 @router.post("/emails", response_model=AccountEmailResponse)
 def create_email(email_in: AccountEmailCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
