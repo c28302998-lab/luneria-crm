@@ -72,7 +72,7 @@ export default function CandidatesPage() {
       setIsRequestModalOpen(false);
       alert('Заявка успешно создана! Вы можете отследить ее в разделе "Заявки на аккаунт".');
     } catch (err) {
-      alert('Ошибка при создании заявки');
+      alert((err as any).response?.data?.detail || 'Ошибка при создании заявки');
     }
   };
 
