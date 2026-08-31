@@ -81,9 +81,9 @@ export default function AccountsPage() {
       setShowModal(false);
       setFormData({ login: '', account_number: '', worker_id: '', partner_id: '', status: 'FREE' });
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Ошибка при создании');
+      alert('Ошибка при создании: ' + (err.response?.data?.detail || err.message));
     }
   };
 
