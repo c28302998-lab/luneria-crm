@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { useAuth } from '@/components/AuthProvider';
+import { useAuth } from '@/store/auth';
 import { Key } from 'lucide-react';
 
 type TabType = 'ALL' | 'FREE' | 'EMAILS';
