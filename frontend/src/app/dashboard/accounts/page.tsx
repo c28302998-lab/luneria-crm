@@ -31,7 +31,7 @@ export default function AccountsPage() {
 
   const [emailForm, setEmailForm] = useState({
     email: '',
-    account_id: ''
+    linked_account_name: ''
   });
 
   const fetchData = async () => {
@@ -110,10 +110,10 @@ export default function AccountsPage() {
     e.preventDefault();
     try {
       const payload: any = { email: emailForm.email };
-      if (emailForm.account_id) payload.account_id = parseInt(emailForm.account_id);
+      if (emailForm.linked_account_name) payload.linked_account_name = emailForm.linked_account_name;
       await api.post('/accounts/emails', payload);
       setShowEmailModal(false);
-      setEmailForm({ email: '', account_id: '' });
+      setEmailForm({ email: '', linked_account_name: '' });
       fetchData();
     } catch (err) {
       console.error(err);
@@ -298,7 +298,7 @@ export default function AccountsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{email.id}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{email.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {linkedAcc ? `[${linkedAcc.id}] ${linkedAcc.login}` : 'Не привязана'}
+                      {email.linked_account_name || 'Не привязана'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button onClick={() => handleDeleteEmail(email.id)} className="text-red-600 hover:text-red-900">
@@ -429,17 +429,14 @@ export default function AccountsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Привязать к аккаунту (Опционально)</label>
-                <select
+                <label className="block text-sm font-medium text-gray-700 mb-1">Привязана за аккаунтом (Напишите имя аккаунта)</label>
+                <input
+                  type="text"
+                  placeholder="Например: user123"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                  value={emailForm.account_id}
-                  onChange={(e) => setEmailForm({...emailForm, account_id: e.target.value})}
-                >
-                  <option value="">-- Не привязывать --</option>
-                  {accounts.map(a => (
-                    <option key={a.id} value={a.id}>[{a.id}] {a.login}</option>
-                  ))}
-                </select>
+                  value={emailForm.linked_account_name}
+                  onChange={(e) => setEmailForm({...emailForm, linked_account_name: e.target.value})}
+                />
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
