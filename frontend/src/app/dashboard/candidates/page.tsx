@@ -342,9 +342,12 @@ export default function CandidatesPage() {
                         <td className="px-4 py-3 text-sm font-medium text-gray-900">{req.candidate_name}</td>
                         <td className="px-4 py-3 text-sm text-gray-500">{req.account_type}</td>
                         <td className="px-4 py-3 text-sm">
-                          {req.status === 'PENDING' ? <span className="text-yellow-600">Ожидает</span> : 
-                           req.status === 'ACCEPTED' ? <span className="text-blue-600">В работе</span> : 
-                           <span className="text-green-600 font-bold">Выдано</span>}
+                          {['NEW', 'PENDING'].includes(req.status) ? <span className="text-yellow-600">Новая</span> : 
+                           ['IN_PROGRESS', 'ACCEPTED'].includes(req.status) ? <span className="text-blue-600">В работе</span> : 
+                           req.status === 'READY' ? <span className="text-emerald-600">Готов к выдаче</span> :
+                           req.status === 'ISSUED' ? <span className="text-green-600 font-bold">Выдан</span> :
+                           req.status === 'ISSUE' ? <span className="text-red-600">Проблема</span> :
+                           <span className="text-gray-600">Отменена</span>}
                         </td>
                         <td className="px-4 py-3 text-sm font-medium text-green-700">{req.issued_account_name || '-'}</td>
                       </tr>

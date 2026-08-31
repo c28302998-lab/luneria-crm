@@ -82,12 +82,31 @@ export default function AccountRequestsPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PENDING': return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Ожидает</span>;
-      case 'ACCEPTED': return <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">В работе</span>;
-      case 'ISSUED': return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Выдано</span>;
-      default: return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">{status}</span>;
-    }
+    const colors: Record<string, string> = {
+      NEW: 'bg-yellow-100 text-yellow-800',
+      PENDING: 'bg-yellow-100 text-yellow-800', // legacy
+      IN_PROGRESS: 'bg-blue-100 text-blue-800',
+      ACCEPTED: 'bg-blue-100 text-blue-800', // legacy
+      READY: 'bg-emerald-100 text-emerald-800',
+      ISSUED: 'bg-green-100 text-green-800',
+      ISSUE: 'bg-red-100 text-red-800',
+      CANCELLED: 'bg-gray-100 text-gray-800'
+    };
+    const labels: Record<string, string> = {
+      NEW: 'Новая',
+      PENDING: 'Ожидает',
+      IN_PROGRESS: 'В работе у куратора',
+      ACCEPTED: 'В работе у куратора',
+      READY: 'Аккаунт готов к выдаче',
+      ISSUED: 'Выдан',
+      ISSUE: 'Проблема',
+      CANCELLED: 'Отменена'
+    };
+    return (
+      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${colors[status] || colors.CANCELLED}`}>
+        {labels[status] || status}
+      </span>
+    );
   };
 
   if (loading) return <div className="p-8 text-center text-gray-500">Загрузка...</div>;

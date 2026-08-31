@@ -28,6 +28,11 @@ interface AdminUser {
 }
 
 const STATUSES = ['ACTIVE', 'ON_LEAVE', 'TERMINATED'];
+const STATUS_LABELS: Record<string, string> = {
+  ACTIVE: 'Активен',
+  ON_LEAVE: 'В отпуске',
+  TERMINATED: 'Уволен'
+};
 
 export default function WorkerDetailPage() {
   const { id } = useParams();
@@ -97,6 +102,17 @@ export default function WorkerDetailPage() {
     }
   };
 
+    const handleDeleteComment = async (commentId: number) => {
+    if (!confirm('Удалить заметку?')) return;
+    try {
+      await api.delete(`/comments/${commentId}`);
+      const { data } = await api.get(`/comments/worker/${id}`);
+      setComments(data);
+    } catch (err) {
+      alert('Ошибка при удалении заметки');
+    }
+  };
+
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -131,17 +147,17 @@ export default function WorkerDetailPage() {
         
         {canEdit ? (
           <select 
-            value={worker.status}
+            value={STATUS_LABELS[worker.status] || worker.status}
             onChange={(e) => handleStatusChange(e.target.value)}
             className="px-3 py-1 bg-green-50 text-green-800 border border-green-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
           >
             {STATUSES.map(s => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>
             ))}
           </select>
         ) : (
           <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-            {worker.status}
+            {STATUS_LABELS[worker.status] || worker.status}
           </span>
         )}
       </div>
@@ -218,7 +234,12 @@ export default function WorkerDetailPage() {
               <div key={c.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                 <div className="flex justify-between items-start mb-1">
                   <span className="font-semibold text-sm text-gray-900">{c.user?.name || `Пользователь #${c.user_id}`}</span>
-                  <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString('ru-RU')}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString('ru-RU')}</span>
+                    {user?.role === 'OWNER' && (
+                      <button onClick={() => handleDeleteComment(c.id)} className="text-red-500 hover:text-red-700 text-xs">Удалить</button>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm text-gray-700 whitespace-pre-wrap">{c.text}</p>
               </div>
