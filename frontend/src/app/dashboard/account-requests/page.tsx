@@ -71,6 +71,16 @@ export default function AccountRequestsPage() {
     }
   };
 
+    const handleDelete = async (id: number) => {
+    if (!confirm('Удалить заявку?')) return;
+    try {
+      await api.delete(`/account-requests/${id}`);
+      fetchData();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Ошибка при удалении');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING': return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Ожидает</span>;
@@ -146,31 +156,41 @@ export default function AccountRequestsPage() {
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  {(user?.role === 'OWNER' || user?.role === 'CURATOR') && req.status === 'PENDING' && (
-                    <div className="flex items-center justify-end gap-2">
-                      <select 
-                        className="border border-gray-300 rounded text-xs px-2 py-1 w-[200px] truncate"
-                        onChange={(e) => handleUpdateStatus(req.id, 'ACCEPTED', parseInt(e.target.value))}
-                        defaultValue=""
-                      >
-                        <option value="" disabled>Назначить партнера...</option>
-                        {partners.map(p => (
-                          <option key={p.id} value={p.id}>{p.company_name}</option>
-                        ))}
-                      </select>
+                  {(user?.role === 'OWNER' || user?.role === 'CURATOR') && (
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-2">
+                        <select
+                          className="border border-gray-300 rounded text-xs px-2 py-1 w-[150px]"
+                          value={['PENDING', 'ACCEPTED'].includes(req.status) ? (req.status === 'PENDING' ? 'NEW' : 'IN_PROGRESS') : req.status}
+                          onChange={(e) => handleUpdateStatus(req.id, e.target.value)}
+                        >
+                          <option value="NEW">Новая</option>
+                          <option value="IN_PROGRESS">В работе у куратора</option>
+                          <option value="READY">Готов к выдаче</option>
+                          <option value="ISSUED">Выдан</option>
+                          <option value="ISSUE">Проблема</option>
+                          <option value="CANCELLED">Отменена</option>
+                        </select>
+                        {user?.role === 'OWNER' && (
+                          <button onClick={() => handleDelete(req.id)} className="text-red-500 hover:text-red-700 text-xs">
+                            Удалить
+                          </button>
+                        )}
+                      </div>
+                      
+                      {!req.partner_id && (
+                        <select 
+                          className="border border-gray-300 rounded text-xs px-2 py-1 w-[150px] truncate"
+                          onChange={(e) => handleUpdateStatus(req.id, req.status, parseInt(e.target.value))}
+                          defaultValue=""
+                        >
+                          <option value="" disabled>Назначить партнера...</option>
+                          {partners.map(p => (
+                            <option key={p.id} value={p.id}>{p.company_name}</option>
+                          ))}
+                        </select>
+                      )}
                     </div>
-                  )}
-                  {(user?.role === 'OWNER' || user?.role === 'CURATOR') && req.status === 'ACCEPTED' && (
-                    <button
-                      onClick={() => {
-                        const accName = prompt('Введите имя выданного аккаунта:');
-                        if (accName) handleUpdateStatus(req.id, 'ISSUED', undefined, accName);
-                      }}
-                      className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 flex items-center ml-auto"
-                    >
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                      Выдано
-                    </button>
                   )}
                 </td>
               </tr>
