@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Users, Briefcase, 
   Settings, LogOut, DollarSign, CheckSquare, 
   FileBarChart, MessageSquare, Shield, Activity, Bell
-, GraduationCap, Globe} from 'lucide-react';
+, GraduationCap, Globe, Key} from 'lucide-react';
 import { ClipboardCheck, Clock } from 'lucide-react';
 import ShiftButton from '@/components/ShiftButton';
 
@@ -25,6 +25,7 @@ const getNavigation = (role: string) => {
       { name: 'Кураторы', href: '/dashboard/curators', icon: Shield },
       { name: 'Администраторы', href: '/dashboard/admins', icon: Users },
       { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
+      { name: 'Заявки на аккаунт', href: '/dashboard/account-requests', icon: Key },
       { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
       { name: 'Рабочее время', href: '/dashboard/work-logs', icon: Clock },
       { name: 'Контроль', href: '/dashboard/attendance', icon: ClipboardCheck },
@@ -45,6 +46,7 @@ const getNavigation = (role: string) => {
       ...base,
       { name: 'Администраторы', href: '/dashboard/admins', icon: Users },
       { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
+      { name: 'Заявки на аккаунт', href: '/dashboard/account-requests', icon: Key },
       { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
       { name: 'Контроль', href: '/dashboard/attendance', icon: ClipboardCheck },
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
@@ -59,6 +61,7 @@ const getNavigation = (role: string) => {
     return [
       ...base,
       { name: 'Мои Кандидаты', href: '/dashboard/candidates', icon: Users },
+      { name: 'Заявки на аккаунт', href: '/dashboard/account-requests', icon: Key },
       { name: 'Мои Работники', href: '/dashboard/workers', icon: Briefcase },
       { name: 'Контроль', href: '/dashboard/attendance', icon: ClipboardCheck },
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },

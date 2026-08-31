@@ -233,14 +233,24 @@ class FileUpload(Base):
 class AccountRequest(Base, SoftDeleteMixin):
     __tablename__ = "account_requests"
     id = Column(Integer, primary_key=True, index=True)
-    candidate_id = Column(Integer, ForeignKey("candidates.id"))
+    candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=True)
     admin_id = Column(Integer, ForeignKey("users.id"))
-    admin_telegram = Column(String)
-    comment = Column(String)
+    
+    candidate_name = Column(String)
+    age = Column(String)
+    account_type = Column(String)
+    admin_nickname = Column(String)
+    candidate_nickname = Column(String, nullable=True)
+    candidate_tg = Column(String)
+    questionnaire = Column(String)
+    
+    partner_id = Column(Integer, ForeignKey("partners.id"), nullable=True)
     status = Column(String, default="PENDING")
     created_at = Column(DateTime, default=datetime.utcnow)
 
     candidate = relationship("Candidate")
+    admin = relationship("User")
+    partner = relationship("Partner")
     admin = relationship("User")
 
 from sqlalchemy import Date

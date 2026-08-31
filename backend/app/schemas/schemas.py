@@ -293,25 +293,36 @@ class Source(SourceBase):
         from_attributes = True
 
 class AccountRequestCreate(BaseModel):
-    candidate_id: int
-    admin_telegram: str
-    comment: str
+    candidate_name: str
+    age: str
+    account_type: str
+    admin_nickname: str
+    candidate_nickname: Optional[str] = None
+    candidate_tg: str
+    questionnaire: str
+    candidate_id: Optional[int] = None
 
 class AccountRequestUpdate(BaseModel):
-    status: str
+    status: Optional[str] = None
+    partner_id: Optional[int] = None
 
 class AccountRequestResponse(BaseModel):
     id: int
-    candidate_id: int
     admin_id: int
-    admin_telegram: str
-    comment: str
+    candidate_name: str
+    age: str
+    account_type: str
+    admin_nickname: str
+    candidate_nickname: Optional[str] = None
+    candidate_tg: str
+    questionnaire: str
+    partner_id: Optional[int] = None
+    candidate_id: Optional[int] = None
     status: str
     created_at: datetime
     
-    # We can include partial candidate and admin data
-    candidate: Optional[CandidateBase] = None
     admin: Optional[User] = None
+    partner: Optional[Any] = None # Or PartnerBase if defined
 
     class Config:
         from_attributes = True
