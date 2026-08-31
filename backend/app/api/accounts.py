@@ -134,6 +134,19 @@ def debug_schema(db: Session = Depends(get_db)):
 def get_emails(db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
     return db.query(AccountEmail).filter(AccountEmail.is_deleted == False).order_by(desc(AccountEmail.created_at)).all()
 
+
+@router.post("/debug-emails")
+def debug_create_email(email_in: AccountEmailCreate, db: Session = Depends(get_db)):
+    try:
+        email = AccountEmail(email=email_in.email, account_id=email_in.account_id, linked_account_name=email_in.linked_account_name)
+        db.add(email)
+        db.commit()
+        db.refresh(email)
+        return email
+    except Exception as e:
+        db.rollback()
+        return {"error": str(e)}
+
 @router.post("/emails", response_model=AccountEmailResponse)
 def create_email(email_in: AccountEmailCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
     email = AccountEmail(email=email_in.email, account_id=email_in.account_id, linked_account_name=email_in.linked_account_name)
