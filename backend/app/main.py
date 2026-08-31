@@ -38,7 +38,7 @@ def run_seed_endpoint():
         import os
         sys.path.append(os.path.dirname(os.path.dirname(__file__)))
         import seed
-        seed.init_db()
+        seed.seed()
         return {"status": "Database seeded successfully!"}
     except Exception as e:
         import traceback
