@@ -19,10 +19,12 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), c
     return users
 
 @router.post("/", response_model=UserSchema)
-def create_user(user_in: UserCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
+def create_user(user_in: UserCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
     """
     Только OWNER может создавать пользователей (включая Curator, Admin, Finance).
     """
+    if current_user.role == "CURATOR" and user_in.role not in ["ADMIN", "WORKER"]:
+        raise HTTPException(status_code=403, detail="Curators can only create ADMIN or WORKER")
     user_db = db.query(User).filter(User.is_deleted == False).filter(User.email == user_in.email).first()
     if user_db:
         raise HTTPException(status_code=400, detail="Email already registered")

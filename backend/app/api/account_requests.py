@@ -46,8 +46,24 @@ def update_status(req_id: int, update: AccountRequestUpdate, db: Session = Depen
         
     if update.status:
         req.status = update.status
+        # Если статус меняется на ISSUED и есть кандидат, автоматически переводим его в работники
+        if update.status == "ISSUED" and req.candidate_id:
+            existing_worker = db.query(Worker).filter(Worker.candidate_id == req.candidate_id).first()
+            if not existing_worker:
+                worker = Worker(
+                    candidate_id=req.candidate_id,
+                    admin_id=req.admin_id,
+                    partner_id=req.partner_id
+                )
+                db.add(worker)
+                candidate = db.query(Candidate).filter(Candidate.id == req.candidate_id).first()
+                if candidate:
+                    candidate.status = "WORKER"
+
     if update.partner_id is not None:
         req.partner_id = update.partner_id
+    if update.issued_account_name is not None:
+        req.issued_account_name = update.issued_account_name
         
     db.commit()
     db.refresh(req)
