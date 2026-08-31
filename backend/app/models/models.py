@@ -246,6 +246,7 @@ class AccountRequest(Base, SoftDeleteMixin):
     
     partner_id = Column(Integer, ForeignKey("partners.id"), nullable=True)
     status = Column(String, default="PENDING")
+    issued_account_name = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     candidate = relationship("Candidate")

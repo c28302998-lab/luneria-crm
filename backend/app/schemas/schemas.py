@@ -95,12 +95,14 @@ class WorkerBase(BaseModel):
 class WorkerCreate(WorkerBase):
     candidate_id: int
     partner_id: Optional[int] = None
+    issued_account_name: Optional[str] = None
     shift: Optional[str] = None
     account_info: Optional[str] = None
 
 class WorkerUpdate(BaseModel):
     status: Optional[str] = None
     partner_id: Optional[int] = None
+    issued_account_name: Optional[str] = None
     shift: Optional[str] = None
     account_info: Optional[str] = None
 
@@ -109,6 +111,7 @@ class Worker(WorkerBase):
     candidate_id: int
     admin_id: int
     partner_id: Optional[int] = None
+    issued_account_name: Optional[str] = None
     shift: Optional[str] = None
     account_info: Optional[str] = None
     created_at: datetime
@@ -305,6 +308,7 @@ class AccountRequestCreate(BaseModel):
 class AccountRequestUpdate(BaseModel):
     status: Optional[str] = None
     partner_id: Optional[int] = None
+    issued_account_name: Optional[str] = None
 
 class AccountRequestResponse(BaseModel):
     id: int
@@ -317,6 +321,7 @@ class AccountRequestResponse(BaseModel):
     candidate_tg: str
     questionnaire: str
     partner_id: Optional[int] = None
+    issued_account_name: Optional[str] = None
     candidate_id: Optional[int] = None
     status: str
     created_at: datetime

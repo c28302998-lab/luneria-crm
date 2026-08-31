@@ -23,8 +23,8 @@ def create_user(user_in: UserCreate, db: Session = Depends(get_db), current_user
     """
     Только OWNER может создавать пользователей (включая Curator, Admin, Finance).
     """
-    if current_user.role == "CURATOR" and user_in.role not in ["ADMIN", "WORKER"]:
-        raise HTTPException(status_code=403, detail="Curators can only create ADMIN or WORKER")
+    if current_user.role == "CURATOR" and user_in.role != "WORKER":
+        raise HTTPException(status_code=403, detail="Кураторы могут создавать только Работников")
     user_db = db.query(User).filter(User.is_deleted == False).filter(User.email == user_in.email).first()
     if user_db:
         raise HTTPException(status_code=400, detail="Email already registered")

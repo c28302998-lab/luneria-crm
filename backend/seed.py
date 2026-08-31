@@ -29,6 +29,7 @@ def seed():
             conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS candidate_tg VARCHAR;"))
             conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS questionnaire VARCHAR;"))
             conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS partner_id INTEGER;"))
+            conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS issued_account_name VARCHAR;"))
 
             
             # Add new columns for attendance and shift
