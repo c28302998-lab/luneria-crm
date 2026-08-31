@@ -18,6 +18,7 @@ export default function AccountsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<any>(null);
   
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
 
@@ -63,6 +64,26 @@ export default function AccountsPage() {
   useEffect(() => {
     fetchData();
   }, [user]);
+
+  
+  const handleEditAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload: any = {
+        login: editingAccount.login,
+        status: editingAccount.status,
+      };
+      if (editingAccount.account_number) payload.account_number = editingAccount.account_number;
+      if (editingAccount.worker_id) payload.worker_id = parseInt(editingAccount.worker_id);
+      if (editingAccount.partner_id) payload.partner_id = parseInt(editingAccount.partner_id);
+      
+      await api.patch(`/accounts/${editingAccount.id}`, payload);
+      setEditingAccount(null);
+      fetchData();
+    } catch (err: any) {
+      alert('Ошибка при сохранении: ' + (err.response?.data?.detail || err.message));
+    }
+  };
 
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -260,9 +281,14 @@ export default function AccountsPage() {
                               <option value="RECEIVED">Получен (Админ)</option>
                             </select>
                             {(user?.role === 'OWNER' || user?.role === 'CURATOR') && (
-                              <button onClick={() => handleDelete(acc.id)} className="text-red-600 hover:text-red-900 ml-2">
-                                Удалить
-                              </button>
+                              <>
+                                <button onClick={() => setEditingAccount(acc)} className="text-blue-600 hover:text-blue-900 ml-3">
+                                  Редактировать
+                                </button>
+                                <button onClick={() => handleDelete(acc.id)} className="text-red-600 hover:text-red-900 ml-3">
+                                  Удалить
+                                </button>
+                              </>
                             )}
                           </div>
                         )}
@@ -450,6 +476,83 @@ export default function AccountsPage() {
                 <button
                   type="submit"
                   className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                >
+                  Сохранить
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Account Modal */}
+      {editingAccount && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Редактировать аккаунт</h3>
+            <form onSubmit={handleEditAccount} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Имя аккаунта (Логин / Ник) *</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={editingAccount.login || ''}
+                  onChange={(e) => setEditingAccount({...editingAccount, login: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Номер аккаунта (Опционально)</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={editingAccount.account_number || ''}
+                  onChange={(e) => setEditingAccount({...editingAccount, account_number: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Работник (Опционально)</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={editingAccount.worker_id || ''}
+                  onChange={(e) => setEditingAccount({...editingAccount, worker_id: e.target.value})}
+                >
+                  <option value="">-- Не выбран --</option>
+                  {workers.map(w => {
+                    const c = candidates.find(c => c.id === w.candidate_id);
+                    return (
+                      <option key={w.id} value={w.id}>[{w.id}] {c?.name || 'Worker'}</option>
+                    );
+                  })}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Партнер (Опционально)</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={editingAccount.partner_id || ''}
+                  onChange={(e) => setEditingAccount({...editingAccount, partner_id: e.target.value})}
+                >
+                  <option value="">-- Не выбран --</option>
+                  {partners.map(p => (
+                    <option key={p.id} value={p.id}>[{p.id}] {p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingAccount(null)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
                 >
                   Сохранить
                 </button>
