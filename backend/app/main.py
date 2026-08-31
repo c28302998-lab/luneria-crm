@@ -30,3 +30,9 @@ app.include_router(api_router, prefix="/api/v1")
 @app.get("/health")
 def health_check():
     return {"status": "ok", "service": "Luneria CRM API"}
+
+@app.get("/api/v1/run-seed")
+def run_seed_endpoint():
+    import seed
+    seed.init_db()
+    return {"status": "Database seeded successfully!"}
