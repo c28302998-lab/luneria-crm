@@ -93,7 +93,7 @@ export default function AdminsPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-gray-900">Администраторы и Финансисты</h2>
         
-        {(user?.role === 'OWNER' || user?.role === 'CURATOR') && (
+        {user?.role === 'OWNER' && (
           <button 
             onClick={() => setIsModalOpen(true)}
             className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
@@ -120,7 +120,7 @@ export default function AdminsPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Куратор</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
-                  {(user?.role === 'OWNER' || user?.role === 'CURATOR') && (
+                  {user?.role === 'OWNER' && (
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
                   )}
                 </tr>
@@ -163,7 +163,7 @@ export default function AdminsPage() {
                           {u.status}
                         </span>
                       </td>
-                      {(user?.role === 'OWNER' || user?.role === 'CURATOR') && (
+                      {user?.role === 'OWNER' && (
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button 
                             onClick={() => handleBlock(u.id, u.status)}
