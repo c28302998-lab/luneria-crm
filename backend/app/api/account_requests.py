@@ -11,7 +11,7 @@ from sqlalchemy import desc
 router = APIRouter()
 
 @router.post("/", response_model=AccountRequestResponse)
-def create_request(req_in: AccountRequestCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["ADMIN", "CURATOR"]))):
+def create_request(req_in: AccountRequestCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "ADMIN", "CURATOR"]))):
     req = AccountRequest(
         admin_id=current_user.id,
         candidate_name=req_in.candidate_name,
