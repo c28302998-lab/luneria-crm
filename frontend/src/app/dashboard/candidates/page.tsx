@@ -202,7 +202,7 @@ export default function CandidatesPage() {
                       {new Date(c.created_at).toLocaleDateString('ru-RU')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end space-x-4">
-                      {user?.role === 'ADMIN' && (
+                      {(user?.role === 'ADMIN' || user?.role === 'OWNER' || user?.role === 'CURATOR') && (
                         <button
                           onClick={() => openRequestModal(c)}
                           className="text-green-600 hover:text-green-900"
