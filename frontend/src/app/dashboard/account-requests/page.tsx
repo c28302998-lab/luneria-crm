@@ -100,7 +100,7 @@ export default function AccountRequestsPage() {
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -149,7 +149,7 @@ export default function AccountRequestsPage() {
                   {(user?.role === 'OWNER' || user?.role === 'CURATOR') && req.status === 'PENDING' && (
                     <div className="flex items-center justify-end gap-2">
                       <select 
-                        className="border border-gray-300 rounded text-xs px-2 py-1 w-[150px] truncate"
+                        className="border border-gray-300 rounded text-xs px-2 py-1 w-[200px] truncate"
                         onChange={(e) => handleUpdateStatus(req.id, 'ACCEPTED', parseInt(e.target.value))}
                         defaultValue=""
                       >
