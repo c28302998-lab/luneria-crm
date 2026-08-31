@@ -115,9 +115,9 @@ export default function AccountsPage() {
       setShowEmailModal(false);
       setEmailForm({ email: '', linked_account_name: '' });
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Ошибка при создании почты');
+      alert('Ошибка при создании почты: ' + (err.response?.data?.detail || err.message));
     }
   };
 
