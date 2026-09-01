@@ -46,7 +46,7 @@ def run_seed_endpoint():
 
 @app.on_event("startup")
 def auto_migrate():
-    from app.database import engine
+    from app.db.database import engine
     from sqlalchemy import text
     from app.models.telegram import Base
     try:
