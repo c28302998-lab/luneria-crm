@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
-from app.api import auth
+from app.api import auth, telegram_admin, telegram_proxy
 import os
 
 app = FastAPI(
