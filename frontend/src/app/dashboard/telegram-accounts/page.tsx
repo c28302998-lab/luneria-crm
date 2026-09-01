@@ -146,10 +146,9 @@ export default function TelegramAccountsPage() {
                     onChange={(e) => handleAssign(acc.id, e.target.value)}
                   >
                     <option value="">Не назначен</option>
-                    {workers.map(w => {
-                      const c = candidates.find(c => c.id === w.candidate_id);
-                      return <option key={w.id} value={w.id}>{c?.name || `Worker #${w.id}`}</option>;
-                    })}
+                    {users.filter(u => u.role !== 'CANDIDATE').map(u => (
+                      <option key={u.id} value={u.id}>{u.name} (Роль: {u.role})</option>
+                    ))}
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
