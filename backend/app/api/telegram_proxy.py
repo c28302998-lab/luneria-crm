@@ -18,7 +18,7 @@ from typing import Optional
 
 @router.get("/my-accounts")
 async def get_my_accounts(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    query = db.query(TelegramAccount).filter(TelegramAccount.status == TelegramAccountStatus.ACTIVE)
+    query = db.query(TelegramAccount).filter(TelegramAccount.is_deleted == False).filter(TelegramAccount.status == TelegramAccountStatus.ACTIVE, TelegramAccount.is_deleted == False)
     if user.role != "OWNER":
         query = query.filter(TelegramAccount.assigned_user_id == user.id)
     accs = query.all()
@@ -26,7 +26,7 @@ async def get_my_accounts(db: Session = Depends(get_db), user: User = Depends(ge
 
 
 async def get_user_account(account_id: Optional[int] = None, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    query = db.query(TelegramAccount)
+    query = db.query(TelegramAccount).filter(TelegramAccount.is_deleted == False)
     if user.role != "OWNER":
         query = query.filter(TelegramAccount.assigned_user_id == user.id)
     if account_id:
