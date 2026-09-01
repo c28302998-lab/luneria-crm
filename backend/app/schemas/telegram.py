@@ -41,12 +41,12 @@ class TelegramRequestCreate(TelegramRequestBase):
 
 class TelegramRequestResponse(TelegramRequestBase):
     id: int
-    worker_id: int
+    user_id: int
     status: str
     owner_comment: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-    worker: Optional[Worker] = None
+    user: Optional[User] = None
     account: Optional[TelegramAccountResponse] = None
     
     class Config:

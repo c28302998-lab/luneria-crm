@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock } from 'lucide-react';
+import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Loader2 } from 'lucide-react';
 
 export default function TelegramAccountsPage() {
   const { user } = useAuth();
@@ -75,6 +75,30 @@ export default function TelegramAccountsPage() {
     }
   };
 
+    const [showStatsModal, setShowStatsModal] = useState<number | null>(null);
+  const [statsData, setStatsData] = useState<any>(null);
+  
+  const handleOpenStats = async (accId: number) => {
+    setShowStatsModal(accId);
+    setStatsData(null);
+    try {
+      const { data } = await api.get(`/telegram/admin/accounts/${accId}/stats`);
+      setStatsData(data);
+    } catch (err) {
+      console.error("Error fetching stats", err);
+    }
+  };
+  
+  const handleUpdateStatus = async (accId: number, status: string) => {
+    if (!confirm(`Изменить статус аккаунта на ${status}?`)) return;
+    try {
+      await api.patch(`/telegram/admin/accounts/${accId}/status`, { status });
+      fetchAccounts();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Ошибка изменения статуса');
+    }
+  };
+
   const handleAssign = async (accId: number, userId: string) => {
     try {
       await api.patch(`/telegram/admin/accounts/${accId}/assign`, {
@@ -133,11 +157,22 @@ export default function TelegramAccountsPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{acc.phone}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    acc.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {acc.status}
-                  </span>
+                                    <select 
+                    value={acc.status}
+                    onChange={(e) => handleUpdateStatus(acc.id, e.target.value)}
+                    className={`px-2 py-1 text-xs font-semibold rounded-full border-none cursor-pointer outline-none ${
+                      acc.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 
+                      acc.status === 'FROZEN' ? 'bg-blue-100 text-blue-800' : 
+                      acc.status === 'BLOCKED' ? 'bg-red-100 text-red-800' : 
+                      'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="REVOKED">REVOKED</option>
+                    <option value="FROZEN">FROZEN</option>
+                    <option value="BLOCKED">BLOCKED</option>
+                    <option value="DISABLED">DISABLED</option>
+                  </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <select
@@ -155,9 +190,14 @@ export default function TelegramAccountsPage() {
                   <div>Отправлено: {acc.total_messages_sent}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <button onClick={() => handleRevoke(acc.id)} className="text-red-600 hover:text-red-900 flex items-center gap-1">
-                    <Unlink className="w-4 h-4" /> Отозвать
-                  </button>
+                                    <div className="flex flex-col gap-2">
+                    <button onClick={() => handleRevoke(acc.id)} className="text-red-600 hover:text-red-900 flex items-center gap-1 text-xs">
+                      <Unlink className="w-4 h-4" /> Отозвать
+                    </button>
+                    <button onClick={() => handleOpenStats(acc.id)} className="text-indigo-600 hover:text-indigo-900 flex items-center gap-1 text-xs">
+                      <Activity className="w-4 h-4" /> Статистика
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

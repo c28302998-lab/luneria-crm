@@ -17,6 +17,35 @@ export default function TelegramPage() {
   const [error, setError] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestType, setRequestType] = useState('');
+  const [requestReason, setRequestReason] = useState('');
+  const [requestSending, setRequestSending] = useState(false);
+  
+  const handleSettingsAction = (type: string) => {
+    setRequestType(type);
+    setShowSettings(false);
+    setShowRequestModal(true);
+  };
+  
+  const submitRequest = async () => {
+    setRequestSending(true);
+    try {
+      await api.post('/telegram/proxy/requests', {
+        request_type: requestType,
+        reason: requestReason
+      });
+      alert('Запрос успешно отправлен Owner-у.');
+      setShowRequestModal(false);
+      setRequestReason('');
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Ошибка отправки запроса');
+    } finally {
+      setRequestSending(false);
+    }
+  };
+
 
   const fetchChats = async () => {
     try {
@@ -106,7 +135,22 @@ export default function TelegramPage() {
       <div className={`w-full sm:w-[350px] border-r border-gray-200 flex flex-col ${activeChat ? 'hidden sm:flex' : 'flex'}`}>
         {/* Header */}
         <div className="p-3 flex items-center gap-4 border-b border-gray-100 bg-gray-50/50">
-          <Menu className="w-6 h-6 text-gray-500 cursor-pointer hover:text-gray-800" />
+                    <div className="relative">
+            <Menu 
+              onClick={() => setShowSettings(!showSettings)}
+              className="w-6 h-6 text-gray-500 cursor-pointer hover:text-gray-800" 
+            />
+            {showSettings && (
+              <div className="absolute top-8 left-0 w-56 bg-white rounded-md shadow-lg border border-gray-100 z-50 py-1">
+                <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Настройки аккаунта</div>
+                <button onClick={() => handleSettingsAction('CHANGE_PASSWORD')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Изменить пароль</button>
+                <button onClick={() => handleSettingsAction('CHANGE_PHONE')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Изменить номер телефона</button>
+                <button onClick={() => handleSettingsAction('CHANGE_2FA')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Настройки 2FA</button>
+                <button onClick={() => handleSettingsAction('TERMINATE_SESSIONS')} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Завершить другие сеансы</button>
+                <button onClick={() => handleSettingsAction('LOGOUT')} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Выйти</button>
+              </div>
+            )}
+          </div>
           <div className="relative flex-1">
             <input 
               type="text" 
@@ -216,7 +260,46 @@ export default function TelegramPage() {
             <span className="bg-gray-200/50 text-gray-500 px-4 py-1.5 rounded-full text-sm font-medium">Выберите чат...</span>
           </div>
         )}
-      </div>
+      
+      {/* Request Modal */}
+      {showRequestModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Требуется одобрение Owner</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Для выполнения этого действия ({requestType}) требуется разрешение Владельца. Опишите причину запроса:
+              </p>
+              
+              <textarea
+                value={requestReason}
+                onChange={(e) => setRequestReason(e.target.value)}
+                className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                rows={4}
+                placeholder="Например: Смена рабочего устройства, забыл облачный пароль..."
+              />
+            </div>
+            
+            <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3">
+              <button 
+                onClick={() => setShowRequestModal(false)}
+                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition"
+              >
+                Отмена
+              </button>
+              <button 
+                onClick={submitRequest}
+                disabled={requestSending || !requestReason.trim()}
+                className="px-4 py-2 text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition disabled:opacity-50 flex items-center gap-2"
+              >
+                {requestSending && <Loader2 className="w-4 h-4 animate-spin" />}
+                Отправить запрос
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
     </div>
   );
 }

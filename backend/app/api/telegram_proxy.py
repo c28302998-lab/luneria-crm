@@ -123,3 +123,31 @@ async def send_message(req: SendMessageRequest, request: Request, db: Session = 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
+from app.schemas.telegram import TelegramRequestCreate, TelegramRequestResponse
+from app.models.telegram import TelegramRequest
+
+@router.post("/requests", response_model=TelegramRequestResponse)
+def create_request(req: TelegramRequestCreate, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_user_account), user: User = Depends(get_current_user)):
+    # Create request
+    new_request = TelegramRequest(
+        user_id=user.id,
+        account_id=acc.id,
+        request_type=req.request_type,
+        reason=req.reason
+    )
+    db.add(new_request)
+    db.commit()
+    db.refresh(new_request)
+    
+    # Log audit
+    log = TelegramAuditLog(
+        user_id=user.id,
+        account_id=acc.id,
+        action="CREATE_REQUEST",
+        details=f"Requested {req.request_type}. Reason: {req.reason}"
+    )
+    db.add(log)
+    db.commit()
+    
+    return new_request

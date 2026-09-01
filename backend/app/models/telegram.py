@@ -46,7 +46,7 @@ class TelegramRequest(Base):
     __tablename__ = "telegram_requests"
     
     id = Column(Integer, primary_key=True, index=True)
-    worker_id = Column(Integer, ForeignKey("workers.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
     account_id = Column(Integer, ForeignKey("telegram_accounts.id"), nullable=True)
     
     request_type = Column(String) # e.g. "CHANGE_PASSWORD", "CHANGE_PHONE", "UPDATE_BIO"
@@ -58,7 +58,7 @@ class TelegramRequest(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    worker = relationship("Worker")
+    user = relationship("User")
     account = relationship("TelegramAccount")
 
 

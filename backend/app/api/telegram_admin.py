@@ -131,3 +131,86 @@ async def revoke_account(acc_id: int, db: Session = Depends(get_db), current_use
 @router.get("/audit", response_model=List[TelegramAuditLogResponse])
 def get_audit_logs(limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
     return db.query(TelegramAuditLog).order_by(TelegramAuditLog.created_at.desc()).limit(limit).all()
+
+from app.models.telegram import TelegramRequest, TelegramRequestStatus
+
+@router.get("/requests")
+def get_requests(db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    return db.query(TelegramRequest).order_by(TelegramRequest.created_at.desc()).all()
+
+class RequestStatusUpdate(BaseModel):
+    status: TelegramRequestStatus
+    owner_comment: Optional[str] = None
+
+@router.patch("/requests/{req_id}/status")
+def update_request_status(req_id: int, update: RequestStatusUpdate, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    req = db.query(TelegramRequest).filter(TelegramRequest.id == req_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
+        
+    req.status = update.status
+    req.owner_comment = update.owner_comment
+    db.commit()
+    
+    # Audit
+    log = TelegramAuditLog(
+        user_id=current_user.id,
+        account_id=req.account_id,
+        action="UPDATE_REQUEST",
+        details=f"Updated request {req.id} to {update.status.value}"
+    )
+    db.add(log)
+    db.commit()
+    return {"status": "success"}
+
+class AccountStatusUpdate(BaseModel):
+    status: TelegramAccountStatus
+
+@router.patch("/accounts/{acc_id}/status")
+async def update_account_status(acc_id: int, update: AccountStatusUpdate, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="Account not found")
+        
+    old_status = acc.status
+    acc.status = update.status
+    db.commit()
+    
+    if update.status != TelegramAccountStatus.ACTIVE:
+        await telegram_manager.disconnect_account(acc.id)
+        
+    log = TelegramAuditLog(
+        user_id=current_user.id,
+        account_id=acc.id,
+        action="UPDATE_STATUS",
+        details=f"Changed status from {old_status.value} to {update.status.value}"
+    )
+    db.add(log)
+    db.commit()
+    return {"status": "success"}
+
+@router.get("/accounts/{acc_id}/stats")
+def get_account_stats(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
+    if not acc:
+        raise HTTPException(404)
+        
+    # Get last IP, OS, Browser
+    last_log = db.query(TelegramAuditLog).filter(TelegramAuditLog.account_id == acc_id).order_by(TelegramAuditLog.created_at.desc()).first()
+    
+    # Is online? (Activity within last 5 minutes)
+    import datetime
+    is_online = False
+    if acc.last_activity_at:
+        is_online = (datetime.datetime.utcnow() - acc.last_activity_at).total_seconds() < 300
+        
+    return {
+        "status": acc.status,
+        "is_online": is_online,
+        "total_messages": acc.total_messages_sent,
+        "total_work_seconds": acc.total_work_seconds,
+        "last_activity": acc.last_activity_at,
+        "last_ip": last_log.ip_address if last_log else None,
+        "last_browser": last_log.browser if last_log else None,
+        "last_os": last_log.os if last_log else None
+    }

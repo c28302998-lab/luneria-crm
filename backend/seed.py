@@ -156,3 +156,9 @@ try:
         conn.execute(text("ALTER TABLE telegram_accounts RENAME COLUMN assigned_worker_id TO assigned_user_id"))
 except Exception as e:
     pass # Column already renamed or table doesn't exist
+try:
+    with engine.begin() as conn:
+        from sqlalchemy import text
+        conn.execute(text("ALTER TABLE telegram_requests RENAME COLUMN worker_id TO user_id"))
+except Exception as e:
+    pass
