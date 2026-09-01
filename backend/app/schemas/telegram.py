@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Any
 from datetime import datetime
 from .user import User
-from .schemas import UserResponse
+from .user import User
 
 class TelegramAccountBase(BaseModel):
     name: str
@@ -26,7 +26,7 @@ class TelegramAccountResponse(TelegramAccountBase):
     total_work_seconds: int
     last_activity_at: Optional[datetime] = None
     created_at: datetime
-    assigned_user: Optional[UserResponse] = None
+    assigned_user: Optional[User] = None
     
     class Config:
         from_attributes = True
