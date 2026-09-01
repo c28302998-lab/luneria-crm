@@ -221,7 +221,14 @@ export default function TelegramPage() {
                   {activeChat.name ? activeChat.name.charAt(0).toUpperCase() : '?'}
                 </div>
                 <div>
-                  <h2 className="font-semibold text-gray-900 leading-tight">{activeChat.name}</h2>
+                                    <h2 className="font-semibold text-gray-900 leading-tight flex items-center gap-2">
+                    {activeChat.name}
+                    {user?.role === 'OWNER' && (
+                      <button onClick={() => handleSetAlias(activeChat.id)} className="text-gray-400 hover:text-indigo-600 p-1" title="Задать внутреннее имя">
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </h2>
                   <p className="text-xs text-gray-500">Был(а) недавно</p>
                 </div>
               </div>
