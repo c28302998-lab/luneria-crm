@@ -69,4 +69,10 @@ def auto_migrate():
     except Exception:
         pass
 
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE telegram_accounts ADD COLUMN setup_checklist TEXT;"))
+    except Exception:
+        pass
+
 

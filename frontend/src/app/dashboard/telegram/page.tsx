@@ -335,26 +335,45 @@ export default function TelegramPage() {
               </button>
             </div>
             <div className="p-6 space-y-3 text-sm text-gray-700">
-              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
-                <span>Зайти на профиль в антидетект браузере (или устройстве).</span>
-              </label>
-              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
-                <span>Убедиться, что нет спам-блока.</span>
-              </label>
-              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
-                <span>Очистить старые чаты и лишние сессии (кроме текущей).</span>
-              </label>
-              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
-                <span>Установить/изменить Облачный пароль (2FA).</span>
-              </label>
-              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
-                <span>Выдать данные от аккаунта кандидату.</span>
-              </label>
+              {(() => {
+                const acc = myAccounts.find(a => a.id === selectedAccountId);
+                const customChecklist = acc?.setup_checklist;
+                
+                if (customChecklist) {
+                  return customChecklist.split('\n').filter((l: string) => l.trim()).map((line: string, i: number) => (
+                    <label key={i} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                      <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                      <span>{line}</span>
+                    </label>
+                  ));
+                }
+                
+                return (
+                  <>
+                    <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                      <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                      <span>Зайти на профиль в антидетект браузере (или устройстве).</span>
+                    </label>
+                    <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                      <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                      <span>Убедиться, что нет спам-блока.</span>
+                    </label>
+                    <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                      <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                      <span>Очистить старые чаты и лишние сессии (кроме текущей).</span>
+                    </label>
+                    <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                      <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                      <span>Установить/изменить Облачный пароль (2FA).</span>
+                    </label>
+                    <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                      <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                      <span>Выдать данные от аккаунта кандидату.</span>
+                    </label>
+                  </
+                  >
+                );
+              })()}
             </div>
             <div className="p-4 bg-gray-50 flex justify-end border-t border-gray-100">
               <button onClick={() => setShowChecklist(false)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Понятно</button>

@@ -281,3 +281,16 @@ def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: Use
     acc.is_deleted = True
     db.commit()
     return {"status": "ok"}
+
+class UpdateChecklistRequest(BaseModel):
+    setup_checklist: Optional[str]
+
+@router.patch("/accounts/{acc_id}/checklist")
+def update_checklist(acc_id: int, req: UpdateChecklistRequest, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    acc.setup_checklist = req.setup_checklist
+    db.commit()
+    return {"status": "ok"}

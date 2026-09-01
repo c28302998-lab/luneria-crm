@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Loader2, Eye, EyeOff, Trash } from 'lucide-react';
+import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Loader2, Eye, EyeOff, Trash, CheckSquare } from 'lucide-react';
 
 export default function TelegramAccountsPage() {
   const { user } = useAuth();
@@ -19,7 +19,10 @@ export default function TelegramAccountsPage() {
   const [phoneCodeHash, setPhoneCodeHash] = useState('');
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
-  const [authStep, setAuthStep] = useState(1); // 1: phone, 2: code, 3: password
+  const [authStep, setAuthStep] = useState(1);
+  const [showChecklistModal, setShowChecklistModal] = useState<number | null>(null);
+  const [checklistText, setChecklistText] = useState('');
+  const [savingChecklist, setSavingChecklist] = useState(false); // 1: phone, 2: code, 3: password
   const [loading, setLoading] = useState(false);
 
 
@@ -276,6 +279,11 @@ export default function TelegramAccountsPage() {
                         <Trash className="w-4 h-4" /> Удалить из CRM
                       </button>
                     )}
+                    {user?.role === 'OWNER' && (
+                      <button onClick={() => { setShowChecklistModal(acc.id); setChecklistText(acc.setup_checklist || ''); }} className="text-blue-600 hover:text-blue-900 flex items-center gap-1 text-xs">
+                        <CheckSquare className="w-4 h-4" /> Задачи админу
+                      </button>
+                    )}
                     <button onClick={() => handleOpenStats(acc.id)} className="text-indigo-600 hover:text-indigo-900 flex items-center gap-1 text-xs">
                       <Activity className="w-4 h-4" /> Статистика
                     </button>
@@ -297,6 +305,53 @@ export default function TelegramAccountsPage() {
           </tbody>
         </table>
       </div>
+
+
+      {/* Checklist Edit Modal */}
+      {showChecklistModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Персональные задачи для Админа</h3>
+              <button onClick={() => setShowChecklistModal(null)} className="text-gray-400 hover:text-gray-600">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-500 mb-4">Напишите список задач (по одной на каждой строке), которые админ должен выполнить при работе с этим аккаунтом перед выдачей кандидату.</p>
+              <textarea
+                value={checklistText}
+                onChange={e => setChecklistText(e.target.value)}
+                className="w-full h-48 border border-gray-300 rounded-lg p-3 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Например:
+Сменить пароль
+Отписать куратору"
+              />
+            </div>
+            <div className="p-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-100">
+              <button onClick={() => setShowChecklistModal(null)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50">Отмена</button>
+              <button 
+                onClick={async () => {
+                  setSavingChecklist(true);
+                  try {
+                    await api.patch(`/telegram/admin/accounts/${showChecklistModal}/checklist`, { setup_checklist: checklistText });
+                    fetchAccounts();
+                    setShowChecklistModal(null);
+                  } catch (err) {
+                    alert('Ошибка сохранения');
+                  } finally {
+                    setSavingChecklist(false);
+                  }
+                }}
+                disabled={savingChecklist}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {savingChecklist ? 'Сохранение...' : 'Сохранить'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
