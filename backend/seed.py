@@ -2,6 +2,7 @@ import sys
 import os
 
 from app.db.database import SessionLocal, engine, Base
+from app.models.telegram import TelegramAccount, TelegramRequest, TelegramAuditLog
 from app.models.models import User, Candidate, Worker, Partner, Payment, Task
 from app.core.security import get_password_hash
 
