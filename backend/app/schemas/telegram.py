@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Any
 from datetime import datetime
 from .user import User
-from .user import User
+from .schemas import Worker
 
 class TelegramAccountBase(BaseModel):
     name: str
