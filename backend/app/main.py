@@ -43,3 +43,18 @@ def run_seed_endpoint():
     except Exception as e:
         import traceback
         return {"error": str(e), "trace": traceback.format_exc()}
+
+@app.on_event("startup")
+def auto_migrate():
+    from app.database import engine
+    from sqlalchemy import text
+    from app.models.telegram import Base
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception:
+        pass
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE telegram_accounts ADD COLUMN mask_client_names BOOLEAN DEFAULT FALSE"))
+    except Exception:
+        pass
