@@ -167,7 +167,19 @@ export default function TelegramPage() {
       {/* Sidebar (Chat list) */}
       <div className={`w-full sm:w-[350px] border-r border-gray-200 flex flex-col ${activeChat ? 'hidden sm:flex' : 'flex'}`}>
         {/* Header */}
-        <div className="p-3 flex items-center gap-4 border-b border-gray-100 bg-gray-50/50">
+        <div className="p-3 flex flex-col gap-3 border-b border-gray-100 bg-gray-50/50">
+          {myAccounts.length > 1 && (
+            <select 
+              className="w-full text-sm border-gray-300 rounded-md py-1.5 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm"
+              value={selectedAccountId || ''}
+              onChange={e => setSelectedAccountId(Number(e.target.value))}
+            >
+              {myAccounts.map(acc => (
+                <option key={acc.id} value={acc.id}>{acc.name} ({acc.phone})</option>
+              ))}
+            </select>
+          )}
+          <div className="flex items-center gap-4">
                     <div className="relative">
             <Menu 
               onClick={() => setShowSettings(!showSettings)}
@@ -191,6 +203,7 @@ export default function TelegramPage() {
               className="w-full bg-gray-100 rounded-full py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
             />
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2" />
+          </div>
           </div>
         </div>
         
