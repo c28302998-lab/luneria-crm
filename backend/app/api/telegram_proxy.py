@@ -180,7 +180,9 @@ class ProxyAliasCreate(BaseModel):
     custom_name: str
 
 @router.post("/chats/{chat_id}/alias")
-def set_proxy_chat_alias(chat_id: str, req: ProxyAliasCreate, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_user_account), user: User = Depends(check_owner)):
+def set_proxy_chat_alias(chat_id: str, req: ProxyAliasCreate, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_user_account), user: User = Depends(get_current_user)):
+    if user.role != 'OWNER':
+        raise HTTPException(status_code=403, detail='Only owner can set aliases')
     from app.models.telegram import TelegramChatAlias
     alias = db.query(TelegramChatAlias).filter(TelegramChatAlias.account_id == acc.id, TelegramChatAlias.tg_chat_id == chat_id).first()
     if alias:
