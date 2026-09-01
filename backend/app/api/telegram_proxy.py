@@ -37,11 +37,10 @@ async def get_chats(request: Request, db: Session = Depends(get_db), acc: Telegr
         
         # Fetch aliases if needed
         aliases = {}
-        if acc.mask_client_names or user.role == "OWNER":
-            from app.models.telegram import TelegramChatAlias
-            db_aliases = db.query(TelegramChatAlias).filter(TelegramChatAlias.account_id == acc.id).all()
-            for a in db_aliases:
-                aliases[a.tg_chat_id] = a.custom_name
+        from app.models.telegram import TelegramChatAlias
+        db_aliases = db.query(TelegramChatAlias).filter(TelegramChatAlias.account_id == acc.id).all()
+        for a in db_aliases:
+            aliases[a.tg_chat_id] = a.custom_name
         
         chats = []
         for d in dialogs:
@@ -54,10 +53,17 @@ async def get_chats(request: Request, db: Session = Depends(get_db), acc: Telegr
             if user.role == "OWNER":
                 if custom_name:
                     chat_name = f"{d.name} [{custom_name}]"
+                else:
+                    chat_name = d.name
             else:
                 if acc.mask_client_names:
                     is_masked = True
-                    chat_name = custom_name if custom_name else f"Клиент {str(d.id)[-4:]}"
+                    chat_name = f"Клиент {str(d.id)[-4:]}"
+                else:
+                    if custom_name:
+                        chat_name = custom_name
+                    else:
+                        chat_name = d.name
 
             chats.append({
                 "id": chat_id_str,
