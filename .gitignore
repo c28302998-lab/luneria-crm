@@ -1,1 +1,3 @@
 backend/luneria_local.db
+backend/.env
+backend/luneria.db
