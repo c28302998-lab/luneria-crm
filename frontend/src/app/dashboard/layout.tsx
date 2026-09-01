@@ -9,8 +9,8 @@ import {
   LayoutDashboard, Users, Briefcase, 
   Settings, LogOut, DollarSign, CheckSquare, 
   FileBarChart, MessageSquare, Shield, Activity, Bell
-, GraduationCap, Globe, Key} from 'lucide-react';
-import { ClipboardCheck, Clock } from 'lucide-react';
+, GraduationCap, Globe, Key} , Menu, X } from 'lucide-react';
+import { ClipboardCheck, Clock } , Menu, X } from 'lucide-react';
 import ShiftButton from '@/components/ShiftButton';
 
 const getNavigation = (role: string) => {
@@ -97,6 +97,7 @@ export default function DashboardLayout({
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -142,8 +143,16 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-gray-100">
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="w-64 bg-[#0f172a] text-slate-300 border-r border-slate-800 flex flex-col shadow-2xl z-10 relative">
+      <div className={`fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 w-64 bg-[#0f172a] text-slate-300 border-r border-slate-800 flex flex-col shadow-2xl z-50 transition-transform duration-300 ease-in-out`}>
         <div className="h-16 flex items-center px-6 border-b border-slate-800">
           <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-indigo-500/30">
             <span className="text-white font-bold text-lg">L</span>
@@ -159,6 +168,7 @@ export default function DashboardLayout({
               return (
                 <Link
                   key={item.name}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   href={item.href}
                   className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all ${isActive ? 'bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}
                 >
@@ -175,7 +185,7 @@ export default function DashboardLayout({
           </nav>
         </div>
 
-        <div className="border-t border-gray-200 p-4">
+        <div className="border-t border-slate-700 p-4 mt-auto">
           <div className="flex items-center">
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-700">
@@ -195,13 +205,25 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 justify-between">
-          <h1 className="text-lg font-medium text-gray-900">
-            {navigation.find(n => n.href === pathname)?.name || 'Dashboard'}
-          </h1>
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <button 
+              className="p-2 md:hidden text-gray-600 hover:text-gray-900 focus:outline-none" 
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <h1 className="text-lg font-medium text-gray-900 truncate max-w-[150px] sm:max-w-xs">
+              {navigation.find(n => n.href === pathname)?.name || 'Dashboard'}
+            </h1>
+          </div>
           
-          <ShiftButton />
-            <div className="relative">
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="hidden sm:block">
+              <ShiftButton />
+            </div>
+            </div>
+          <div className="relative">
             <button 
               onClick={() => setIsNotifOpen(!isNotifOpen)}
               className="p-2 text-gray-400 hover:text-gray-500 relative"
@@ -232,6 +254,7 @@ export default function DashboardLayout({
                 )}
               </div>
             )}
+          </div>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-6">
