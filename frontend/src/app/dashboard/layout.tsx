@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Users, Briefcase, 
   Settings, LogOut, DollarSign, CheckSquare, 
   FileBarChart, MessageSquare, Shield, Activity, Bell
-, GraduationCap, Globe, Key, Menu, X } from 'lucide-react';
+, GraduationCap, Globe, Key, Menu, X , MessageCircle, ShieldAlert, MonitorSmartphone } from 'lucide-react';
 import { ClipboardCheck, Clock } from 'lucide-react';
 import ShiftButton from '@/components/ShiftButton';
 
@@ -54,6 +54,8 @@ const getNavigation = (role: string) => {
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
       { name: 'Источники', href: '/dashboard/sources', icon: Globe },
       { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
+      { name: 'TG Аккаунты', href: '/dashboard/telegram-accounts', icon: MonitorSmartphone },
+      { name: 'TG Аудит', href: '/dashboard/telegram-audit', icon: ShieldAlert },
       { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
       { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
     ];
@@ -69,6 +71,8 @@ const getNavigation = (role: string) => {
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
       { name: 'Источники', href: '/dashboard/sources', icon: Globe },
       { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
+      { name: 'TG Аккаунты', href: '/dashboard/telegram-accounts', icon: MonitorSmartphone },
+      { name: 'TG Аудит', href: '/dashboard/telegram-audit', icon: ShieldAlert },
       { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
       { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
     ];
@@ -79,6 +83,8 @@ const getNavigation = (role: string) => {
       ...base,
       { name: 'Финансы', href: '/dashboard/finance', icon: DollarSign },
       { name: 'Партнеры', href: '/dashboard/partners', icon: Briefcase },
+      { name: 'TG Аккаунты', href: '/dashboard/telegram-accounts', icon: MonitorSmartphone },
+      { name: 'TG Аудит', href: '/dashboard/telegram-audit', icon: ShieldAlert },
       { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
       { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
     ];
