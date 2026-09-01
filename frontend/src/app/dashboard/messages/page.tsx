@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Send, User } from 'lucide-react';
+import { Send, User, ChevronLeft } from 'lucide-react';
 
 export default function MessagesPage() {
   const { user } = useAuth();
@@ -71,7 +71,7 @@ export default function MessagesPage() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="w-1/3 border-r border-gray-200 bg-gray-50 flex flex-col">
+      <div className={`${activeChatUserId ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 border-r border-gray-200 bg-gray-50 flex-col`}>
         <div className="p-4 border-b border-gray-200">
           <h3 className="font-medium text-gray-900">Коллеги</h3>
         </div>
@@ -114,14 +114,20 @@ export default function MessagesPage() {
         </div>
       </div>
       
-      <div className="flex-1 flex flex-col bg-white">
+      <div className={`${activeChatUserId ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-white`}>
         {!activeChatUserId ? (
           <div className="flex-1 flex items-center justify-center text-gray-400">
             Выберите чат слева, чтобы начать общение
           </div>
         ) : (
           <>
-            <div className="p-4 border-b border-gray-200 flex items-center">
+            <div className="p-4 border-b border-gray-200 flex items-center shadow-sm z-10">
+              <button 
+                onClick={() => setActiveChatUserId(null)}
+                className="md:hidden mr-3 p-1.5 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 focus:outline-none"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
               <h3 className="font-medium text-gray-900">
                 {users.find(u => u.id === activeChatUserId)?.name}
               </h3>
