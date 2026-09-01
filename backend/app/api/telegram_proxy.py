@@ -12,11 +12,6 @@ from ..services.telegram_manager import telegram_manager
 
 router = APIRouter(prefix="/telegram/proxy", tags=["Telegram Proxy"])
 
-async def get_user_account(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    acc = db.query(TelegramAccount).filter(TelegramAccount.assigned_user_id == user.id, TelegramAccount.status == TelegramAccountStatus.ACTIVE).first()
-    if not acc:
-        raise HTTPException(status_code=404, detail="No active Telegram account assigned")
-    return acc
 
 
 from typing import Optional
@@ -29,7 +24,8 @@ async def get_my_accounts(db: Session = Depends(get_db), user: User = Depends(ge
     accs = query.all()
     return [{"id": a.id, "name": a.name, "phone": a.phone} for a in accs]
 
-def get_user_account(user, db, account_id=None):
+
+async def get_user_account(account_id: Optional[int] = None, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     query = db.query(TelegramAccount)
     if user.role != "OWNER":
         query = query.filter(TelegramAccount.assigned_user_id == user.id)
@@ -37,7 +33,7 @@ def get_user_account(user, db, account_id=None):
         query = query.filter(TelegramAccount.id == account_id)
     acc = query.first()
     if not acc:
-        raise HTTPException(status_code=404, detail="No Telegram account assigned to you")
+        raise HTTPException(status_code=404, detail="No active Telegram account assigned")
     return acc
 
 @router.get("/chats")
