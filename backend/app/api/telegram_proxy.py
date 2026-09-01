@@ -57,7 +57,7 @@ async def get_chats(request: Request, db: Session = Depends(get_db), acc: Telegr
                 
             # If OWNER, maybe append alias for context
             if user.role == "OWNER" and custom_name:
-                chat_name = f"{d.name} [{custom_name}]"
+                chat_name = custom_name
 
             chats.append({
                 "id": chat_id_str,
