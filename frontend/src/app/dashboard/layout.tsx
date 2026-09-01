@@ -38,6 +38,8 @@ const getNavigation = (role: string) => {
       { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
       { name: 'Аналитика', href: '/dashboard/analytics', icon: FileBarChart },
       { name: 'Логи', href: '/dashboard/logs', icon: Activity },
+      { name: 'TG Аккаунты', href: '/dashboard/telegram-accounts', icon: MonitorSmartphone },
+      { name: 'TG Аудит', href: '/dashboard/telegram-audit', icon: ShieldAlert },
       { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
     ];
   }
