@@ -16,6 +16,7 @@ import ShiftButton from '@/components/ShiftButton';
 const getNavigation = (role: string) => {
   const base = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Telegram', href: '/dashboard/telegram', icon: MessageCircle },
     { name: 'Сообщения', href: '/dashboard/messages', icon: MessageSquare },
   ];
 
