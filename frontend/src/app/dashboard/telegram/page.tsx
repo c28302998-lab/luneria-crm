@@ -107,8 +107,10 @@ export default function TelegramPage() {
   };
 
   useEffect(() => {
-    fetchChats();
-  }, []);
+    if (selectedAccountId) {
+      fetchChats();
+    }
+  }, [selectedAccountId]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
