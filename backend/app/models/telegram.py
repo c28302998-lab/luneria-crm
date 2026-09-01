@@ -25,7 +25,7 @@ class TelegramAccount(Base, SoftDeleteMixin):
     status = Column(SQLEnum(TelegramAccountStatus), default=TelegramAccountStatus.PENDING)
     
     # Who is currently assigned to this account
-    assigned_worker_id = Column(Integer, ForeignKey("workers.id"), nullable=True)
+    assigned_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
     # Metrics
     total_messages_sent = Column(Integer, default=0)
@@ -34,7 +34,7 @@ class TelegramAccount(Base, SoftDeleteMixin):
     last_activity_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    assigned_worker = relationship("Worker")
+    assigned_user = relationship("User")
 
 class TelegramRequestStatus(str, enum.Enum):
     PENDING = "PENDING"

@@ -12,24 +12,14 @@ from ..services.telegram_manager import telegram_manager
 
 router = APIRouter(prefix="/telegram/proxy", tags=["Telegram Proxy"])
 
-async def get_worker_account(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if user.role not in ["ADMIN", "WORKER", "OWNER"]:
-        raise HTTPException(status_code=403, detail="Role not allowed")
-        
-    worker = db.query(Worker).filter(Worker.user_id == user.id).first()
-    if not worker:
-        # For testing, if OWNER doesn't have a worker profile, maybe we let them pass? 
-        # But policy says "assigned worker". Let's strictly require it.
-        raise HTTPException(status_code=403, detail="No worker profile found")
-        
-    acc = db.query(TelegramAccount).filter(TelegramAccount.assigned_worker_id == worker.id, TelegramAccount.status == TelegramAccountStatus.ACTIVE).first()
+async def get_user_account(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    acc = db.query(TelegramAccount).filter(TelegramAccount.assigned_user_id == user.id, TelegramAccount.status == TelegramAccountStatus.ACTIVE).first()
     if not acc:
         raise HTTPException(status_code=404, detail="No active Telegram account assigned")
-        
     return acc
 
 @router.get("/chats")
-async def get_chats(request: Request, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_worker_account), user: User = Depends(get_current_user)):
+async def get_chats(request: Request, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_user_account), user: User = Depends(get_current_user)):
     try:
         client = await telegram_manager.get_client(acc.id, acc.session_string)
         
@@ -63,7 +53,7 @@ async def get_chats(request: Request, db: Session = Depends(get_db), acc: Telegr
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/messages/{chat_id}")
-async def get_messages(chat_id: str, request: Request, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_worker_account), user: User = Depends(get_current_user)):
+async def get_messages(chat_id: str, request: Request, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_user_account), user: User = Depends(get_current_user)):
     try:
         client = await telegram_manager.get_client(acc.id, acc.session_string)
         
@@ -106,7 +96,7 @@ class SendMessageRequest(BaseModel):
     text: str
 
 @router.post("/send")
-async def send_message(req: SendMessageRequest, request: Request, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_worker_account), user: User = Depends(get_current_user)):
+async def send_message(req: SendMessageRequest, request: Request, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_user_account), user: User = Depends(get_current_user)):
     try:
         client = await telegram_manager.get_client(acc.id, acc.session_string)
         

@@ -86,7 +86,7 @@ async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = D
         raise HTTPException(status_code=404, detail="Account not found")
         
     old_worker = acc.assigned_worker_id
-    acc.assigned_worker_id = req.worker_id
+    acc.assigned_user_id = req.user_id
     db.commit()
     
     # Audit log
@@ -111,7 +111,7 @@ async def revoke_account(acc_id: int, db: Session = Depends(get_db), current_use
     if not acc:
         raise HTTPException(status_code=404, detail="Account not found")
         
-    acc.assigned_worker_id = None
+    acc.assigned_user_id = None
     acc.status = TelegramAccountStatus.DISABLED
     db.commit()
     

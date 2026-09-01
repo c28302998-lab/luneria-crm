@@ -8,7 +8,7 @@ import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock } from 'lucide-
 export default function TelegramAccountsPage() {
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<any[]>([]);
-  const [workers, setWorkers] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [candidates, setCandidates] = useState<any[]>([]);
   
   const [showAddModal, setShowAddModal] = useState(false);
@@ -32,7 +32,7 @@ export default function TelegramAccountsPage() {
   useEffect(() => {
     if (user?.role === 'OWNER') {
       fetchAccounts();
-      api.get('/workers/').then(res => setWorkers(res.data)).catch(console.error);
+      api.get('/users/').then(res => setUsers(res.data)).catch(console.error);
       api.get('/candidates/').then(res => setCandidates(res.data)).catch(console.error);
     }
   }, [user]);
@@ -75,10 +75,10 @@ export default function TelegramAccountsPage() {
     }
   };
 
-  const handleAssign = async (accId: number, workerId: string) => {
+  const handleAssign = async (accId: number, userId: string) => {
     try {
       await api.patch(`/telegram/admin/accounts/${accId}/assign`, {
-        worker_id: workerId ? parseInt(workerId) : null
+        user_id: userId ? parseInt(userId) : null
       });
       fetchAccounts();
     } catch (err) {
@@ -142,7 +142,7 @@ export default function TelegramAccountsPage() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <select
                     className="border border-gray-300 rounded-md text-sm p-1"
-                    value={acc.assigned_worker_id || ''}
+                    value={acc.assigned_user_id || ''}
                     onChange={(e) => handleAssign(acc.id, e.target.value)}
                   >
                     <option value="">Не назначен</option>

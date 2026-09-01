@@ -148,3 +148,11 @@ def seed():
 
 if __name__ == "__main__":
     seed()
+
+# Auto-migration for telegram_accounts
+try:
+    with engine.begin() as conn:
+        from sqlalchemy import text
+        conn.execute(text("ALTER TABLE telegram_accounts RENAME COLUMN assigned_worker_id TO assigned_user_id"))
+except Exception as e:
+    pass # Column already renamed or table doesn't exist
