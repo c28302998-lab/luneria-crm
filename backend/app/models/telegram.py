@@ -23,6 +23,7 @@ class TelegramAccount(Base, SoftDeleteMixin):
     session_string = Column(Text, nullable=False) # The Telethon session string
     
     status = Column(SQLEnum(TelegramAccountStatus), default=TelegramAccountStatus.PENDING)
+    mask_client_names = Column(Boolean, default=False)
     
     # Who is currently assigned to this account
     assigned_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
