@@ -85,33 +85,39 @@ class AssignAccountRequest(BaseModel):
 
 @router.patch("/accounts/{acc_id}/assign")
 async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
-    acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
-    if not acc:
-        raise HTTPException(status_code=404, detail="Account not found")
-        
-    old_user = acc.assigned_user_id
-    acc.assigned_user_id = req.user_id
-    db.commit()
-    
-    # Audit log
     try:
-        log = TelegramAuditLog(
-        user_id=current_user.id,
-        account_id=acc.id,
-        action="ASSIGN_ACCOUNT",
-        details=f"Changed assigned worker from {old_user} to {req.user_id}"
-        )
-        db.add(log)
+        acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
+        if not acc:
+            raise HTTPException(status_code=404, detail="Account not found")
+            
+        old_user = acc.assigned_user_id
+        acc.assigned_user_id = req.user_id
         db.commit()
-    except Exception as e:
-        db.rollback()
-        print(f"Failed to save audit log: {e}")
-    
-    # Session Lock: If changing worker, kill active session to prevent old worker from using it
-    if old_user != req.user_id:
-        await telegram_manager.disconnect_account(acc.id)
         
-    return {"status": "success"}
+        # Audit log
+        try:
+            log = TelegramAuditLog(
+            user_id=current_user.id,
+            account_id=acc.id,
+            action="ASSIGN_ACCOUNT",
+            details=f"Changed assigned worker from {old_user} to {req.user_id}"
+            )
+            db.add(log)
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            print(f"Failed to save audit log: {e}")
+        
+        # Session Lock: If changing worker, kill active session to prevent old worker from using it
+        if old_user != req.user_id:
+            await telegram_manager.disconnect_account(acc.id)
+            
+        return {"status": "success"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(traceback.format_exc())
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/accounts/{acc_id}/revoke")
 async def revoke_account(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):

@@ -49,7 +49,8 @@ class TelegramManager:
         """Force disconnect and remove an account session (e.g. for Session Lock)."""
         if account_id in self.clients:
             try:
-                await self.clients[account_id].disconnect()
+                import asyncio
+                await asyncio.wait_for(self.clients[account_id].disconnect(), timeout=2.0)
             except:
                 pass
             del self.clients[account_id]
