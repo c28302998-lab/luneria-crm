@@ -14,6 +14,7 @@ export default function AccountRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [viewQuestionnaire, setViewQuestionnaire] = useState<string | null>(null);
+  const [showChecklist, setShowChecklist] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -153,12 +154,16 @@ export default function AccountRequestsPage() {
                   <div className="font-medium text-gray-900">{req.candidate_name} {req.candidate_nickname && `(${req.candidate_nickname})`}</div>
                   <div className="text-sm text-blue-600">{req.candidate_tg}</div>
                 </td>
-                <td 
-                  className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate cursor-pointer hover:text-indigo-600 transition"
-                  onClick={() => setViewQuestionnaire(req.questionnaire)}
-                  title="Нажмите, чтобы прочитать полностью"
-                >
-                  {req.questionnaire}
+                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                  <div className="flex flex-col gap-1 items-start">
+                    <span className="truncate w-full">{req.questionnaire}</span>
+                    <button
+                      onClick={() => setViewQuestionnaire(req.questionnaire)}
+                      className="text-indigo-600 hover:text-indigo-800 font-medium underline decoration-indigo-300 underline-offset-2 flex items-center gap-1 text-xs mt-1"
+                    >
+                      Посмотреть анкету
+                    </button>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {req.admin_nickname}
@@ -317,6 +322,46 @@ export default function AccountRequestsPage() {
         </div>
       )}
 
+
+
+      {/* Admin Checklist Modal */}
+      {showChecklist && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-blue-50">
+              <h3 className="text-lg font-bold text-gray-900">Чек-лист перед выдачей аккаунта</h3>
+              <button onClick={() => setShowChecklist(false)} className="text-gray-400 hover:text-gray-600 transition">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-3 text-sm text-gray-700">
+              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                <span>Зайти на профиль в антидетект браузере (или устройстве).</span>
+              </label>
+              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                <span>Проверить работоспособность Telegram аккаунта, убедиться, что нет спам-блока.</span>
+              </label>
+              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                <span>Очистить старые чаты и лишние сессии (кроме текущей).</span>
+              </label>
+              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                <span>Установить/изменить Облачный пароль (2FA) для безопасности.</span>
+              </label>
+              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                <span>Выдать данные от аккаунта (лог/пасс или tdata) кандидату или куратору.</span>
+              </label>
+            </div>
+            <div className="p-4 bg-gray-50 flex justify-end border-t border-gray-100">
+              <button onClick={() => setShowChecklist(false)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Понятно</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Questionnaire View Modal */}
       {viewQuestionnaire && (

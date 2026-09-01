@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Loader2, Eye, EyeOff } from 'lucide-react';
+import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Loader2, Eye, EyeOff, Trash } from 'lucide-react';
 
 export default function TelegramAccountsPage() {
   const { user } = useAuth();
@@ -22,7 +22,19 @@ export default function TelegramAccountsPage() {
   const [authStep, setAuthStep] = useState(1); // 1: phone, 2: code, 3: password
   const [loading, setLoading] = useState(false);
 
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Вы уверены, что хотите полностью удалить этот аккаунт из CRM?')) return;
+    try {
+      await api.delete(`/telegram/admin/accounts/${id}`);
+      fetchAccounts();
+    } catch (err) {
+      alert('Ошибка при удалении аккаунта');
+    }
+  };
+
   const fetchAccounts = async () => {
+
     try {
       const { data } = await api.get('/telegram/admin/accounts');
       setAccounts(data);
@@ -232,11 +244,11 @@ export default function TelegramAccountsPage() {
                       'bg-gray-100 text-gray-800'
                     }`}
                   >
-                    <option value="ACTIVE">ACTIVE</option>
-                    <option value="REVOKED">REVOKED</option>
-                    <option value="FROZEN">FROZEN</option>
-                    <option value="BLOCKED">BLOCKED</option>
-                    <option value="DISABLED">DISABLED</option>
+                                        <option value="ACTIVE">Активен</option>
+                    <option value="REVOKED">Отозван</option>
+                    <option value="FROZEN">Заморожен</option>
+                    <option value="BLOCKED">Заблокирован</option>
+                    <option value="DISABLED">Отключен</option>
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -255,10 +267,15 @@ export default function TelegramAccountsPage() {
                   <div>Отправлено: {acc.total_messages_sent}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                      <div className="flex flex-col gap-2">
+                                                                        <div className="flex flex-col gap-2">
                     <button onClick={() => handleRevoke(acc.id)} className="text-red-600 hover:text-red-900 flex items-center gap-1 text-xs">
-                      <Unlink className="w-4 h-4" /> Отозвать
+                      <Unlink className="w-4 h-4" /> Отозвать (откл. сессию)
                     </button>
+                    {user?.role === 'OWNER' && (
+                      <button onClick={() => handleDelete(acc.id)} className="text-red-700 font-bold hover:text-red-900 flex items-center gap-1 text-xs">
+                        <Trash className="w-4 h-4" /> Удалить из CRM
+                      </button>
+                    )}
                     <button onClick={() => handleOpenStats(acc.id)} className="text-indigo-600 hover:text-indigo-900 flex items-center gap-1 text-xs">
                       <Activity className="w-4 h-4" /> Статистика
                     </button>

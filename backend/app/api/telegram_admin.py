@@ -270,3 +270,14 @@ def set_chat_alias(acc_id: int, req: AliasCreate, db: Session = Depends(get_db),
         db.add(alias)
     db.commit()
     return {"status": "success"}
+
+@router.delete("/accounts/{acc_id}")
+def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    # We soft delete it
+    acc.is_deleted = True
+    db.commit()
+    return {"status": "ok"}
