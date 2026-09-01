@@ -23,11 +23,16 @@ from typing import Optional
 
 @router.get("/my-accounts")
 async def get_my_accounts(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    accs = db.query(TelegramAccount).filter(TelegramAccount.assigned_user_id == user.id, TelegramAccount.status == TelegramAccountStatus.ACTIVE).all()
+    query = db.query(TelegramAccount).filter(TelegramAccount.status == TelegramAccountStatus.ACTIVE)
+    if user.role != "OWNER":
+        query = query.filter(TelegramAccount.assigned_user_id == user.id)
+    accs = query.all()
     return [{"id": a.id, "name": a.name, "phone": a.phone} for a in accs]
 
 def get_user_account(user, db, account_id=None):
-    query = db.query(TelegramAccount).filter(TelegramAccount.assigned_user_id == user.id)
+    query = db.query(TelegramAccount)
+    if user.role != "OWNER":
+        query = query.filter(TelegramAccount.assigned_user_id == user.id)
     if account_id:
         query = query.filter(TelegramAccount.id == account_id)
     acc = query.first()
