@@ -51,13 +51,14 @@ async def get_chats(request: Request, db: Session = Depends(get_db), acc: Telegr
             is_masked = False
             custom_name = aliases.get(chat_id_str)
             
-            if user.role != "OWNER" and acc.mask_client_names:
-                is_masked = True
-                chat_name = custom_name if custom_name else f"Клиент {str(d.id)[-4:]}"
-                
-            # If OWNER, maybe append alias for context
-            if user.role == "OWNER" and custom_name:
-                chat_name = custom_name
+            if acc.mask_client_names:
+                if user.role != "OWNER":
+                    is_masked = True
+                    chat_name = custom_name if custom_name else f"Клиент {str(d.id)[-4:]}"
+                else:
+                    # If OWNER and mask is ON, show custom name
+                    if custom_name:
+                        chat_name = custom_name
 
             chats.append({
                 "id": chat_id_str,
