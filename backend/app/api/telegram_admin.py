@@ -51,14 +51,18 @@ async def verify_code(req: VerifyCodeRequest, db: Session = Depends(get_db), cur
         db.refresh(acc)
         
         # Audit Log
-        log = TelegramAuditLog(
+        try:
+            log = TelegramAuditLog(
             user_id=current_user.id,
             account_id=acc.id,
             action="CONNECT_ACCOUNT",
             details=f"Owner connected new account {req.phone}"
-        )
-        db.add(log)
-        db.commit()
+            )
+            db.add(log)
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            print(f"Failed to save audit log: {e}")
         
         return {"status": "success", "account_id": acc.id}
         
@@ -90,14 +94,18 @@ async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = D
     db.commit()
     
     # Audit log
-    log = TelegramAuditLog(
+    try:
+        log = TelegramAuditLog(
         user_id=current_user.id,
         account_id=acc.id,
         action="ASSIGN_ACCOUNT",
         details=f"Changed assigned worker from {old_user} to {req.user_id}"
-    )
-    db.add(log)
-    db.commit()
+        )
+        db.add(log)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Failed to save audit log: {e}")
     
     # Session Lock: If changing worker, kill active session to prevent old worker from using it
     if old_user != req.user_id:
@@ -115,14 +123,18 @@ async def revoke_account(acc_id: int, db: Session = Depends(get_db), current_use
     acc.status = TelegramAccountStatus.DISABLED
     db.commit()
     
-    log = TelegramAuditLog(
+    try:
+        log = TelegramAuditLog(
         user_id=current_user.id,
         account_id=acc.id,
         action="REVOKE_ACCOUNT",
         details="Owner revoked access and disabled account"
-    )
-    db.add(log)
-    db.commit()
+        )
+        db.add(log)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Failed to save audit log: {e}")
     
     # Session Lock: Kill immediately
     await telegram_manager.disconnect_account(acc.id)
@@ -153,14 +165,18 @@ def update_request_status(req_id: int, update: RequestStatusUpdate, db: Session 
     db.commit()
     
     # Audit
-    log = TelegramAuditLog(
+    try:
+        log = TelegramAuditLog(
         user_id=current_user.id,
         account_id=req.account_id,
         action="UPDATE_REQUEST",
         details=f"Updated request {req.id} to {update.status.value}"
-    )
-    db.add(log)
-    db.commit()
+        )
+        db.add(log)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Failed to save audit log: {e}")
     return {"status": "success"}
 
 class AccountStatusUpdate(BaseModel):
@@ -179,14 +195,18 @@ async def update_account_status(acc_id: int, update: AccountStatusUpdate, db: Se
     if update.status != TelegramAccountStatus.ACTIVE:
         await telegram_manager.disconnect_account(acc.id)
         
-    log = TelegramAuditLog(
+    try:
+        log = TelegramAuditLog(
         user_id=current_user.id,
         account_id=acc.id,
         action="UPDATE_STATUS",
         details=f"Changed status from {old_status.value} to {update.status.value}"
-    )
-    db.add(log)
-    db.commit()
+        )
+        db.add(log)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Failed to save audit log: {e}")
     return {"status": "success"}
 
 @router.get("/accounts/{acc_id}/stats")

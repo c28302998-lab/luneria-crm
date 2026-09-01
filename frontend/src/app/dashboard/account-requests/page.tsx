@@ -13,6 +13,7 @@ export default function AccountRequestsPage() {
   const [candidates, setCandidates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [viewQuestionnaire, setViewQuestionnaire] = useState<string | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -152,7 +153,11 @@ export default function AccountRequestsPage() {
                   <div className="font-medium text-gray-900">{req.candidate_name} {req.candidate_nickname && `(${req.candidate_nickname})`}</div>
                   <div className="text-sm text-blue-600">{req.candidate_tg}</div>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                <td 
+                  className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate cursor-pointer hover:text-indigo-600 transition"
+                  onClick={() => setViewQuestionnaire(req.questionnaire)}
+                  title="Нажмите, чтобы прочитать полностью"
+                >
                   {req.questionnaire}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -307,6 +312,27 @@ export default function AccountRequestsPage() {
               <button type="submit" form="reqForm" className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
                 Отправить заявку
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Questionnaire View Modal */}
+      {viewQuestionnaire && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <h3 className="text-lg font-bold text-gray-900">Анкета кандидата</h3>
+              <button onClick={() => setViewQuestionnaire(null)} className="text-gray-400 hover:text-gray-600 transition">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto whitespace-pre-wrap text-sm text-gray-700 font-mono bg-slate-50 border-b border-gray-100">
+              {viewQuestionnaire}
+            </div>
+            <div className="p-4 bg-white flex justify-end">
+              <button onClick={() => setViewQuestionnaire(null)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Закрыть</button>
             </div>
           </div>
         </div>

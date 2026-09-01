@@ -58,9 +58,6 @@ const getNavigation = (role: string) => {
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
       { name: 'Источники', href: '/dashboard/sources', icon: Globe },
       { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
-      { name: 'TG Аккаунты', href: '/dashboard/telegram-accounts', icon: MonitorSmartphone },
-      { name: 'TG Заявки', href: '/dashboard/telegram-requests', icon: ShieldAlert },
-      { name: 'TG Аудит', href: '/dashboard/telegram-audit', icon: ShieldAlert },
       { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
       { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
     ];
@@ -76,9 +73,6 @@ const getNavigation = (role: string) => {
       { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
       { name: 'Источники', href: '/dashboard/sources', icon: Globe },
       { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
-      { name: 'TG Аккаунты', href: '/dashboard/telegram-accounts', icon: MonitorSmartphone },
-      { name: 'TG Заявки', href: '/dashboard/telegram-requests', icon: ShieldAlert },
-      { name: 'TG Аудит', href: '/dashboard/telegram-audit', icon: ShieldAlert },
       { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
       { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
     ];
@@ -89,9 +83,6 @@ const getNavigation = (role: string) => {
       ...base,
       { name: 'Финансы', href: '/dashboard/finance', icon: DollarSign },
       { name: 'Партнеры', href: '/dashboard/partners', icon: Briefcase },
-      { name: 'TG Аккаунты', href: '/dashboard/telegram-accounts', icon: MonitorSmartphone },
-      { name: 'TG Заявки', href: '/dashboard/telegram-requests', icon: ShieldAlert },
-      { name: 'TG Аудит', href: '/dashboard/telegram-audit', icon: ShieldAlert },
       { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
       { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
     ];

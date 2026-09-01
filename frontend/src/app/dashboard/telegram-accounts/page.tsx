@@ -26,7 +26,7 @@ export default function TelegramAccountsPage() {
     try {
       const { data } = await api.get('/telegram/admin/accounts');
       setAccounts(data);
-    } catch (err) {}
+    } catch (err: any) {}
   };
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function TelegramAccountsPage() {
     try {
       const { data } = await api.get(`/telegram/admin/accounts/${accId}/stats`);
       setStatsData(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching stats", err);
     }
   };
@@ -115,8 +115,8 @@ export default function TelegramAccountsPage() {
         user_id: userId ? parseInt(userId) : null
       });
       fetchAccounts();
-    } catch (err) {
-      alert('Ошибка при назначении');
+    } catch (err: any) {
+      alert(err.response?.data?.detail || err.message || 'Ошибка при назначении');
     }
   };
 
@@ -125,7 +125,7 @@ export default function TelegramAccountsPage() {
     try {
       await api.post(`/telegram/admin/accounts/${accId}/revoke`);
       fetchAccounts();
-    } catch (err) {
+    } catch (err: any) {
       alert('Ошибка при отзыве');
     }
   };
