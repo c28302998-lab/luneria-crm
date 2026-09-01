@@ -100,7 +100,7 @@ async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = D
     db.commit()
     
     # Session Lock: If changing worker, kill active session to prevent old worker from using it
-    if old_worker != req.user_id:
+    if old_user != req.user_id:
         await telegram_manager.disconnect_account(acc.id)
         
     return {"status": "success"}
