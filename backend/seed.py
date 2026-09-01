@@ -162,3 +162,16 @@ try:
         conn.execute(text("ALTER TABLE telegram_requests RENAME COLUMN worker_id TO user_id"))
 except Exception as e:
     pass
+
+# Auto-migration for mask_client_names
+try:
+    with engine.begin() as conn:
+        from sqlalchemy import text
+        conn.execute(text("ALTER TABLE telegram_accounts ADD COLUMN mask_client_names BOOLEAN DEFAULT FALSE"))
+except Exception as e:
+    pass
+
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    pass

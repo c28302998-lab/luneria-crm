@@ -10,6 +10,7 @@ class TelegramAccountBase(BaseModel):
     phone: Optional[str] = None
     assigned_user_id: Optional[int] = None
     status: str
+    mask_client_names: Optional[bool] = False
 
 class TelegramAccountCreate(TelegramAccountBase):
     session_string: str
@@ -43,6 +44,7 @@ class TelegramRequestResponse(TelegramRequestBase):
     id: int
     user_id: int
     status: str
+    mask_client_names: Optional[bool] = False
     owner_comment: Optional[str] = None
     created_at: datetime
     updated_at: datetime

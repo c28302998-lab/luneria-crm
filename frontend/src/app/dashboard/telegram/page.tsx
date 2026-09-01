@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Search, Send, Menu, ArrowLeft, Loader2, Info } from 'lucide-react';
+import { Search, Send, Menu, ArrowLeft, Loader2, Info, Edit2 } from 'lucide-react';
 
 export default function TelegramPage() {
   const { user } = useAuth();
@@ -29,6 +29,18 @@ export default function TelegramPage() {
     setShowRequestModal(true);
   };
   
+  
+  const handleSetAlias = async (chatId: string) => {
+    const alias = prompt(`Внутреннее имя клиента (пусто = сброс):`);
+    if (alias === null) return;
+    try {
+      await api.post(`/telegram/proxy/chats/${chatId}/alias`, { custom_name: alias });
+      fetchChats();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Ошибка сохранения имени');
+    }
+  };
+
   const submitRequest = async () => {
     setRequestSending(true);
     try {

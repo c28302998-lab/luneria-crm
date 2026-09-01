@@ -214,3 +214,33 @@ def get_account_stats(acc_id: int, db: Session = Depends(get_db), current_user: 
         "last_browser": last_log.browser if last_log else None,
         "last_os": last_log.os if last_log else None
     }
+
+
+class MaskUpdate(BaseModel):
+    mask_client_names: bool
+
+@router.patch("/accounts/{acc_id}/mask")
+def update_account_mask(acc_id: int, update: MaskUpdate, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
+    if not acc:
+        raise HTTPException(404)
+    acc.mask_client_names = update.mask_client_names
+    db.commit()
+    return {"status": "success"}
+
+class AliasCreate(BaseModel):
+    tg_chat_id: str
+    custom_name: str
+
+from app.models.telegram import TelegramChatAlias
+
+@router.post("/accounts/{acc_id}/aliases")
+def set_chat_alias(acc_id: int, req: AliasCreate, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    alias = db.query(TelegramChatAlias).filter(TelegramChatAlias.account_id == acc_id, TelegramChatAlias.tg_chat_id == req.tg_chat_id).first()
+    if alias:
+        alias.custom_name = req.custom_name
+    else:
+        alias = TelegramChatAlias(account_id=acc_id, tg_chat_id=req.tg_chat_id, custom_name=req.custom_name)
+        db.add(alias)
+    db.commit()
+    return {"status": "success"}

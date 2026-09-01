@@ -81,3 +81,15 @@ class TelegramAuditLog(Base):
 
     user = relationship("User")
     account = relationship("TelegramAccount")
+
+
+class TelegramChatAlias(Base):
+    __tablename__ = "telegram_chat_aliases"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("telegram_accounts.id"), index=True)
+    tg_chat_id = Column(String, index=True) # Stored as string to handle big ints or telethon ids
+    custom_name = Column(String)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Loader2 } from 'lucide-react';
+import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function TelegramAccountsPage() {
   const { user } = useAuth();
@@ -96,6 +96,16 @@ export default function TelegramAccountsPage() {
       fetchAccounts();
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Ошибка изменения статуса');
+    }
+  };
+
+  
+  const handleToggleMask = async (accId: number, current: boolean) => {
+    try {
+      await api.patch(`/telegram/admin/accounts/${accId}/mask`, { mask_client_names: !current });
+      fetchAccounts();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Ошибка изменения настройки');
     }
   };
 
@@ -245,12 +255,16 @@ export default function TelegramAccountsPage() {
                   <div>Отправлено: {acc.total_messages_sent}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <div className="flex flex-col gap-2">
+                                                      <div className="flex flex-col gap-2">
                     <button onClick={() => handleRevoke(acc.id)} className="text-red-600 hover:text-red-900 flex items-center gap-1 text-xs">
                       <Unlink className="w-4 h-4" /> Отозвать
                     </button>
                     <button onClick={() => handleOpenStats(acc.id)} className="text-indigo-600 hover:text-indigo-900 flex items-center gap-1 text-xs">
                       <Activity className="w-4 h-4" /> Статистика
+                    </button>
+                    <button onClick={() => handleToggleMask(acc.id, !!acc.mask_client_names)} className="text-gray-600 hover:text-gray-900 flex items-center gap-1 text-xs">
+                      {acc.mask_client_names ? <EyeOff className="w-4 h-4 text-orange-500" /> : <Eye className="w-4 h-4" />}
+                      Анонимность: {acc.mask_client_names ? 'ВКЛ' : 'ВЫКЛ'}
                     </button>
                   </div>
                 </td>

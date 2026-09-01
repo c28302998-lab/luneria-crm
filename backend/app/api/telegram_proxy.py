@@ -35,17 +35,41 @@ async def get_chats(request: Request, db: Session = Depends(get_db), acc: Telegr
         
         dialogs = await client.get_dialogs(limit=50)
         
+        # Fetch aliases if needed
+        aliases = {}
+        if acc.mask_client_names or user.role == "OWNER":
+            from app.models.telegram import TelegramChatAlias
+            db_aliases = db.query(TelegramChatAlias).filter(TelegramChatAlias.account_id == acc.id).all()
+            for a in db_aliases:
+                aliases[a.tg_chat_id] = a.custom_name
+        
         chats = []
         for d in dialogs:
+            chat_id_str = str(d.id)
+            chat_name = d.name
+            
+            is_masked = False
+            custom_name = aliases.get(chat_id_str)
+            
+            if user.role != "OWNER" and acc.mask_client_names:
+                is_masked = True
+                chat_name = custom_name if custom_name else f"Клиент {str(d.id)[-4:]}"
+                
+            # If OWNER, maybe append alias for context
+            if user.role == "OWNER" and custom_name:
+                chat_name = f"{d.name} [{custom_name}]"
+
             chats.append({
-                "id": str(d.id),
-                "name": d.name,
+                "id": chat_id_str,
+                "name": chat_name,
                 "is_user": d.is_user,
                 "is_group": d.is_group,
                 "is_channel": d.is_channel,
                 "unread_count": d.unread_count,
                 "message": d.message.text if d.message else "",
-                "date": d.date.isoformat() if d.date else None
+                "date": d.date.isoformat() if d.date else None,
+                "is_masked": is_masked,
+                "original_name": d.name if user.role == "OWNER" else None
             })
             
         return chats
@@ -151,3 +175,18 @@ def create_request(req: TelegramRequestCreate, db: Session = Depends(get_db), ac
     db.commit()
     
     return new_request
+
+class ProxyAliasCreate(BaseModel):
+    custom_name: str
+
+@router.post("/chats/{chat_id}/alias")
+def set_proxy_chat_alias(chat_id: str, req: ProxyAliasCreate, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_user_account), user: User = Depends(check_owner)):
+    from app.models.telegram import TelegramChatAlias
+    alias = db.query(TelegramChatAlias).filter(TelegramChatAlias.account_id == acc.id, TelegramChatAlias.tg_chat_id == chat_id).first()
+    if alias:
+        alias.custom_name = req.custom_name
+    else:
+        alias = TelegramChatAlias(account_id=acc.id, tg_chat_id=chat_id, custom_name=req.custom_name)
+        db.add(alias)
+    db.commit()
+    return {"status": "success"}
