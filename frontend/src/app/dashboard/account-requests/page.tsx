@@ -113,7 +113,7 @@ export default function AccountRequestsPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
           <Key className="w-6 h-6 text-indigo-600" />
           Заявки на аккаунты
