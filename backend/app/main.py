@@ -49,8 +49,25 @@ def auto_migrate():
     from app.db.database import engine
     from sqlalchemy import text
     from app.models.telegram import Base
+    from app.models.user import Base as UB
+    from app.models.models import Base as MB
     try:
+        MB.metadata.create_all(bind=engine)
+        UB.metadata.create_all(bind=engine)
         Base.metadata.create_all(bind=engine)
+    except Exception:
+        pass
+        
+    # Drop the old foreign key constraint if it exists (for PostgreSQL)
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE telegram_accounts DROP CONSTRAINT telegram_accounts_assigned_worker_id_fkey;"))
+    except Exception:
+        pass
+        
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE telegram_accounts ADD COLUMN mask_client_names BOOLEAN DEFAULT FALSE;"))
     except Exception:
         pass
     try:
