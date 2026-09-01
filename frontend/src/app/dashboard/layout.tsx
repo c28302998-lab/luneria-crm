@@ -9,8 +9,8 @@ import {
   LayoutDashboard, Users, Briefcase, 
   Settings, LogOut, DollarSign, CheckSquare, 
   FileBarChart, MessageSquare, Shield, Activity, Bell
-, GraduationCap, Globe, Key} , Menu, X } from 'lucide-react';
-import { ClipboardCheck, Clock } , Menu, X } from 'lucide-react';
+, GraduationCap, Globe, Key, Menu, X } from 'lucide-react';
+import { ClipboardCheck, Clock } from 'lucide-react';
 import ShiftButton from '@/components/ShiftButton';
 
 const getNavigation = (role: string) => {
@@ -221,7 +221,6 @@ export default function DashboardLayout({
           <div className="flex items-center gap-2 md:gap-4">
             <div className="hidden sm:block">
               <ShiftButton />
-            </div>
             </div>
           <div className="relative">
             <button 
