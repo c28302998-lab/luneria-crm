@@ -77,7 +77,7 @@ def get_accounts(db: Session = Depends(get_db), current_user: User = Depends(che
     return db.query(TelegramAccount).filter(TelegramAccount.is_deleted == False).all()
 
 class AssignAccountRequest(BaseModel):
-    worker_id: Optional[int]
+    user_id: Optional[int]
 
 @router.patch("/accounts/{acc_id}/assign")
 async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
@@ -85,7 +85,7 @@ async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = D
     if not acc:
         raise HTTPException(status_code=404, detail="Account not found")
         
-    old_worker = acc.assigned_worker_id
+    old_user = acc.assigned_user_id
     acc.assigned_user_id = req.user_id
     db.commit()
     
@@ -94,13 +94,13 @@ async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = D
         user_id=current_user.id,
         account_id=acc.id,
         action="ASSIGN_ACCOUNT",
-        details=f"Changed assigned worker from {old_worker} to {req.worker_id}"
+        details=f"Changed assigned worker from {old_user} to {req.user_id}"
     )
     db.add(log)
     db.commit()
     
     # Session Lock: If changing worker, kill active session to prevent old worker from using it
-    if old_worker != req.worker_id:
+    if old_worker != req.user_id:
         await telegram_manager.disconnect_account(acc.id)
         
     return {"status": "success"}
