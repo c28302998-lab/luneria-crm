@@ -18,6 +18,23 @@ async def get_user_account(user: User = Depends(get_current_user), db: Session =
         raise HTTPException(status_code=404, detail="No active Telegram account assigned")
     return acc
 
+
+from typing import Optional
+
+@router.get("/my-accounts")
+async def get_my_accounts(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    accs = db.query(TelegramAccount).filter(TelegramAccount.assigned_user_id == user.id, TelegramAccount.status == TelegramAccountStatus.ACTIVE).all()
+    return [{"id": a.id, "name": a.name, "phone": a.phone} for a in accs]
+
+def get_user_account(user, db, account_id=None):
+    query = db.query(TelegramAccount).filter(TelegramAccount.assigned_user_id == user.id)
+    if account_id:
+        query = query.filter(TelegramAccount.id == account_id)
+    acc = query.first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="No Telegram account assigned to you")
+    return acc
+
 @router.get("/chats")
 async def get_chats(request: Request, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_user_account), user: User = Depends(get_current_user)):
     try:

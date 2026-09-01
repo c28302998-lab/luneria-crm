@@ -7,6 +7,8 @@ import { Search, Send, Menu, ArrowLeft, Loader2, Info, Edit2 } from 'lucide-reac
 
 export default function TelegramPage() {
   const { user } = useAuth();
+  const [myAccounts, setMyAccounts] = useState<any[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const [chats, setChats] = useState<any[]>([]);
   const [activeChat, setActiveChat] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -34,7 +36,7 @@ export default function TelegramPage() {
     const alias = prompt(`Внутреннее имя клиента (пусто = сброс):`);
     if (alias === null) return;
     try {
-      await api.post(`/telegram/proxy/chats/${chatId}/alias`, { custom_name: alias });
+      await api.post(`/telegram/proxy/chats/${chatId}/alias${selectedAccountId ? '?account_id='+selectedAccountId : ''}`, { custom_name: alias });
       fetchChats();
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Ошибка сохранения имени');
@@ -59,9 +61,26 @@ export default function TelegramPage() {
   };
 
 
+
+  const fetchMyAccounts = async () => {
+    try {
+      const { data } = await api.get('/telegram/proxy/my-accounts');
+      setMyAccounts(data);
+      if (data.length > 0 && !selectedAccountId) {
+        setSelectedAccountId(data[0].id);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyAccounts();
+  }, []);
+
   const fetchChats = async () => {
     try {
-      const { data } = await api.get('/telegram/proxy/chats');
+      const { data } = await api.get(`/telegram/proxy/chats${selectedAccountId ? '?account_id='+selectedAccountId : ''}`);
       setChats(data);
       setError(null);
     } catch (err: any) {
@@ -77,7 +96,7 @@ export default function TelegramPage() {
 
   const fetchMessages = async (chatId: string) => {
     try {
-      const { data } = await api.get(`/telegram/proxy/messages/${chatId}`);
+      const { data } = await api.get(`/telegram/proxy/messages/${chatId}${selectedAccountId ? '?account_id='+selectedAccountId : ''}`);
       // Reverse because Telegram returns newest first
       setMessages(data.reverse());
     } catch (err) {
