@@ -122,6 +122,61 @@ export default function TelegramAccountsPage() {
 
   return (
     <div>
+
+      {/* Stats Modal */}
+      {showStatsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Мониторинг аккаунта #{showStatsModal}</h3>
+              <button onClick={() => setShowStatsModal(null)} className="text-gray-400 hover:text-gray-500">×</button>
+            </div>
+            
+            {!statsData ? (
+              <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm font-medium text-gray-500">Статус</span>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${statsData.is_online ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                    <span className="text-sm font-bold">{statsData.is_online ? 'Онлайн' : 'Оффлайн'}</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Всего сообщений</div>
+                    <div className="text-lg font-semibold">{statsData.total_messages}</div>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Время работы</div>
+                    <div className="text-lg font-semibold">{Math.round(statsData.total_work_seconds / 60)} мин</div>
+                  </div>
+                </div>
+                
+                <div className="border-t border-gray-100 pt-4 space-y-2">
+                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Технические данные</h4>
+                  
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Последняя активность:</span>
+                    <span className="text-gray-900">{statsData.last_activity ? new Date(statsData.last_activity).toLocaleString('ru-RU') : 'Нет данных'}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Последний IP:</span>
+                    <span className="text-gray-900">{statsData.last_ip || 'Неизвестно'}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Устройство:</span>
+                    <span className="text-gray-900 truncate max-w-[150px]" title={`${statsData.last_os} / ${statsData.last_browser}`}>{statsData.last_os || 'Неизвестно'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
           <MonitorSmartphone className="w-6 h-6 text-indigo-600" />
