@@ -5,7 +5,7 @@ from typing import List, Optional
 import traceback
 
 from ..db.database import get_db
-from ..models.models import User
+from ..models.models import User, Account
 from ..models.telegram import TelegramAccount, TelegramAccountStatus, TelegramAuditLog
 from .auth import get_current_user
 from ..services.telegram_manager import telegram_manager

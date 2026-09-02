@@ -8,6 +8,19 @@ import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Load
 export default function TelegramAccountsPage() {
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<any[]>([]);
+  const [editingPwdId, setEditingPwdId] = useState<number | null>(null);
+  const [editPwdValue, setEditPwdValue] = useState('');
+  
+  const handleSavePwd = async (id: number) => {
+    try {
+      await api.put(`/telegram/admin/accounts/${id}/2fa-password`, { password: editPwdValue || null });
+      setEditingPwdId(null);
+      fetchAccounts();
+    } catch (err) {
+      alert('Ошибка при сохранении пароля');
+    }
+  };
+
   const [users, setUsers] = useState<any[]>([]);
   const [candidates, setCandidates] = useState<any[]>([]);
   
@@ -279,6 +292,27 @@ export default function TelegramAccountsPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div>Отправлено: {acc.total_messages_sent}</div>
+                  <div className="mt-2 text-xs">
+                    <span className="font-semibold">2FA Пароль:</span><br/>
+                    {editingPwdId === acc.id ? (
+                      <div className="flex items-center gap-1 mt-1">
+                        <input 
+                          type="text" 
+                          className="border border-gray-300 rounded px-1 py-0.5 w-24 text-xs" 
+                          value={editPwdValue} 
+                          onChange={e => setEditPwdValue(e.target.value)} 
+                          placeholder="Нет пароля"
+                        />
+                        <button onClick={() => handleSavePwd(acc.id)} className="text-green-600 font-bold hover:text-green-800">✓</button>
+                        <button onClick={() => setEditingPwdId(null)} className="text-red-600 font-bold hover:text-red-800">✕</button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-gray-700 font-mono">{acc.two_fa_password || <span className="text-gray-400 italic">Нет пароля</span>}</span>
+                        <button onClick={() => { setEditingPwdId(acc.id); setEditPwdValue(acc.two_fa_password || ''); }} className="text-blue-500 hover:text-blue-700 text-[10px] ml-1 flex items-center gap-0.5"><Key className="w-3 h-3"/> ИЗМЕНИТЬ</button>
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                                         <div className="flex flex-col gap-2">

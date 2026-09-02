@@ -13,6 +13,7 @@ class TelegramAccountBase(BaseModel):
     mask_client_names: Optional[bool] = False
     setup_checklist: Optional[str] = None
     issue_request_status: Optional[str] = 'NONE'
+    two_fa_password: Optional[str] = None
 
 class TelegramAccountCreate(TelegramAccountBase):
     session_string: str
@@ -49,6 +50,7 @@ class TelegramRequestResponse(TelegramRequestBase):
     mask_client_names: Optional[bool] = False
     setup_checklist: Optional[str] = None
     issue_request_status: Optional[str] = 'NONE'
+    two_fa_password: Optional[str] = None
     owner_comment: Optional[str] = None
     created_at: datetime
     updated_at: datetime
