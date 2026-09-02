@@ -113,3 +113,13 @@ def debug_db(db: Session = Depends(get_db)):
         return {"columns": cols}
     except Exception as e:
         return {"error": str(e)}
+
+from app.models.telegram import TelegramAccount
+
+@app.get("/api/v1/debug-accounts")
+def debug_accounts(db: Session = Depends(get_db)):
+    try:
+        accs = db.query(TelegramAccount).all()
+        return {"accounts": [{"id": a.id, "name": a.name, "status": a.issue_request_status} for a in accs]}
+    except Exception as e:
+        return {"error": str(e)}
