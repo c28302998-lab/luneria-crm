@@ -34,7 +34,7 @@ export default function TelegramPage() {
       fetchMyAccounts();
       alert('Запрос на выдачу отправлен!');
     } catch (err: any) {
-      alert('Ошибка запроса');
+      alert('Ошибка запроса: ' + (err.response?.data?.detail || err.message));
     }
   };
 
