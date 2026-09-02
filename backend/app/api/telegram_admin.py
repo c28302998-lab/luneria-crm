@@ -100,6 +100,19 @@ def sync_legacy_accounts(db: Session = Depends(get_db), current_user: User = Dep
     db.commit()
     return {"status": "ok", "synced": added}
 
+
+class EditPasswordRequest(BaseModel):
+    password: Optional[str] = None
+
+@router.put("/accounts/{acc_id}/2fa-password")
+def edit_2fa_password_admin(acc_id: int, req: EditPasswordRequest, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="Account not found")
+    acc.two_fa_password = req.password
+    db.commit()
+    return {"status": "ok"}
+
 @router.get("/accounts", response_model=List[TelegramAccountResponse])
 def get_accounts(db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
     return db.query(TelegramAccount).filter(TelegramAccount.is_deleted == False).all()
