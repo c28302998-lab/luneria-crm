@@ -78,6 +78,28 @@ async def verify_code(req: VerifyCodeRequest, db: Session = Depends(get_db), cur
 
 from ..schemas.telegram import TelegramAccountResponse, TelegramAuditLogResponse
 
+
+@router.post("/accounts/sync-legacy")
+def sync_legacy_accounts(db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    tg_accs = db.query(TelegramAccount).filter(TelegramAccount.is_deleted == False).all()
+    existing_accs = db.query(Account).filter(Account.is_deleted == False).all()
+    existing_phones = {a.account_number for a in existing_accs if a.account_number}
+    
+    added = 0
+    for tg in tg_accs:
+        if tg.phone not in existing_phones:
+            new_acc = Account(
+                login=tg.username if tg.username else tg.name,
+                account_number=tg.phone,
+                status="FREE"
+            )
+            db.add(new_acc)
+            existing_phones.add(tg.phone)
+            added += 1
+    
+    db.commit()
+    return {"status": "ok", "synced": added}
+
 @router.get("/accounts", response_model=List[TelegramAccountResponse])
 def get_accounts(db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
     return db.query(TelegramAccount).filter(TelegramAccount.is_deleted == False).all()
