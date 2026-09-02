@@ -115,7 +115,7 @@ def edit_2fa_password_admin(acc_id: int, req: EditPasswordRequest, db: Session =
 
 @router.get("/accounts", response_model=List[TelegramAccountResponse])
 def get_accounts(db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
-    return db.query(TelegramAccount).filter(TelegramAccount.is_deleted == False).all()
+    return db.query(TelegramAccount).filter(TelegramAccount.is_deleted == False).order_by(TelegramAccount.id.asc()).all()
 
 class AssignAccountRequest(BaseModel):
     user_id: Optional[int]
