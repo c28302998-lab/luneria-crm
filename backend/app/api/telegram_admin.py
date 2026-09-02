@@ -45,7 +45,8 @@ async def verify_code(req: VerifyCodeRequest, db: Session = Depends(get_db), cur
             phone=req.phone,
             username=username,
             session_string=session_string,
-            status=TelegramAccountStatus.ACTIVE
+            status=TelegramAccountStatus.ACTIVE,
+            two_fa_password=req.password
         )
         db.add(acc)
         db.commit()
@@ -293,5 +294,15 @@ def update_checklist(acc_id: int, req: UpdateChecklistRequest, db: Session = Dep
         raise HTTPException(status_code=404, detail="Account not found")
     
     acc.setup_checklist = req.setup_checklist
+    db.commit()
+    return {"status": "ok"}
+
+@router.post("/accounts/{acc_id}/approve-issue")
+def approve_issue(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    acc.issue_request_status = 'APPROVED'
     db.commit()
     return {"status": "ok"}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Loader2, Eye, EyeOff, Trash, CheckSquare } from 'lucide-react';
+import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Loader2, Eye, EyeOff, Trash, CheckSquare, Key } from 'lucide-react';
 
 export default function TelegramAccountsPage() {
   const { user } = useAuth();
@@ -132,6 +132,17 @@ export default function TelegramAccountsPage() {
       fetchAccounts();
     } catch (err: any) {
       alert(err.response?.data?.detail || err.message || 'Ошибка при назначении');
+    }
+  };
+
+
+  const handleApproveIssue = async (id: number) => {
+    if (!confirm('Выдать пароль админу?')) return;
+    try {
+      await api.post(`/telegram/admin/accounts/${id}/approve-issue`);
+      fetchAccounts();
+    } catch (err) {
+      alert('Ошибка при одобрении');
     }
   };
 
@@ -271,6 +282,11 @@ export default function TelegramAccountsPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                                         <div className="flex flex-col gap-2">
+                    {acc.issue_request_status === 'REQUESTED' && (
+                      <button onClick={() => handleApproveIssue(acc.id)} className="text-orange-600 font-bold hover:text-orange-900 flex items-center gap-1 text-xs">
+                        <Key className="w-4 h-4 animate-pulse" /> Одобрить выдачу 2FA
+                      </button>
+                    )}
                     <button onClick={() => handleRevoke(acc.id)} className="text-red-600 hover:text-red-900 flex items-center gap-1 text-xs">
                       <Unlink className="w-4 h-4" /> Отозвать (откл. сессию)
                     </button>

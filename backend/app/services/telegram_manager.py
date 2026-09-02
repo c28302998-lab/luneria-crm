@@ -106,5 +106,22 @@ class TelegramManager:
             del self.auth_sessions[phone]
             raise e
 
+
+    async def edit_2fa_password(self, session_string: str, old_password: str, new_password: str) -> str:
+        if not API_ID or not API_HASH:
+            raise ValueError("Telegram API credentials not configured")
+            
+        client = TelegramClient(StringSession(session_string), API_ID, API_HASH)
+        await client.connect()
+        try:
+            if not await client.is_user_authorized():
+                raise ValueError("Session is invalid or expired")
+                
+            await client.edit_2fa(current_password=old_password, new_password=new_password)
+            new_session = client.session.save()
+            return new_session
+        finally:
+            await client.disconnect()
+
 # Global singleton
 telegram_manager = TelegramManager()

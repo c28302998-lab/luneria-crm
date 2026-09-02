@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Search, Send, Menu, ArrowLeft, Loader2, Info, Edit2 } from 'lucide-react';
+import { Search, Send, Menu, ArrowLeft, Loader2, Info, Edit2, Key } from 'lucide-react';
 
 export default function TelegramPage() {
   const { user } = useAuth();
@@ -26,6 +26,30 @@ export default function TelegramPage() {
   const [requestSending, setRequestSending] = useState(false);
   const [showChecklist, setShowChecklist] = useState(false);
   
+
+  const handleRequestIssue = async () => {
+    if (!selectedAccountId) return;
+    try {
+      await api.post(`/telegram/proxy/accounts/${selectedAccountId}/request-issue`);
+      fetchMyAccounts();
+      alert('Запрос на выдачу отправлен!');
+    } catch (err: any) {
+      alert('Ошибка запроса');
+    }
+  };
+
+  const handleFinishIssue = async () => {
+    if (!selectedAccountId) return;
+    if (!confirm('Аккаунт выдан воркеру? Сбросить облачный пароль?')) return;
+    try {
+      await api.post(`/telegram/proxy/accounts/${selectedAccountId}/finish-issue`);
+      fetchMyAccounts();
+      alert('Аккаунт успешно выдан, 2FA пароль изменен!');
+    } catch (err: any) {
+      alert('Ошибка при смене пароля: ' + err.response?.data?.detail);
+    }
+  };
+
   const handleSettingsAction = (type: string) => {
     setRequestType(type);
     setShowSettings(false);
@@ -207,12 +231,48 @@ export default function TelegramPage() {
           </div>
           </div>
           {user?.role !== 'CANDIDATE' && (
-            <button 
-              onClick={() => setShowChecklist(true)} 
-              className="w-full py-1.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-md hover:bg-blue-200 transition"
-            >
-              📋 Чек-лист подготовки аккаунта
-            </button>
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => setShowChecklist(true)} 
+                className="w-full py-1.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-md hover:bg-blue-200 transition"
+              >
+                📋 Чек-лист подготовки аккаунта
+              </button>
+              
+              {(() => {
+                const acc = myAccounts.find(a => a.id === selectedAccountId);
+                if (!acc) return null;
+                
+                if (acc.issue_request_status === 'APPROVED') {
+                  return (
+                    <div className="p-2 bg-green-50 border border-green-200 rounded-md">
+                      <div className="text-xs text-green-800 font-semibold mb-1 flex items-center gap-1">
+                        <Key className="w-3 h-3"/> Данные для выдачи:
+                      </div>
+                      <div className="text-xs text-gray-700 font-mono mb-2">
+                        Номер: {acc.phone}<br/>
+                        Пароль: {acc.two_fa_password || 'Нет пароля'}
+                      </div>
+                      <button onClick={handleFinishIssue} className="w-full py-1.5 bg-green-600 text-white text-xs font-semibold rounded-md hover:bg-green-700 transition">
+                        Завершить выдачу (Сменить пароль)
+                      </button>
+                    </div>
+                  );
+                } else if (acc.issue_request_status === 'REQUESTED') {
+                  return (
+                    <div className="p-2 bg-orange-50 border border-orange-200 rounded-md text-center text-xs text-orange-800 font-medium">
+                      Ожидание одобрения Овнером...
+                    </div>
+                  );
+                } else {
+                  return (
+                    <button onClick={handleRequestIssue} className="w-full py-1.5 bg-gray-800 text-white text-xs font-semibold rounded-md hover:bg-gray-900 transition flex justify-center items-center gap-1">
+                      <Key className="w-3 h-3"/> Запросить пароль для выдачи
+                    </button>
+                  );
+                }
+              })()}
+            </div>
           )}
         </div>
         

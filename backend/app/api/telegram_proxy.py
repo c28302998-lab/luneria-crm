@@ -216,3 +216,38 @@ def set_proxy_chat_alias(chat_id: str, req: ProxyAliasCreate, db: Session = Depe
         db.add(alias)
     db.commit()
     return {"status": "success"}
+
+import string
+import random
+
+def generate_random_password(length=12):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for i in range(length))
+
+@router.post("/accounts/{account_id}/request-issue")
+async def request_issue(account_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    acc = await get_user_account(account_id, user, db)
+    if acc.issue_request_status == 'APPROVED':
+        return {"status": "ok"}
+    acc.issue_request_status = 'REQUESTED'
+    db.commit()
+    return {"status": "ok"}
+
+@router.post("/accounts/{account_id}/finish-issue")
+async def finish_issue(account_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    acc = await get_user_account(account_id, user, db)
+    if acc.issue_request_status != 'APPROVED':
+        raise HTTPException(status_code=400, detail="Not approved for issuance")
+        
+    old_password = acc.two_fa_password
+    new_password = generate_random_password()
+    
+    try:
+        new_session = await telegram_manager.edit_2fa_password(acc.session_string, old_password, new_password)
+        acc.two_fa_password = new_password
+        acc.session_string = new_session
+        acc.issue_request_status = 'NONE'
+        db.commit()
+        return {"status": "success", "message": "Password rotated"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to change 2FA: {str(e)}")

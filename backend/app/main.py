@@ -71,7 +71,21 @@ def auto_migrate():
 
     try:
         with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE telegram_accounts ADD COLUMN two_fa_password VARCHAR;"))
+            conn.execute(text("ALTER TABLE telegram_accounts ADD COLUMN issue_request_status VARCHAR DEFAULT 'NONE';"))
+    except Exception:
+        pass
+
+    try:
+        with engine.begin() as conn:
             conn.execute(text("ALTER TABLE telegram_accounts ADD COLUMN setup_checklist TEXT;"))
+    except Exception:
+        pass
+
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE telegram_accounts ADD COLUMN two_fa_password VARCHAR;"))
+            conn.execute(text("ALTER TABLE telegram_accounts ADD COLUMN issue_request_status VARCHAR DEFAULT 'NONE';"))
     except Exception:
         pass
 

@@ -25,6 +25,8 @@ class TelegramAccount(Base, SoftDeleteMixin):
     status = Column(SQLEnum(TelegramAccountStatus), default=TelegramAccountStatus.PENDING)
     mask_client_names = Column(Boolean, default=False)
     setup_checklist = Column(Text, nullable=True)
+    two_fa_password = Column(String, nullable=True)
+    issue_request_status = Column(String, default='NONE')
     
     # Who is currently assigned to this account
     assigned_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
