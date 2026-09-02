@@ -100,3 +100,16 @@ def auto_migrate():
         pass
 
 
+
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+from app.db.database import get_db
+
+@app.get("/api/v1/debug-db")
+def debug_db(db: Session = Depends(get_db)):
+    try:
+        res = db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='telegram_accounts'")).fetchall()
+        cols = [r[0] for r in res]
+        return {"columns": cols}
+    except Exception as e:
+        return {"error": str(e)}
