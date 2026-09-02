@@ -22,6 +22,18 @@ export default function AccountsPage() {
   
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
 
+  const handleSyncLegacy = async () => {
+    if (!confirm('Синхронизировать старые TG аккаунты в эту таблицу?')) return;
+    try {
+      const res = await api.post('/telegram/admin/accounts/sync-legacy');
+      alert(`Синхронизировано аккаунтов: ${res.data.synced}`);
+      window.location.reload();
+    } catch (err) {
+      alert('Ошибка синхронизации');
+    }
+  };
+
+
   const [formData, setFormData] = useState({
     login: '',
     account_number: '',
