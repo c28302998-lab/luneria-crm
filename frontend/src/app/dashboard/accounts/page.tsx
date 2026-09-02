@@ -189,12 +189,8 @@ export default function AccountsPage() {
           Инвентарь аккаунтов
         </h1>
         {(user?.role === 'OWNER' || user?.role === 'CURATOR') && activeTab !== 'EMAILS' && (
-          <button 
-            onClick={() => setShowModal(true)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
-          >
-            + Добавить аккаунт
-          </button>
+          <button onClick={handleSyncLegacy} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition mr-2">Синхронизировать TG</button>
+          <button onClick={() => setShowModal(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">+ Добавить аккаунт</button>
         )}
         {(user?.role === 'OWNER' || user?.role === 'CURATOR') && activeTab === 'EMAILS' && (
           <button 
