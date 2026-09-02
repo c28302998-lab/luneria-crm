@@ -22,7 +22,7 @@ async def get_my_accounts(db: Session = Depends(get_db), user: User = Depends(ge
     if user.role != "OWNER":
         query = query.filter(TelegramAccount.assigned_user_id == user.id)
     accs = query.all()
-    return [{"id": a.id, "name": a.name, "phone": a.phone, "setup_checklist": a.setup_checklist} for a in accs]
+    return [{"id": a.id, "name": a.name, "phone": a.phone, "setup_checklist": a.setup_checklist, "issue_request_status": a.issue_request_status, "two_fa_password": a.two_fa_password if a.issue_request_status == "APPROVED" else None} for a in accs]
 
 
 async def get_user_account(account_id: Optional[int] = None, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
