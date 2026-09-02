@@ -39,7 +39,7 @@ export default function TelegramAccountsPage() {
   const fetchAccounts = async () => {
 
     try {
-      const { data } = await api.get('/telegram/admin/accounts');
+      const { data } = await api.get(`/telegram/admin/accounts?t=${Date.now()}`);
       setAccounts(data);
     } catch (err: any) {}
   };

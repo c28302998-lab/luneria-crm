@@ -89,7 +89,7 @@ export default function TelegramPage() {
 
   const fetchMyAccounts = async () => {
     try {
-      const { data } = await api.get('/telegram/proxy/my-accounts');
+      const { data } = await api.get(`/telegram/proxy/my-accounts?t=${Date.now()}`);
       setMyAccounts(data);
       if (data.length > 0 && !selectedAccountId) {
         setSelectedAccountId(data[0].id);
