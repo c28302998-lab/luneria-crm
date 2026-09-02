@@ -34,7 +34,9 @@ export default function TelegramPage() {
     setIssueError(null);
     setIssueSuccess(null);
     try {
-      await api.post(`/telegram/proxy/accounts/${selectedAccountId}/request-issue`);
+      const res = await api.post(`/telegram/proxy/accounts/${selectedAccountId}/request-issue`);
+      console.log('Request issue response:', res.data);
+      alert('Ответ сервера: ' + JSON.stringify(res.data));
       fetchMyAccounts();
       setIssueSuccess('Запрос успешно отправлен!');
     } catch (err: any) {

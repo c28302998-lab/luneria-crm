@@ -231,7 +231,8 @@ async def request_issue(account_id: int, user: User = Depends(get_current_user),
         return {"status": "ok"}
     acc.issue_request_status = 'REQUESTED'
     db.commit()
-    return {"status": "ok"}
+    db.refresh(acc)
+    return {"status": "ok", "new_status": acc.issue_request_status}
 
 @router.post("/accounts/{account_id}/finish-issue")
 async def finish_issue(account_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
