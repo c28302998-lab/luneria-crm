@@ -25,16 +25,20 @@ export default function TelegramPage() {
   const [requestReason, setRequestReason] = useState('');
   const [requestSending, setRequestSending] = useState(false);
   const [showChecklist, setShowChecklist] = useState(false);
+  const [issueError, setIssueError] = useState<string | null>(null);
+  const [issueSuccess, setIssueSuccess] = useState<string | null>(null);
   
 
   const handleRequestIssue = async () => {
     if (!selectedAccountId) return;
+    setIssueError(null);
+    setIssueSuccess(null);
     try {
       await api.post(`/telegram/proxy/accounts/${selectedAccountId}/request-issue`);
       fetchMyAccounts();
-      alert('Запрос на выдачу отправлен!');
+      setIssueSuccess('Запрос успешно отправлен!');
     } catch (err: any) {
-      alert('Ошибка запроса: ' + (err.response?.data?.detail || err.message));
+      setIssueError('Ошибка: ' + (err.response?.data?.detail || err.message));
     }
   };
 
@@ -266,9 +270,13 @@ export default function TelegramPage() {
                   );
                 } else {
                   return (
-                    <button onClick={handleRequestIssue} className="w-full py-1.5 bg-gray-800 text-white text-xs font-semibold rounded-md hover:bg-gray-900 transition flex justify-center items-center gap-1">
-                      <Key className="w-3 h-3"/> Запросить пароль для выдачи
-                    </button>
+                    <div className="flex flex-col gap-1">
+                      {issueError && <div className="text-[10px] text-red-600 font-medium bg-red-50 p-1 rounded border border-red-200">{issueError}</div>}
+                      {issueSuccess && <div className="text-[10px] text-green-600 font-medium bg-green-50 p-1 rounded border border-green-200">{issueSuccess}</div>}
+                      <button onClick={handleRequestIssue} className="w-full py-1.5 bg-gray-800 text-white text-xs font-semibold rounded-md hover:bg-gray-900 transition flex justify-center items-center gap-1">
+                        <Key className="w-3 h-3"/> Запросить пароль для выдачи
+                      </button>
+                    </div>
                   );
                 }
               })()}
