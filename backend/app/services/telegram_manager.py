@@ -75,7 +75,7 @@ class TelegramManager:
             await client.disconnect()
             raise e
 
-    async def auth_sign_in(self, phone: str, code: str, password: str = None) -> str:
+    async def auth_sign_in(self, phone: str, code: str, password: str = None) -> tuple[str, str]:
         """Step 2: Submit code (and optionally password) to get session string."""
         if phone not in self.auth_sessions:
             raise ValueError("Auth session not found. Please request code again.")
@@ -91,10 +91,11 @@ class TelegramManager:
                 await client.sign_in(phone, code, phone_code_hash=state.phone_code_hash)
                 
             # Successfully logged in! Return the session string.
+            me = await client.get_me()
             session_string = client.session.save()
             await client.disconnect()
             del self.auth_sessions[phone]
-            return session_string
+            return session_string, getattr(me, 'username', None)
             
         except SessionPasswordNeededError:
             # Code was correct, but 2FA is required.

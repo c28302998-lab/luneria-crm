@@ -37,12 +37,13 @@ async def send_code(req: SendCodeRequest, current_user: User = Depends(check_own
 @router.post("/auth/verify-code")
 async def verify_code(req: VerifyCodeRequest, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
     try:
-        session_string = await telegram_manager.auth_sign_in(req.phone, req.code, req.password)
+        session_string, username = await telegram_manager.auth_sign_in(req.phone, req.code, req.password)
         
         # Save to DB
         acc = TelegramAccount(
             name=req.account_name,
             phone=req.phone,
+            username=username,
             session_string=session_string,
             status=TelegramAccountStatus.ACTIVE
         )
