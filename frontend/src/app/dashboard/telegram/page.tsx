@@ -188,7 +188,7 @@ export default function TelegramPage() {
         <div className="bg-red-50 text-red-600 p-6 rounded-xl flex flex-col items-center gap-4 text-center max-w-md">
           <Info className="w-12 h-12" />
           <p className="font-medium text-lg">{error}</p>
-          <p className="text-sm opacity-80">Политика безопасности не позволяет использовать аккаунт, если он не привязан к вам в CRM.</p>
+          <p className="text-sm opacity-80">Эта сессия Telegram больше не работает. Возможно, аккаунт был заблокирован Telegram, либо сессия была завершена с другого устройства.</p>
         </div>
       </div>
     );
