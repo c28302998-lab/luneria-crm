@@ -6,7 +6,20 @@ from app.api import auth, telegram_admin, telegram_proxy
 import os
 
 
+
+
+
+app = FastAPI(
+    title="Luneria CRM API",
+    description="Internal CRM system for Luneria agency",
+    version="1.0.0"
+)
+
 from sqlalchemy import text
+from app.db.database import get_db
+from sqlalchemy.orm import Session
+from fastapi import Depends
+
 @app.get("/api/v1/run-migration-3")
 def run_migration_3(db: Session = Depends(get_db)):
     msgs = []
@@ -32,12 +45,6 @@ def run_migration_3(db: Session = Depends(get_db)):
     db.commit()
     return {"status": msgs}
 
-
-app = FastAPI(
-    title="Luneria CRM API",
-    description="Internal CRM system for Luneria agency",
-    version="1.0.0"
-)
 
 # CORS
 app.add_middleware(
