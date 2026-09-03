@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
+from app.services.google_sheets import sheets_service
 from app.models.models import User, Worker, Candidate
 from app.schemas.schemas import Worker as WorkerSchema, WorkerCreate, WorkerUpdate
 from app.core.dependencies import get_current_user, RoleChecker
@@ -22,7 +23,7 @@ def read_workers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),
     return []
 
 @router.post("/", response_model=WorkerSchema)
-def create_worker(worker_in: WorkerCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["ADMIN", "OWNER"]))):
+def create_worker(worker_in: WorkerCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["ADMIN", "OWNER"]))):
     candidate = db.query(Candidate).filter(Candidate.id == worker_in.candidate_id).first()
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidate not found")
@@ -43,6 +44,18 @@ def create_worker(worker_in: WorkerCreate, db: Session = Depends(get_db), curren
     db.commit()
     db.refresh(worker)
     log_audit(db, current_user.id, "CREATE", "Worker", worker.id, {"status": worker.status})
+    
+    # Trigger sheets sync
+    admin = db.query(User).filter(User.id == candidate.admin_id).first()
+    admin_name = admin.first_name if admin else "Unknown"
+    worker_data = {
+        "id": worker.id,
+        "candidate_name": f"{candidate.first_name} {candidate.last_name or ''}".strip(),
+        "admin_name": admin_name,
+        "status": worker.status,
+    }
+    background_tasks.add_task(sheets_service.sync_new_worker, worker_data)
+    
     return worker
 
 @router.patch("/{worker_id}/status", response_model=WorkerSchema)

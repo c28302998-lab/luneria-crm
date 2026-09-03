@@ -111,6 +111,16 @@ def edit_2fa_password_admin(acc_id: int, req: EditPasswordRequest, db: Session =
         raise HTTPException(status_code=404, detail="Account not found")
     acc.two_fa_password = req.password
     db.commit()
+    
+    # Trigger sheets sync
+    assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
+    admin_name = assigned_user.first_name if assigned_user else "Unknown"
+    account_data = {
+        "account_number": acc.phone if acc.phone else acc.name,
+        "admin_name": admin_name,
+    }
+    background_tasks.add_task(sheets_service.sync_issued_account, account_data)
+    
     return {"status": "ok"}
 
 @router.get("/accounts", response_model=List[TelegramAccountResponse])
@@ -317,6 +327,16 @@ def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: Use
     # We soft delete it
     acc.is_deleted = True
     db.commit()
+    
+    # Trigger sheets sync
+    assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
+    admin_name = assigned_user.first_name if assigned_user else "Unknown"
+    account_data = {
+        "account_number": acc.phone if acc.phone else acc.name,
+        "admin_name": admin_name,
+    }
+    background_tasks.add_task(sheets_service.sync_issued_account, account_data)
+    
     return {"status": "ok"}
 
 class UpdateChecklistRequest(BaseModel):
@@ -330,10 +350,20 @@ def update_checklist(acc_id: int, req: UpdateChecklistRequest, db: Session = Dep
     
     acc.setup_checklist = req.setup_checklist
     db.commit()
+    
+    # Trigger sheets sync
+    assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
+    admin_name = assigned_user.first_name if assigned_user else "Unknown"
+    account_data = {
+        "account_number": acc.phone if acc.phone else acc.name,
+        "admin_name": admin_name,
+    }
+    background_tasks.add_task(sheets_service.sync_issued_account, account_data)
+    
     return {"status": "ok"}
 
 @router.post("/accounts/{acc_id}/approve-issue")
-def approve_issue(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+def approve_issue(acc_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
     from app.models.models import Account
     from datetime import datetime
     
@@ -359,6 +389,16 @@ def approve_issue(acc_id: int, db: Session = Depends(get_db), current_user: User
             db.add(new_acc)
             
     db.commit()
+    
+    # Trigger sheets sync
+    assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
+    admin_name = assigned_user.first_name if assigned_user else "Unknown"
+    account_data = {
+        "account_number": acc.phone if acc.phone else acc.name,
+        "admin_name": admin_name,
+    }
+    background_tasks.add_task(sheets_service.sync_issued_account, account_data)
+    
     return {"status": "ok"}
 
 @router.post("/accounts/{account_id}/deny-issue")
@@ -368,4 +408,14 @@ async def deny_issue(account_id: int, user: User = Depends(check_owner), db: Ses
         raise HTTPException(status_code=404, detail="Account not found")
     acc.issue_request_status = 'NONE'
     db.commit()
+    
+    # Trigger sheets sync
+    assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
+    admin_name = assigned_user.first_name if assigned_user else "Unknown"
+    account_data = {
+        "account_number": acc.phone if acc.phone else acc.name,
+        "admin_name": admin_name,
+    }
+    background_tasks.add_task(sheets_service.sync_issued_account, account_data)
+    
     return {"status": "ok"}
