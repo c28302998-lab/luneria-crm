@@ -97,6 +97,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   useEffect(() => {
+    api.get('/run-migration-5').catch(console.error);
     api.get('/run-migration-4').catch(console.error);
     api.get('/run-migration-3').catch(console.error);
   }, []);
