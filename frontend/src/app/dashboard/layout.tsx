@@ -92,15 +92,15 @@ const getNavigation = (role: string) => {
 };
 
 export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   useEffect(() => {
     api.get('/run-migration-4').catch(console.error);
     api.get('/run-migration-3').catch(console.error);
   }, []);
 
-  children,
-}: {
-  children: React.ReactNode;
-}) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
