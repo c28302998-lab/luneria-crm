@@ -114,7 +114,7 @@ def edit_2fa_password_admin(acc_id: int, req: EditPasswordRequest, db: Session =
     
     # Trigger sheets sync
     assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
-    admin_name = assigned_user.first_name if assigned_user else "Unknown"
+    admin_name = assigned_user.name if assigned_user else "Unknown"
     account_data = {
         "account_number": acc.phone if acc.phone else acc.name,
         "admin_name": admin_name,
@@ -330,7 +330,7 @@ def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: Use
     
     # Trigger sheets sync
     assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
-    admin_name = assigned_user.first_name if assigned_user else "Unknown"
+    admin_name = assigned_user.name if assigned_user else "Unknown"
     account_data = {
         "account_number": acc.phone if acc.phone else acc.name,
         "admin_name": admin_name,
@@ -353,7 +353,7 @@ def update_checklist(acc_id: int, req: UpdateChecklistRequest, db: Session = Dep
     
     # Trigger sheets sync
     assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
-    admin_name = assigned_user.first_name if assigned_user else "Unknown"
+    admin_name = assigned_user.name if assigned_user else "Unknown"
     account_data = {
         "account_number": acc.phone if acc.phone else acc.name,
         "admin_name": admin_name,
@@ -392,7 +392,7 @@ def approve_issue(acc_id: int, background_tasks: BackgroundTasks, db: Session = 
     
     # Trigger sheets sync
     assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
-    admin_name = assigned_user.first_name if assigned_user else "Unknown"
+    admin_name = assigned_user.name if assigned_user else "Unknown"
     account_data = {
         "account_number": acc.phone if acc.phone else acc.name,
         "admin_name": admin_name,
@@ -411,7 +411,7 @@ async def deny_issue(account_id: int, user: User = Depends(check_owner), db: Ses
     
     # Trigger sheets sync
     assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
-    admin_name = assigned_user.first_name if assigned_user else "Unknown"
+    admin_name = assigned_user.name if assigned_user else "Unknown"
     account_data = {
         "account_number": acc.phone if acc.phone else acc.name,
         "admin_name": admin_name,

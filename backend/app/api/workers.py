@@ -47,7 +47,7 @@ def create_worker(worker_in: WorkerCreate, background_tasks: BackgroundTasks, db
     
     # Trigger sheets sync
     admin = db.query(User).filter(User.id == candidate.admin_id).first()
-    admin_name = admin.first_name if admin else "Unknown"
+    admin_name = admin.name if admin else "Unknown"
     worker_data = {
         "id": worker.id,
         "candidate_name": candidate.first_name,
