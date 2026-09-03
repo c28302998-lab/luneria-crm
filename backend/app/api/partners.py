@@ -18,13 +18,6 @@ def read_partners(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
         p.workers_count = len([w for w in p.workers if not w.is_deleted])
         if current_user.role == "ADMIN":
             p.contact = "***HIDDEN***"
-    partner_data = {
-        "name": partner.company_name,
-        "contact": partner.contact or "",
-        "notes": "",
-        "schedule": ""
-    }
-    background_tasks.add_task(sheets_service.sync_partner, partner_data)
     return partners
 
 @router.post("/", response_model=PartnerSchema)
@@ -34,6 +27,7 @@ def create_partner(partner_in: PartnerCreate, background_tasks: BackgroundTasks,
     db.commit()
     db.refresh(partner)
     log_audit(db, current_user.id, "CREATE", "Partner", partner.id, partner_in.dict())
+    
     partner_data = {
         "name": partner.company_name,
         "contact": partner.contact or "",
@@ -55,13 +49,6 @@ def update_partner(partner_id: int, partner_in: PartnerCreate, db: Session = Dep
     db.commit()
     db.refresh(partner)
     log_audit(db, current_user.id, "UPDATE", "Partner", partner.id, partner_in.dict())
-    partner_data = {
-        "name": partner.company_name,
-        "contact": partner.contact or "",
-        "notes": "",
-        "schedule": ""
-    }
-    background_tasks.add_task(sheets_service.sync_partner, partner_data)
     return partner
 
 @router.delete("/{partner_id}")
