@@ -334,11 +334,30 @@ def update_checklist(acc_id: int, req: UpdateChecklistRequest, db: Session = Dep
 
 @router.post("/accounts/{acc_id}/approve-issue")
 def approve_issue(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    from app.models.models import Account
+    from datetime import datetime
+    
     acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
     if not acc:
         raise HTTPException(status_code=404, detail="Account not found")
     
     acc.issue_request_status = 'APPROVED'
+    
+    # Auto-link/create in manual Accounts table
+    login_str = acc.phone if acc.phone else acc.name
+    if login_str:
+        existing = db.query(Account).filter(Account.login == login_str).first()
+        if existing:
+            existing.status = "ISSUED"
+            existing.issued_at = datetime.utcnow()
+        else:
+            new_acc = Account(
+                login=login_str,
+                status="ISSUED",
+                issued_at=datetime.utcnow()
+            )
+            db.add(new_acc)
+            
     db.commit()
     return {"status": "ok"}
 
