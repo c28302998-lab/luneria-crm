@@ -91,6 +91,7 @@ export default function AccountRequestsPage() {
       ACCEPTED: 'bg-blue-100 text-blue-800', // legacy
       READY: 'bg-emerald-100 text-emerald-800',
       ISSUED: 'bg-green-100 text-green-800',
+      ISSUED_TO_ADMIN: 'bg-indigo-100 text-indigo-800',
       ISSUE: 'bg-red-100 text-red-800',
       CANCELLED: 'bg-gray-100 text-gray-800'
     };
@@ -101,6 +102,7 @@ export default function AccountRequestsPage() {
       ACCEPTED: 'В работе у куратора',
       READY: 'Аккаунт готов к выдаче',
       ISSUED: 'Выдан',
+      ISSUED_TO_ADMIN: 'Выдан админу',
       ISSUE: 'Проблема',
       CANCELLED: 'Отменена'
     };
@@ -197,6 +199,7 @@ export default function AccountRequestsPage() {
                           <option value="IN_PROGRESS">В работе у куратора</option>
                           <option value="READY">Готов к выдаче</option>
                           <option value="ISSUED">Выдан</option>
+                          <option value="ISSUED_TO_ADMIN">Выдан админу</option>
                           <option value="ISSUE">Проблема</option>
                           <option value="CANCELLED">Отменена</option>
                         </select>
