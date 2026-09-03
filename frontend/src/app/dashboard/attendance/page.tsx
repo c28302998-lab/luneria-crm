@@ -40,13 +40,40 @@ export default function AttendancePage() {
     fetchData();
   }, [targetDate, user]);
 
-  const handleAttendanceToggle = async (workerId: number, currentStatus: boolean) => {
+  const handleIncomeChange = async (workerId: number, value: string, currentPresent: boolean) => {
+    if (user?.role !== 'OWNER') return;
+    try {
+      const val = value === '' ? null : parseFloat(value);
+      const res = await api.post('/attendance/', {
+        worker_id: workerId,
+        date: targetDate,
+        is_present: currentPresent,
+        income: val
+      });
+      setAttendance(prev => {
+        const existingIdx = prev.findIndex(a => a.worker_id === workerId);
+        if (existingIdx >= 0) {
+          const newAtt = [...prev];
+          newAtt[existingIdx] = res.data;
+          return newAtt;
+        } else {
+          return [...prev, res.data];
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      alert('Ошибка при сохранении дохода');
+    }
+  };
+
+  const handleAttendanceToggle = async (workerId: number, currentStatus: boolean, currentIncome?: number) => {
     if (user?.role === 'CURATOR') return; // Cannot edit
     try {
       const res = await api.post('/attendance/', {
         worker_id: workerId,
         date: targetDate,
-        is_present: !currentStatus
+        is_present: !currentStatus,
+        income: currentIncome
       });
       // Update local state
       setAttendance(prev => {

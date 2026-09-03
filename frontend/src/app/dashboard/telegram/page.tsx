@@ -5,6 +5,37 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
 import { Search, Send, Menu, ArrowLeft, Loader2, Info, Edit2, Key } from 'lucide-react';
 
+
+const MediaWithAuth = ({ accountId, chatId, messageId }: { accountId: number, chatId: string, messageId: number }) => {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMedia = async () => {
+      try {
+        const res = await api.get(`/telegram/proxy/accounts/${accountId}/chats/${chatId}/messages/${messageId}/media`, {
+          responseType: 'blob'
+        });
+        const url = URL.createObjectURL(res.data);
+        setBlobUrl(url);
+      } catch (err) {
+        console.error("Failed to load media", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMedia();
+    return () => {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [accountId, chatId, messageId]);
+
+  if (loading) return <div className="w-48 h-48 bg-gray-200 animate-pulse rounded-lg flex items-center justify-center text-gray-400 text-xs">Загрузка...</div>;
+  if (!blobUrl) return <div className="text-xs text-gray-500 italic">Медиа недоступно</div>;
+
+  return <img src={blobUrl} alt="media" className="max-w-full h-auto rounded-lg mb-2" style={{ maxHeight: '300px' }} />;
+};
+
 export default function TelegramPage() {
   const { user } = useAuth();
   const [myAccounts, setMyAccounts] = useState<any[]>([]);
@@ -355,7 +386,7 @@ export default function TelegramPage() {
                   <div key={msg.id} className={`flex ${msg.out ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[75%] sm:max-w-[60%] rounded-2xl px-4 py-2 shadow-sm ${msg.out ? 'bg-[#EEFFDE] rounded-br-none text-gray-900' : 'bg-white rounded-bl-none text-gray-900'}`}>
                       {msg.has_media && (
-                        <MediaWithAuth accountId={selectedAccountId!} chatId={selectedChatId!} messageId={msg.id} />
+                        <MediaWithAuth accountId={selectedAccountId!} chatId={activeChat.id} messageId={msg.id} />
                       )}
                       <p className="text-[15px] whitespace-pre-wrap break-words leading-relaxed">{msg.text}</p>
                       <div className="flex justify-end items-center gap-1 mt-1">
