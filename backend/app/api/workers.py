@@ -46,13 +46,27 @@ def create_worker(worker_in: WorkerCreate, background_tasks: BackgroundTasks, db
     log_audit(db, current_user.id, "CREATE", "Worker", worker.id, {"status": worker.status})
     
     # Trigger sheets sync
-    admin = db.query(User).filter(User.id == candidate.admin_id).first()
-    admin_name = admin.name if admin else "Unknown"
+    referrer_name = ""
+    if hasattr(worker, "referrer_id") and worker.referrer_id:
+        ref_worker = db.query(Worker).filter(Worker.id == worker.referrer_id).first()
+        if ref_worker:
+            ref_cand = db.query(Candidate).filter(Candidate.id == ref_worker.candidate_id).first()
+            if ref_cand:
+                referrer_name = ref_cand.first_name
+                
+    partner_name = ""
+    from app.models.models import Partner
+    if worker.partner_id:
+        partner = db.query(Partner).filter(Partner.id == worker.partner_id).first()
+        if partner:
+            partner_name = partner.company_name
+
     worker_data = {
-        "id": worker.id,
         "candidate_name": candidate.first_name,
-        "admin_name": admin_name,
+        "referrer_name": referrer_name,
         "status": worker.status,
+        "telegram": candidate.telegram or "",
+        "partner_name": partner_name,
     }
     background_tasks.add_task(sheets_service.sync_new_worker, worker_data)
     

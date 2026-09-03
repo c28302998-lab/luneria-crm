@@ -116,8 +116,11 @@ def edit_2fa_password_admin(acc_id: int, req: EditPasswordRequest, db: Session =
     assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
     admin_name = assigned_user.name if assigned_user else "Unknown"
     account_data = {
-        "account_number": acc.phone if acc.phone else acc.name,
+        "account_name": acc.name,
+        "account_number": acc.phone or "",
         "admin_name": admin_name,
+        "password_tg": acc.two_fa_password or "",
+        "status": "Акаунт выдан"
     }
     background_tasks.add_task(sheets_service.sync_issued_account, account_data)
     
@@ -332,8 +335,11 @@ def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: Use
     assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
     admin_name = assigned_user.name if assigned_user else "Unknown"
     account_data = {
-        "account_number": acc.phone if acc.phone else acc.name,
+        "account_name": acc.name,
+        "account_number": acc.phone or "",
         "admin_name": admin_name,
+        "password_tg": acc.two_fa_password or "",
+        "status": "Акаунт выдан"
     }
     background_tasks.add_task(sheets_service.sync_issued_account, account_data)
     
@@ -355,8 +361,11 @@ def update_checklist(acc_id: int, req: UpdateChecklistRequest, db: Session = Dep
     assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
     admin_name = assigned_user.name if assigned_user else "Unknown"
     account_data = {
-        "account_number": acc.phone if acc.phone else acc.name,
+        "account_name": acc.name,
+        "account_number": acc.phone or "",
         "admin_name": admin_name,
+        "password_tg": acc.two_fa_password or "",
+        "status": "Акаунт выдан"
     }
     background_tasks.add_task(sheets_service.sync_issued_account, account_data)
     
@@ -394,8 +403,11 @@ def approve_issue(acc_id: int, background_tasks: BackgroundTasks, db: Session = 
     assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
     admin_name = assigned_user.name if assigned_user else "Unknown"
     account_data = {
-        "account_number": acc.phone if acc.phone else acc.name,
+        "account_name": acc.name,
+        "account_number": acc.phone or "",
         "admin_name": admin_name,
+        "password_tg": acc.two_fa_password or "",
+        "status": "Акаунт выдан"
     }
     background_tasks.add_task(sheets_service.sync_issued_account, account_data)
     
@@ -413,8 +425,11 @@ async def deny_issue(account_id: int, user: User = Depends(check_owner), db: Ses
     assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
     admin_name = assigned_user.name if assigned_user else "Unknown"
     account_data = {
-        "account_number": acc.phone if acc.phone else acc.name,
+        "account_name": acc.name,
+        "account_number": acc.phone or "",
         "admin_name": admin_name,
+        "password_tg": acc.two_fa_password or "",
+        "status": "Акаунт выдан"
     }
     background_tasks.add_task(sheets_service.sync_issued_account, account_data)
     

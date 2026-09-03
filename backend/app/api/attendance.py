@@ -56,9 +56,17 @@ def set_attendance(attendance_in: AttendanceCreate, background_tasks: Background
     
     if hasattr(record, "income") and record.income is not None:
         candidate = db.query(Candidate).filter(Candidate.id == worker.candidate_id).first()
+        from app.models.models import Partner
+        partner_name = ""
+        if worker.partner_id:
+            partner = db.query(Partner).filter(Partner.id == worker.partner_id).first()
+            if partner:
+                partner_name = partner.company_name
+
         income_data = {
-            "worker_name": f"{candidate.first_name} {candidate.last_name or ''}".strip(),
-            "date": str(record.date),
+            "worker_name": candidate.first_name,
+            "partner_name": partner_name,
+            "date": str(record.date.strftime("%d.%m.%Y")),
             "income": record.income
         }
         background_tasks.add_task(sheets_service.sync_income, income_data)
