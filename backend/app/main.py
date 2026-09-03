@@ -21,6 +21,26 @@ from sqlalchemy.orm import Session
 from fastapi import Depends
 
 @app.get("/api/v1/run-migration-3")
+
+@app.get("/api/v1/run-migration-4")
+def run_migration_4(db: Session = Depends(get_db)):
+    msgs = []
+    try:
+        db.execute(text("ALTER TABLE candidate_history ADD COLUMN referrer_id INTEGER REFERENCES workers(id) ON DELETE SET NULL;"))
+        msgs.append("Added referrer_id to candidate_history")
+    except Exception as e:
+        msgs.append(str(e))
+        
+    try:
+        db.execute(text("ALTER TABLE trainings ADD COLUMN referrer_id INTEGER REFERENCES workers(id) ON DELETE SET NULL;"))
+        msgs.append("Added referrer_id to trainings")
+    except Exception as e:
+        msgs.append(str(e))
+        
+    db.commit()
+    return {"status": msgs}
+
+@app.get("/api/v1/run-migration-3")
 def run_migration_3(db: Session = Depends(get_db)):
     msgs = []
     try:
