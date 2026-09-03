@@ -50,7 +50,7 @@ def create_worker(worker_in: WorkerCreate, background_tasks: BackgroundTasks, db
     admin_name = admin.first_name if admin else "Unknown"
     worker_data = {
         "id": worker.id,
-        "candidate_name": f"{candidate.first_name} {candidate.last_name or ''}".strip(),
+        "candidate_name": candidate.first_name,
         "admin_name": admin_name,
         "status": worker.status,
     }
