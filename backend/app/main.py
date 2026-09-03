@@ -177,3 +177,13 @@ def run_seed_endpoint():
 @app.on_event("startup")
 def auto_migrate():
     from app.db.database import engine
+
+@app.get("/api/v1/debug-db-2")
+def debug_db_2(db: Session = Depends(get_db)):
+    from app.models.models import Partner, AccountRequest
+    p = db.query(Partner).all()
+    a = db.query(AccountRequest).all()
+    return {
+        "partners": [{"id": x.id, "name": x.company_name, "deleted": x.is_deleted} for x in p],
+        "requests": [{"id": x.id, "deleted": x.is_deleted} for x in a]
+    }
