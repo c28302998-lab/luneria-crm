@@ -49,16 +49,18 @@ export default function WorkerDetailPage() {
 
   const fetchData = async () => {
     try {
-      const [{ data: wData }, { data: pData }, { data: uData }, { data: cData }] = await Promise.all([
+      const [{ data: wData }, { data: pData }, { data: uData }, { data: cData }, { data: allWData }] = await Promise.all([
         api.get(`/workers/${id}`),
         api.get('/partners/'),
         api.get('/users/'),
-        api.get(`/comments/worker/${id}`).catch(() => ({ data: [] }))
+        api.get(`/comments/worker/${id}`).catch(() => ({ data: [] })),
+        api.get('/workers/')
       ]);
       setWorker(wData);
       setPartners(pData);
       setAdmins(uData.filter((u: any) => u.role === 'ADMIN'));
       setComments(cData);
+      setAllWorkers(allWData);
     } catch (err) {
       console.error(err);
     } finally {

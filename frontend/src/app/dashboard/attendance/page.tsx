@@ -198,18 +198,40 @@ export default function AttendancePage() {
                           <span className="text-sm text-gray-700">{worker.shift || 'Не указана'}</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <button 
-                          onClick={() => handleAttendanceToggle(worker.id, isPresent)}
-                          disabled={!canEdit}
-                          className={`focus:outline-none transition-transform active:scale-95 ${!canEdit ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-80'}`}
-                        >
-                          {isPresent ? (
-                            <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto" />
-                          ) : (
-                            <Circle className="w-8 h-8 text-gray-300 mx-auto hover:text-gray-400" />
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                          <button 
+                            onClick={() => handleAttendanceToggle(worker.id, isPresent, att?.income)}
+                            disabled={!canEdit}
+                            className={`focus:outline-none transition-transform active:scale-95 ${!canEdit ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-80'}`}
+                          >
+                            {isPresent ? (
+                              <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto" />
+                            ) : (
+                              <Circle className="w-8 h-8 text-gray-300 mx-auto hover:text-gray-400" />
+                            )}
+                          </button>
+                          
+                          {user?.role === 'OWNER' && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-gray-500 text-sm font-medium">$</span>
+                              <input
+                                type="number"
+                                placeholder="Доход"
+                                className="w-20 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 px-2 py-1"
+                                value={att?.income !== undefined && att?.income !== null ? att.income : ''}
+                                onChange={(e) => {
+                                  const newAtt = [...attendance];
+                                  const existingIdx = newAtt.findIndex(a => a.worker_id === worker.id);
+                                  if (existingIdx >= 0) newAtt[existingIdx].income = e.target.value === '' ? null : parseFloat(e.target.value);
+                                  else newAtt.push({ worker_id: worker.id, is_present: isPresent, income: e.target.value === '' ? null : parseFloat(e.target.value) });
+                                  setAttendance(newAtt);
+                                }}
+                                onBlur={(e) => handleIncomeChange(worker.id, e.target.value, isPresent)}
+                              />
+                            </div>
                           )}
-                        </button>
+                        </div>
                       </td>
                     </tr>
                   );
