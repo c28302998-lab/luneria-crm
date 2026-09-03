@@ -92,6 +92,11 @@ const getNavigation = (role: string) => {
 };
 
 export default function DashboardLayout({
+  useEffect(() => {
+    api.get('/run-migration-4').catch(console.error);
+    api.get('/run-migration-3').catch(console.error);
+  }, []);
+
   children,
 }: {
   children: React.ReactNode;
