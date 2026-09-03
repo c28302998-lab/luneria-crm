@@ -82,6 +82,27 @@ os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(api_router, prefix="/api/v1")
+
+@app.get("/api/v1/debug-worker/{candidate_id}")
+def debug_worker(candidate_id: int, db: Session = Depends(get_db)):
+    import traceback
+    try:
+        from app.models.models import Worker, Candidate
+        candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
+        worker = Worker(
+            candidate_id=candidate.id,
+            admin_id=candidate.admin_id,
+            partner_id=None,
+            status="ACTIVE"
+        )
+        db.add(worker)
+        candidate.status = "WORKER"
+        db.commit()
+        return {"status": "ok", "worker_id": worker.id}
+    except Exception as e:
+        db.rollback()
+        return {"error": str(e), "traceback": traceback.format_exc()}
+
 @app.get("/health")
 def health_check():
     return {"status": "ok", "service": "Luneria CRM API"}
