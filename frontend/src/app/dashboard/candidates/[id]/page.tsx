@@ -160,7 +160,7 @@ const fetchCandidate = async () => {
         {canEdit ? (
           <div className="flex items-center space-x-3">
             <select 
-              value={STATUS_LABELS[candidate.status] || candidate.status}
+              value={candidate.status}
               onChange={(e) => handleStatusChange(e.target.value)}
               className="px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
