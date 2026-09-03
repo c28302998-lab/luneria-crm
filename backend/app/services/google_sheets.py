@@ -88,7 +88,7 @@ class GoogleSheetsService:
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(executor, self._sync_account_sync, account_data)
 
-sheets_service = GoogleSheetsService()
+
 
     def _sync_income_sync(self, income_data: dict):
         if not self.client:
@@ -120,3 +120,5 @@ sheets_service = GoogleSheetsService()
             return
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(executor, self._sync_income_sync, income_data)
+
+sheets_service = GoogleSheetsService()
