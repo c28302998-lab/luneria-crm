@@ -37,6 +37,8 @@ def set_attendance(attendance_in: AttendanceCreate, db: Session = Depends(get_db
     if record:
         record.is_present = attendance_in.is_present
         record.updated_by = current_user.id
+        if current_user.role == "OWNER" and hasattr(attendance_in, "income"):
+            record.income = attendance_in.income
     else:
         record = Attendance(
             worker_id=attendance_in.worker_id,
@@ -44,6 +46,8 @@ def set_attendance(attendance_in: AttendanceCreate, db: Session = Depends(get_db
             is_present=attendance_in.is_present,
             updated_by=current_user.id
         )
+        if current_user.role == "OWNER" and hasattr(attendance_in, "income"):
+            record.income = attendance_in.income
         db.add(record)
         
     db.commit()

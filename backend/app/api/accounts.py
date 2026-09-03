@@ -21,6 +21,9 @@ def create_account(acc_in: AccountCreate, db: Session = Depends(get_db), current
         status=acc_in.status,
         issued_at=datetime.utcnow() if acc_in.status == "ISSUED" else None
     )
+    if current_user.role == "OWNER" and hasattr(acc_in, "gmail_address"):
+        acc.gmail_address = acc_in.gmail_address
+        acc.gmail_password = acc_in.gmail_password
     db.add(acc)
     db.commit()
     db.refresh(acc)

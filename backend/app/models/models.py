@@ -48,6 +48,7 @@ class CandidateHistory(Base):
     __tablename__ = "candidate_history"
     id = Column(Integer, primary_key=True, index=True)
     candidate_id = Column(Integer, ForeignKey("candidates.id"))
+    referrer_id = Column(Integer, ForeignKey("workers.id"), nullable=True)
     old_status = Column(String, nullable=True)
     new_status = Column(String)
     changed_by = Column(Integer, ForeignKey("users.id"))
@@ -61,6 +62,7 @@ class Training(Base, SoftDeleteMixin):
     __tablename__ = "trainings"
     id = Column(Integer, primary_key=True, index=True)
     candidate_id = Column(Integer, ForeignKey("candidates.id"))
+    referrer_id = Column(Integer, ForeignKey("workers.id"), nullable=True)
     progress = Column(Float, default=0.0)
     tasks = Column(JSON, default=list)
     start_date = Column(DateTime, default=datetime.utcnow)
@@ -84,6 +86,7 @@ class Worker(Base, SoftDeleteMixin):
     __tablename__ = "workers"
     id = Column(Integer, primary_key=True, index=True)
     candidate_id = Column(Integer, ForeignKey("candidates.id"))
+    referrer_id = Column(Integer, ForeignKey("workers.id"), nullable=True)
     files = Column(JSON, default=list)
     admin_id = Column(Integer, ForeignKey("users.id"))
     partner_id = Column(Integer, ForeignKey("partners.id"), nullable=True)
@@ -261,6 +264,7 @@ class Attendance(Base):
     worker_id = Column(Integer, ForeignKey("workers.id"))
     date = Column(Date)
     is_present = Column(Boolean, default=False)
+    income = Column(Float, nullable=True)
     updated_by = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
 

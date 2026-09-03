@@ -36,6 +36,8 @@ def create_worker(worker_in: WorkerCreate, db: Session = Depends(get_db), curren
         partner_id=worker_in.partner_id,
         status=worker_in.status
     )
+    if current_user.role == "OWNER" and hasattr(worker_in, "referrer_id"):
+        worker.referrer_id = worker_in.referrer_id
     db.add(worker)
     candidate.status = "WORKER" # Auto-update candidate status
     db.commit()

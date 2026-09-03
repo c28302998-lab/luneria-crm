@@ -20,6 +20,8 @@ class CandidateCreate(CandidateBase):
 class CandidateUpdate(CandidateBase):
     first_name: Optional[str] = None
     status: Optional[str] = None
+    gmail_address: Optional[str] = None
+    gmail_password: Optional[str] = None
 
 class Candidate(CandidateBase):
     id: int
@@ -33,6 +35,8 @@ class Candidate(CandidateBase):
 class CandidateHistoryBase(BaseModel):
     new_status: str
     old_status: Optional[str] = None
+    gmail_address: Optional[str] = None
+    gmail_password: Optional[str] = None
     comment: Optional[str] = None
 
 class UserBasic(BaseModel):
@@ -94,14 +98,20 @@ class WorkerBase(BaseModel):
 
 class WorkerCreate(WorkerBase):
     candidate_id: int
-    partner_id: Optional[int] = None
+    partner_id: Optional[int]
+    referrer_id: Optional[int] = None
+    referrer_id: Optional[int] = None
     issued_account_name: Optional[str] = None
     shift: Optional[str] = None
     account_info: Optional[str] = None
 
 class WorkerUpdate(BaseModel):
     status: Optional[str] = None
-    partner_id: Optional[int] = None
+    gmail_address: Optional[str] = None
+    gmail_password: Optional[str] = None
+    partner_id: Optional[int]
+    referrer_id: Optional[int] = None
+    referrer_id: Optional[int] = None
     issued_account_name: Optional[str] = None
     shift: Optional[str] = None
     account_info: Optional[str] = None
@@ -110,7 +120,8 @@ class Worker(WorkerBase):
     id: int
     candidate_id: int
     admin_id: int
-    partner_id: Optional[int] = None
+    partner_id: Optional[int]
+    referrer_id: Optional[int] = None
     issued_account_name: Optional[str] = None
     shift: Optional[str] = None
     account_info: Optional[str] = None
@@ -170,6 +181,8 @@ class TaskUpdate(BaseModel):
     priority: Optional[str] = None
     deadline: Optional[datetime] = None
     status: Optional[str] = None
+    gmail_address: Optional[str] = None
+    gmail_password: Optional[str] = None
     assigned_user_id: Optional[int] = None
 
 class Task(TaskBase):
@@ -307,7 +320,11 @@ class AccountRequestCreate(BaseModel):
 
 class AccountRequestUpdate(BaseModel):
     status: Optional[str] = None
-    partner_id: Optional[int] = None
+    gmail_address: Optional[str] = None
+    gmail_password: Optional[str] = None
+    partner_id: Optional[int]
+    referrer_id: Optional[int] = None
+    referrer_id: Optional[int] = None
     issued_account_name: Optional[str] = None
 
 class AccountRequestResponse(BaseModel):
@@ -320,7 +337,9 @@ class AccountRequestResponse(BaseModel):
     candidate_nickname: Optional[str] = None
     candidate_tg: str
     questionnaire: str
-    partner_id: Optional[int] = None
+    partner_id: Optional[int]
+    referrer_id: Optional[int] = None
+    referrer_id: Optional[int] = None
     issued_account_name: Optional[str] = None
     candidate_id: Optional[int] = None
     status: str
@@ -337,6 +356,7 @@ class AttendanceBase(BaseModel):
     worker_id: int
     date: date
     is_present: bool
+    income: Optional[float] = None
 
 class AttendanceCreate(AttendanceBase):
     pass
@@ -369,9 +389,13 @@ class AccountBase(BaseModel):
     login: str
     account_number: Optional[str] = None
     worker_id: Optional[int] = None
-    partner_id: Optional[int] = None
+    partner_id: Optional[int]
+    referrer_id: Optional[int] = None
+    referrer_id: Optional[int] = None
     issued_at: Optional[datetime] = None
     status: str = "FREE"
+    gmail_address: Optional[str] = None
+    gmail_password: Optional[str] = None
 
 class AccountCreate(AccountBase):
     pass
@@ -380,8 +404,12 @@ class AccountUpdate(BaseModel):
     login: Optional[str] = None
     account_number: Optional[str] = None
     worker_id: Optional[int] = None
-    partner_id: Optional[int] = None
+    partner_id: Optional[int]
+    referrer_id: Optional[int] = None
+    referrer_id: Optional[int] = None
     status: Optional[str] = None
+    gmail_address: Optional[str] = None
+    gmail_password: Optional[str] = None
 
 class AccountResponse(AccountBase):
     id: int
