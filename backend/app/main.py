@@ -5,6 +5,34 @@ import os
 from app.api import auth, telegram_admin, telegram_proxy
 import os
 
+
+from sqlalchemy import text
+@app.get("/api/v1/run-migration-3")
+def run_migration_3(db: Session = Depends(get_db)):
+    msgs = []
+    try:
+        db.execute(text("ALTER TABLE attendance ADD COLUMN income FLOAT;"))
+        msgs.append("Added income")
+    except Exception as e:
+        msgs.append(str(e))
+        
+    try:
+        db.execute(text("ALTER TABLE accounts ADD COLUMN gmail_address VARCHAR;"))
+        db.execute(text("ALTER TABLE accounts ADD COLUMN gmail_password VARCHAR;"))
+        msgs.append("Added gmail")
+    except Exception as e:
+        msgs.append(str(e))
+        
+    try:
+        db.execute(text("ALTER TABLE workers ADD COLUMN referrer_id INTEGER REFERENCES workers(id) ON DELETE SET NULL;"))
+        msgs.append("Added referrer_id")
+    except Exception as e:
+        msgs.append(str(e))
+        
+    db.commit()
+    return {"status": msgs}
+
+
 app = FastAPI(
     title="Luneria CRM API",
     description="Internal CRM system for Luneria agency",
