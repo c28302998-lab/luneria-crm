@@ -236,3 +236,14 @@ def debug_partners(db: Session = Depends(get_db)):
     except Exception as e:
         import traceback
         return {"error": str(e), "traceback": traceback.format_exc()}
+
+@app.get("/api/v1/debug-requests")
+def debug_requests(db: Session = Depends(get_db)):
+    from app.api.account_requests import get_requests
+    from app.models.models import User
+    try:
+        user = User(id=1, role="OWNER")
+        return get_requests(db=db, current_user=user)
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "traceback": traceback.format_exc()}
