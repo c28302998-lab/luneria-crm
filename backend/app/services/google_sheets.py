@@ -89,3 +89,34 @@ class GoogleSheetsService:
         await loop.run_in_executor(executor, self._sync_account_sync, account_data)
 
 sheets_service = GoogleSheetsService()
+
+    def _sync_income_sync(self, income_data: dict):
+        if not self.client:
+            return
+        try:
+            sheet = self.client.open_by_key(self.spreadsheet_id)
+            try:
+                worksheet = sheet.worksheet("Доход")
+            except gspread.exceptions.WorksheetNotFound:
+                try:
+                    worksheet = sheet.worksheet("Контроль")
+                except:
+                    return
+
+            col_a = worksheet.col_values(1)
+            next_row = len(col_a) + 1
+            
+            row_data = [
+                income_data.get("worker_name", ""),
+                income_data.get("date", ""),
+                income_data.get("income", ""),
+            ]
+            worksheet.update(f"A{next_row}", [row_data])
+        except Exception as e:
+            print(f"Google Sheets sync error (income): {e}")
+
+    async def sync_income(self, income_data: dict):
+        if not self.client:
+            return
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(executor, self._sync_income_sync, income_data)

@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import date
 
 from app.db.database import get_db
+from app.services.google_sheets import sheets_service
 from app.models.models import User, Attendance, Worker
 from app.schemas.schemas import Attendance as AttendanceSchema, AttendanceCreate
 from app.core.dependencies import get_current_user, RoleChecker
@@ -17,7 +18,7 @@ def get_attendance(target_date: date, db: Session = Depends(get_db), current_use
     return query.all()
 
 @router.post("/", response_model=AttendanceSchema)
-def set_attendance(attendance_in: AttendanceCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def set_attendance(attendance_in: AttendanceCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     worker = db.query(Worker).filter(Worker.id == attendance_in.worker_id).first()
     if not worker:
         raise HTTPException(status_code=404, detail="Worker not found")
@@ -52,4 +53,14 @@ def set_attendance(attendance_in: AttendanceCreate, db: Session = Depends(get_db
         
     db.commit()
     db.refresh(record)
+    
+    if hasattr(record, "income") and record.income is not None:
+        candidate = db.query(Candidate).filter(Candidate.id == worker.candidate_id).first()
+        income_data = {
+            "worker_name": f"{candidate.first_name} {candidate.last_name or ''}".strip(),
+            "date": str(record.date),
+            "income": record.income
+        }
+        background_tasks.add_task(sheets_service.sync_income, income_data)
+        
     return record
