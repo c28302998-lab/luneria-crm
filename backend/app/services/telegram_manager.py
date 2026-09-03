@@ -45,6 +45,18 @@ class TelegramManager:
         self.clients[account_id] = client
         return client
 
+    async def download_message_media(self, account_id: int, chat_id: int, message_id: int) -> bytes:
+        client = self.clients.get(account_id)
+        if not client:
+            raise Exception("Client not connected")
+        
+        msg = await client.get_messages(chat_id, ids=message_id)
+        if not msg or not msg.media:
+            return None
+            
+        data = await client.download_media(msg, file=bytes)
+        return data
+
     async def disconnect_account(self, account_id: int):
         """Force disconnect and remove an account session (e.g. for Session Lock)."""
         if account_id in self.clients:

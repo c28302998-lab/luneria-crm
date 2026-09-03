@@ -36,6 +36,25 @@ async def get_user_account(account_id: Optional[int] = None, user: User = Depend
         raise HTTPException(status_code=404, detail="No active Telegram account assigned")
     return acc
 
+from fastapi import Response
+
+@router.get("/accounts/{account_id}/chats/{chat_id}/messages/{message_id}/media")
+async def get_message_media(account_id: int, chat_id: str, message_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    acc = await get_user_account(account_id, user, db)
+    
+    try:
+        peer_id = int(chat_id)
+    except:
+        peer_id = chat_id
+        
+    try:
+        data = await telegram_manager.download_message_media(acc.id, peer_id, message_id)
+        if not data:
+            raise HTTPException(status_code=404, detail="Media not found or could not be downloaded")
+        return Response(content=data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/chats")
 async def get_chats(request: Request, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_user_account), user: User = Depends(get_current_user)):
     try:
