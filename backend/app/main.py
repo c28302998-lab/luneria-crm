@@ -213,3 +213,15 @@ def debug_error_req(db: Session = Depends(get_db)):
     except Exception as e:
         import traceback
         return {"error": str(e), "traceback": traceback.format_exc()}
+
+@app.get("/api/v1/debug-error-cand")
+def debug_error_cand(db: Session = Depends(get_db)):
+    from app.models.models import Candidate
+    from app.schemas.schemas import CandidateResponse
+    try:
+        cands = db.query(Candidate).filter(Candidate.is_deleted == False).offset(0).limit(10).all()
+        res = [CandidateResponse.from_orm(p).dict() for p in cands]
+        return res
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "traceback": traceback.format_exc()}
