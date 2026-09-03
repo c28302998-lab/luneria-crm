@@ -159,6 +159,17 @@ export default function TelegramAccountsPage() {
     }
   };
 
+
+  const handleDenyIssue = async (accId: number) => {
+    if (!confirm('Отклонить запрос на данные аккаунта?')) return;
+    try {
+      await api.post(`/telegram/admin/accounts/${accId}/deny-issue`);
+      fetchAccounts();
+    } catch (err: any) {
+      alert('Ошибка при отклонении запроса');
+    }
+  };
+
   const handleRevoke = async (accId: number) => {
     if (!confirm('Вы уверены, что хотите отозвать доступ и заморозить аккаунт?')) return;
     try {
@@ -317,9 +328,14 @@ export default function TelegramAccountsPage() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                                         <div className="flex flex-col gap-2">
                     {acc.issue_request_status === 'REQUESTED' && (
-                      <button onClick={() => handleApproveIssue(acc.id)} className="text-orange-600 font-bold hover:text-orange-900 flex items-center gap-1 text-xs">
-                        <Key className="w-4 h-4 animate-pulse" /> Одобрить выдачу 2FA
-                      </button>
+                      <>
+                        <button onClick={() => handleApproveIssue(acc.id)} className="text-orange-600 font-bold hover:text-orange-900 flex items-center gap-1 text-xs">
+                          <Key className="w-4 h-4 animate-pulse" /> Одобрить выдачу 2FA
+                        </button>
+                        <button onClick={() => handleDenyIssue(acc.id)} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-xs">
+                          <X className="w-4 h-4" /> Отклонить запрос данных
+                        </button>
+                      </>
                     )}
                     <button onClick={() => handleRevoke(acc.id)} className="text-red-600 hover:text-red-900 flex items-center gap-1 text-xs">
                       <Unlink className="w-4 h-4" /> Отозвать (откл. сессию)
