@@ -187,8 +187,18 @@ export default function TelegramPage() {
     return () => clearInterval(interval);
   }, [activeChat]);
 
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+
+  const handleScroll = () => {
+    if (!messagesContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    // Если мы в пределах 100px от низа - считаем что мы внизу
+    setIsNearBottom(scrollHeight - scrollTop - clientHeight < 100);
+  };
+
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && isNearBottom) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
