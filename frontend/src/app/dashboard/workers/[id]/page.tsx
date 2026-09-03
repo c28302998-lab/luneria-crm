@@ -15,6 +15,7 @@ interface Worker {
   candidate_id: number;
   admin_id: number;
   partner_id: number | null;
+  referrer_id: number | null;
 }
 
 interface Partner {
@@ -41,6 +42,7 @@ export default function WorkerDetailPage() {
   const [worker, setWorker] = useState<Worker | null>(null);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [allWorkers, setAllWorkers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -79,6 +81,17 @@ export default function WorkerDetailPage() {
     }
   };
 
+
+  const handleReferrerChange = async (newReferrerId: string) => {
+    if (!worker) return;
+    try {
+      await api.patch(`/workers/${worker.id}`, { referrer_id: newReferrerId ? parseInt(newReferrerId) : null });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('Ошибка при смене реферера.');
+    }
+  };
 
   const handleAdminChange = async (newAdminId: string) => {
     if (!worker) return;
@@ -170,6 +183,23 @@ export default function WorkerDetailPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Информация о работнике</h3>
           <div className="space-y-4">
+
+            {isOwner && (
+              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                <span className="text-gray-500 text-sm">Кто привел (Реферер):</span>
+                <select 
+                  value={worker.referrer_id || ''}
+                  onChange={(e) => handleReferrerChange(e.target.value)}
+                  className="font-medium text-gray-900 text-sm border-gray-300 rounded-md py-1 pl-2 pr-8 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                >
+                  <option value="">-- Никто --</option>
+                  {allWorkers.filter(w => w.id !== worker.id).map(w => (
+                    <option key={w.id} value={w.id}>Работник #{w.id}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="flex justify-between border-b border-gray-100 pb-2">
               <span className="text-gray-500 text-sm">ID Кандидата:</span>
               <span className="font-medium text-gray-900 text-sm">

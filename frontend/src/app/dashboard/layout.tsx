@@ -186,6 +186,19 @@ export default function DashboardLayout({
                 </Link>
               );
             })}
+            {user?.role === 'OWNER' && (
+              <Link
+                href="/dashboard/referrals"
+                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  pathname === '/dashboard/referrals'
+                    ? 'bg-indigo-50 text-indigo-700'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <Users className="w-5 h-5 mr-3" />
+                Рефералы
+              </Link>
+            )}
           </nav>
         </div>
 
