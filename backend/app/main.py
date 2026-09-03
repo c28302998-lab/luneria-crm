@@ -187,3 +187,17 @@ def debug_db_2(db: Session = Depends(get_db)):
         "partners": [{"id": x.id, "name": x.company_name, "deleted": x.is_deleted} for x in p],
         "requests": [{"id": x.id, "deleted": x.is_deleted} for x in a]
     }
+
+@app.get("/api/v1/debug-error")
+def debug_error(db: Session = Depends(get_db)):
+    from app.models.models import Partner, AccountRequest
+    from app.schemas.schemas import Partner as PartnerSchema, AccountRequestResponse
+    try:
+        partners = db.query(Partner).filter(Partner.is_deleted == False).offset(0).limit(10).all()
+        for p in partners:
+            p.workers_count = len([w for w in p.workers if not w.is_deleted])
+        res = [PartnerSchema.from_orm(p).dict() for p in partners]
+        return res
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "traceback": traceback.format_exc()}
