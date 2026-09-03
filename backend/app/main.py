@@ -201,3 +201,15 @@ def debug_error(db: Session = Depends(get_db)):
     except Exception as e:
         import traceback
         return {"error": str(e), "traceback": traceback.format_exc()}
+
+@app.get("/api/v1/debug-error-req")
+def debug_error_req(db: Session = Depends(get_db)):
+    from app.models.models import AccountRequest
+    from app.schemas.schemas import AccountRequestResponse
+    try:
+        reqs = db.query(AccountRequest).filter(AccountRequest.is_deleted == False).offset(0).limit(10).all()
+        res = [AccountRequestResponse.from_orm(p).dict() for p in reqs]
+        return res
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "traceback": traceback.format_exc()}
