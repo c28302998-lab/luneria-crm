@@ -341,3 +341,12 @@ def approve_issue(acc_id: int, db: Session = Depends(get_db), current_user: User
     acc.issue_request_status = 'APPROVED'
     db.commit()
     return {"status": "ok"}
+
+@router.post("/accounts/{account_id}/deny-issue")
+async def deny_issue(account_id: int, user: User = Depends(check_owner), db: Session = Depends(get_db)):
+    acc = db.query(TelegramAccount).filter(TelegramAccount.id == account_id).first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="Account not found")
+    acc.issue_request_status = 'NONE'
+    db.commit()
+    return {"status": "ok"}
