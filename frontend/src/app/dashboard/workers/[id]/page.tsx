@@ -147,9 +147,13 @@ export default function WorkerDetailPage() {
         
         {canEdit ? (
           <select 
-            value={STATUS_LABELS[worker.status] || worker.status}
+            value={worker.status}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="px-3 py-1 bg-green-50 text-green-800 border border-green-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
+                        className={`px-3 py-1 border rounded-full text-sm font-medium focus:outline-none cursor-pointer ${
+              worker.status === 'ACTIVE' ? 'bg-green-50 text-green-800 border-green-200' :
+              worker.status === 'TERMINATED' ? 'bg-red-50 text-red-800 border-red-200' :
+              'bg-gray-50 text-gray-800 border-gray-200'
+            }`}
           >
             {STATUSES.map(s => (
               <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>
