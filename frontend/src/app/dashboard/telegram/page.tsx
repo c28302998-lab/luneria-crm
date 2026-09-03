@@ -354,6 +354,9 @@ export default function TelegramPage() {
                 messages.map((msg: any) => (
                   <div key={msg.id} className={`flex ${msg.out ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[75%] sm:max-w-[60%] rounded-2xl px-4 py-2 shadow-sm ${msg.out ? 'bg-[#EEFFDE] rounded-br-none text-gray-900' : 'bg-white rounded-bl-none text-gray-900'}`}>
+                      {msg.has_media && (
+                        <MediaWithAuth accountId={selectedAccountId!} chatId={selectedChatId!} messageId={msg.id} />
+                      )}
                       <p className="text-[15px] whitespace-pre-wrap break-words leading-relaxed">{msg.text}</p>
                       <div className="flex justify-end items-center gap-1 mt-1">
                         <span className="text-[11px] text-gray-400/80">{msg.date ? new Date(msg.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}</span>
