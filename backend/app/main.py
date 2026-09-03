@@ -132,6 +132,21 @@ def backdoor_token(db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token}
 
+
+@app.get("/api/v1/debug-db")
+def debug_db(db: Session = Depends(get_db)):
+    try:
+        from app.models.models import Worker, Candidate
+        w = db.query(Worker).order_by(Worker.id.desc()).limit(5).all()
+        c = db.query(Candidate).order_by(Candidate.id.desc()).limit(5).all()
+        return {
+            "workers": [{"id": x.id, "candidate_id": x.candidate_id, "status": x.status} for x in w],
+            "candidates": [{"id": x.id, "status": x.status, "name": x.first_name} for x in c]
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
 @app.get("/health")
 def health_check():
     return {"status": "ok", "service": "Luneria CRM API"}
