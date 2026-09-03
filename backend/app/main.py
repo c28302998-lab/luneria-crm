@@ -20,10 +20,6 @@ from app.db.database import get_db
 from sqlalchemy.orm import Session
 from fastapi import Depends
 
-@app.get("/api/v1/run-migration-3")
-
-@app.get("/api/v1/run-migration-4")
-
 @app.get("/api/v1/run-migration-5")
 def run_migration_5(db: Session = Depends(get_db)):
     msgs = []
@@ -43,6 +39,7 @@ def run_migration_5(db: Session = Depends(get_db)):
     return {"status": msgs}
 
 @app.get("/api/v1/run-migration-4")
+@app.get("/api/v1/run-migration-4")
 def run_migration_4(db: Session = Depends(get_db)):
     msgs = []
     try:
@@ -60,6 +57,7 @@ def run_migration_4(db: Session = Depends(get_db)):
     db.commit()
     return {"status": msgs}
 
+@app.get("/api/v1/run-migration-3")
 @app.get("/api/v1/run-migration-3")
 def run_migration_3(db: Session = Depends(get_db)):
     msgs = []
@@ -146,6 +144,18 @@ def debug_db(db: Session = Depends(get_db)):
     except Exception as e:
         import traceback
         return {"error": str(e), "trace": traceback.format_exc()}
+
+
+@app.get("/api/v1/run-migration-6")
+def run_migration_6(db: Session = Depends(get_db)):
+    msgs = []
+    try:
+        db.execute(text("ALTER TABLE workers ADD COLUMN referrer_id INTEGER REFERENCES workers(id) ON DELETE SET NULL;"))
+        msgs.append("Added referrer_id to workers")
+    except Exception as e:
+        msgs.append(str(e))
+    db.commit()
+    return {"status": msgs}
 
 @app.get("/health")
 def health_check():
