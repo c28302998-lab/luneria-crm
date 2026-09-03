@@ -23,6 +23,26 @@ from fastapi import Depends
 @app.get("/api/v1/run-migration-3")
 
 @app.get("/api/v1/run-migration-4")
+
+@app.get("/api/v1/run-migration-5")
+def run_migration_5(db: Session = Depends(get_db)):
+    msgs = []
+    try:
+        db.execute(text("ALTER TABLE workers ADD COLUMN shift VARCHAR;"))
+        msgs.append("Added shift to workers")
+    except Exception as e:
+        msgs.append(str(e))
+        
+    try:
+        db.execute(text("ALTER TABLE workers ADD COLUMN account_info VARCHAR;"))
+        msgs.append("Added account_info to workers")
+    except Exception as e:
+        msgs.append(str(e))
+        
+    db.commit()
+    return {"status": msgs}
+
+@app.get("/api/v1/run-migration-4")
 def run_migration_4(db: Session = Depends(get_db)):
     msgs = []
     try:
