@@ -247,3 +247,14 @@ def debug_requests(db: Session = Depends(get_db)):
     except Exception as e:
         import traceback
         return {"error": str(e), "traceback": traceback.format_exc()}
+
+@app.get("/api/v1/debug-candidates")
+def debug_candidates(db: Session = Depends(get_db)):
+    from app.api.candidates import read_candidates
+    from app.models.models import User
+    try:
+        user = User(id=1, role="OWNER")
+        return read_candidates(skip=0, limit=10, db=db, current_user=user)
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "traceback": traceback.format_exc()}
