@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Loader2, Eye, EyeOff, Trash, CheckSquare, Key } from 'lucide-react';
+import { MonitorSmartphone, Plus, Link as LinkIcon, Unlink, Lock, Activity, Loader2, Eye, EyeOff, Trash, CheckSquare, Key, X } from 'lucide-react';
 
 export default function TelegramAccountsPage() {
   const { user } = useAuth();
