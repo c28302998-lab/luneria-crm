@@ -98,7 +98,7 @@ class WorkerBase(BaseModel):
 
 class WorkerCreate(WorkerBase):
     candidate_id: int
-    partner_id: Optional[int]
+    partner_id: Optional[int] = None
     referrer_id: Optional[int] = None
     referrer_id: Optional[int] = None
     issued_account_name: Optional[str] = None
@@ -109,7 +109,7 @@ class WorkerUpdate(BaseModel):
     status: Optional[str] = None
     gmail_address: Optional[str] = None
     gmail_password: Optional[str] = None
-    partner_id: Optional[int]
+    partner_id: Optional[int] = None
     referrer_id: Optional[int] = None
     referrer_id: Optional[int] = None
     issued_account_name: Optional[str] = None
@@ -120,7 +120,7 @@ class Worker(WorkerBase):
     id: int
     candidate_id: int
     admin_id: int
-    partner_id: Optional[int]
+    partner_id: Optional[int] = None
     referrer_id: Optional[int] = None
     issued_account_name: Optional[str] = None
     shift: Optional[str] = None
@@ -322,7 +322,7 @@ class AccountRequestUpdate(BaseModel):
     status: Optional[str] = None
     gmail_address: Optional[str] = None
     gmail_password: Optional[str] = None
-    partner_id: Optional[int]
+    partner_id: Optional[int] = None
     referrer_id: Optional[int] = None
     referrer_id: Optional[int] = None
     issued_account_name: Optional[str] = None
@@ -337,7 +337,7 @@ class AccountRequestResponse(BaseModel):
     candidate_nickname: Optional[str] = None
     candidate_tg: str
     questionnaire: str
-    partner_id: Optional[int]
+    partner_id: Optional[int] = None
     referrer_id: Optional[int] = None
     referrer_id: Optional[int] = None
     issued_account_name: Optional[str] = None
@@ -389,7 +389,7 @@ class AccountBase(BaseModel):
     login: str
     account_number: Optional[str] = None
     worker_id: Optional[int] = None
-    partner_id: Optional[int]
+    partner_id: Optional[int] = None
     referrer_id: Optional[int] = None
     referrer_id: Optional[int] = None
     issued_at: Optional[datetime] = None
@@ -404,7 +404,7 @@ class AccountUpdate(BaseModel):
     login: Optional[str] = None
     account_number: Optional[str] = None
     worker_id: Optional[int] = None
-    partner_id: Optional[int]
+    partner_id: Optional[int] = None
     referrer_id: Optional[int] = None
     referrer_id: Optional[int] = None
     status: Optional[str] = None
