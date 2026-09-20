@@ -142,3 +142,22 @@ def get_all_shifts(db: Session = Depends(get_db), current_user: User = Depends(R
     if current_user.role == "ADMIN":
         query = query.filter(Shift.admin_id == current_user.id)
     return query.order_by(Shift.start_time.desc()).limit(200).all()
+
+@router.delete("/{shift_id}")
+def delete_shift(shift_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "ADMIN"]))):
+    shift = db.query(Shift).filter(Shift.id == shift_id).first()
+    if not shift:
+        raise HTTPException(status_code=404, detail="Shift not found")
+    if current_user.role == "ADMIN" and shift.admin_id != current_user.id and shift.admin_id is not None:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this shift")
+    
+    db.delete(shift)
+    
+    log = AuditLog(
+        user_id=current_user.id,
+        action="SHIFT_DELETED",
+        details=f"Deleted shift {shift_id}"
+    )
+    db.add(log)
+    db.commit()
+    return {"message": "Смена удалена"}

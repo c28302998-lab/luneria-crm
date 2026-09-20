@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { Loader2, CheckCircle2, Clock, Calendar } from 'lucide-react';
+import { Loader2, CheckCircle2, Clock, Calendar, Trash2 } from 'lucide-react';
 import { useAuth } from '@/store/auth';
 
 export default function AdminShiftsPage() {
@@ -61,6 +61,16 @@ export default function AdminShiftsPage() {
       fetchShifts();
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Ошибка');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Вы уверены, что хотите удалить эту смену?')) return;
+    try {
+      await api.delete(`/shifts/${id}`);
+      fetchShifts();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Ошибка при удалении');
     }
   };
 
@@ -133,16 +143,15 @@ export default function AdminShiftsPage() {
                         <span className="text-muted-foreground italic text-xs">Нет отчета</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
-                      {shift.status === 'PENDING_REVIEW' && (user?.role === 'OWNER' || user?.role === 'FINANCE') && (
+                    <td className="px-4 py-3 flex gap-2">
+                      {shift.status === 'PENDING_REVIEW' && (
                         <button onClick={() => handleApprove(shift)} className="flex items-center px-3 py-1.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-xs font-medium">
                           <CheckCircle2 className="w-4 h-4 mr-1" /> Одобрить
                         </button>
                       )}
-                      {shift.status === 'PENDING_REVIEW' && user?.role === 'ADMIN' && (
-                        <span className="text-xs text-muted-foreground italic">Ожидает Овнера</span>
-                      )}
-
+                      <button onClick={() => handleDelete(shift.id)} className="flex items-center px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-xs font-medium" title="Удалить смену">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
