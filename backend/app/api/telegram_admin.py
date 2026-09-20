@@ -87,7 +87,7 @@ async def verify_code(req: VerifyCodeRequest, db: Session = Depends(get_db), cur
             user_id=current_user.id,
             account_id=acc.id,
             action="CONNECT_ACCOUNT",
-            details=f"Owner connected new account {req.phone}"
+            changes={"message": f"Owner connected new account {req.phone}"},
             )
             db.add(log)
             db.commit()
@@ -251,7 +251,7 @@ async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = D
             user_id=current_user.id,
             account_id=acc.id,
             action="ASSIGN_ACCOUNT",
-            details=f"Changed assigned worker from {old_user} to {req.user_id}"
+            changes={"message": f"Changed assigned worker from {old_user} to {req.user_id}"},
             )
             db.add(log)
             db.commit()
@@ -316,7 +316,7 @@ async def revoke_account(acc_id: int, db: Session = Depends(get_db), current_use
         user_id=current_user.id,
         account_id=acc.id,
         action="REVOKE_ACCOUNT",
-        details="Owner revoked access and disabled account"
+        changes={"message": "Owner revoked access and disabled account"},
         )
         db.add(log)
         db.commit()
@@ -358,7 +358,7 @@ def update_request_status(req_id: int, update: RequestStatusUpdate, db: Session 
         user_id=current_user.id,
         account_id=req.account_id,
         action="UPDATE_REQUEST",
-        details=f"Updated request {req.id} to {update.status.value}"
+        changes={"message": f"Updated request {req.id} to {update.status.value}"},
         )
         db.add(log)
         db.commit()
@@ -388,7 +388,7 @@ async def update_account_status(acc_id: int, update: AccountStatusUpdate, db: Se
         user_id=current_user.id,
         account_id=acc.id,
         action="UPDATE_STATUS",
-        details=f"Changed status from {old_status.value} to {update.status.value}"
+        changes={"message": f"Changed status from {old_status.value} to {update.status.value}"},
         )
         db.add(log)
         db.commit()

@@ -56,7 +56,7 @@ def trigger_automation(event: AutomationEvent, db: Session = Depends(get_db)):
     log = AuditLog(
         user_id=1,
         action="AUTOMATION_TRIGGERED",
-        details=f"Task created for {admin_id} regarding {event.event_type} on {event.account_type} {event.account_id}"
+        changes={"message": f"Task created for {admin_id} regarding {event.event_type} on {event.account_type} {event.account_id}"},
     )
     db.add(log)
     

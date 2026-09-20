@@ -165,7 +165,7 @@ async def get_messages(chat_id: str, request: Request, db: Session = Depends(get
             user_id=user.id,
             account_id=acc.id,
             action="OPEN_CHAT",
-            details=f"Opened chat {chat_id}",
+            changes={"message": f"Opened chat {chat_id}"},
             ip_address=request.client.host if request.client else None
         )
         db.add(log)
@@ -263,7 +263,7 @@ async def send_message(req: SendMessageRequest, request: Request, db: Session = 
             user_id=user.id,
             account_id=acc.id,
             action="SEND_MESSAGE",
-            details=f"Sent message to {req.chat_id}: {req.text[:50]}...",
+            changes={"message": f"Sent message to {req.chat_id}: {req.text[:50]}..."},
             ip_address=request.client.host if request.client else None
         )
         db.add(log)
@@ -314,7 +314,7 @@ def create_request(req: TelegramRequestCreate, db: Session = Depends(get_db), ac
         user_id=user.id,
         account_id=acc.id,
         action="CREATE_REQUEST",
-        details=f"Requested {req.request_type}. Reason: {req.reason}"
+        changes={"message": f"Requested {req.request_type}. Reason: {req.reason}"},
     )
     db.add(log)
     db.commit()

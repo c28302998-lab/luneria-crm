@@ -57,7 +57,7 @@ def submit_review(review_id: int, req: ReviewSubmit, db: Session = Depends(get_d
     log = AuditLog(
         user_id=current_user.id,
         action="ACCOUNT_REVIEW_COMPLETED",
-        details=f"Review {review.id} for Account {review.account_id} completed. Decision: {req.decision}"
+        changes={"message": f"Review {review.id} for Account {review.account_id} completed. Decision: {req.decision}"},
     )
     db.add(log)
     

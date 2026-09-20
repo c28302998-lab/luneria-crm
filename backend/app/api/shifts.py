@@ -43,7 +43,7 @@ def start_shift(req: ShiftStartRequest, db: Session = Depends(get_db), current_u
     log = AuditLog(
         user_id=current_user.id,
         action="SHIFT_START",
-        details=f"Started {req.shift_type} shift"
+        changes={"message": f"Started {req.shift_type} shift"},
     )
     db.add(log)
     
@@ -74,7 +74,7 @@ def end_shift(req: ShiftEndRequest, db: Session = Depends(get_db), current_user:
     log = AuditLog(
         user_id=current_user.id,
         action="SHIFT_END",
-        details=f"Ended shift and submitted report for review"
+        changes={"message": f"Ended shift and submitted report for review"},
     )
     db.add(log)
     
@@ -117,7 +117,9 @@ def approve_shift(shift_id: int, payload: ShiftApproveRequest, db: Session = Dep
     log = AuditLog(
         user_id=current_user.id,
         action="SHIFT_APPROVED",
-        details=f"Approved shift {shift.id} for worker {shift.worker_id}"
+        entity_type="Shift",
+        entity_id=shift.id,
+        changes={"message": f"Approved shift {shift.id} for worker {shift.worker_id}"}
     )
     db.add(log)
     
@@ -156,7 +158,9 @@ def delete_shift(shift_id: int, db: Session = Depends(get_db), current_user: Use
     log = AuditLog(
         user_id=current_user.id,
         action="SHIFT_DELETED",
-        details=f"Deleted shift {shift_id}"
+        entity_type="Shift",
+        entity_id=shift_id,
+        changes={"message": f"Deleted shift {shift_id}"}
     )
     db.add(log)
     db.commit()

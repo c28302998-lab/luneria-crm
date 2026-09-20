@@ -329,7 +329,7 @@ def worker_leaves(worker_id: int, db: Session = Depends(get_db), current_user: U
     log = AuditLog(
         user_id=current_user.id,
         action="WORKER_LEAVES",
-        details=f"Worker {worker.id} terminated. {tg_count} TG accounts detached. {email_count} Email accounts detached. {tg_count} AccountReviews created."
+        changes={"message": f"Worker {worker.id} terminated. {tg_count} TG accounts detached. {email_count} Email accounts detached. {tg_count} AccountReviews created."},
     )
     db.add(log)
     
