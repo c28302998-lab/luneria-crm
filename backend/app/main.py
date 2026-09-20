@@ -30,6 +30,38 @@ app.add_middleware(
 )
 from app.api.router import api_router
 
+
+@app.get("/api/migrate-old-reports")
+def migrate_old_reports(db: Session = Depends(get_db)):
+    from app.models.models import ShiftReport, Shift
+    reports = db.query(ShiftReport).all()
+    count = 0
+    for r in reports:
+        # Check if already migrated
+        existing = db.query(Shift).filter(Shift.worker_id == r.worker_id, Shift.start_time == r.created_at).first()
+        if not existing:
+            status_map = {"PENDING": "PENDING_REVIEW", "APPROVED": "APPROVED", "REJECTED": "REJECTED"}
+            s = Shift(
+                worker_id=r.worker_id,
+                admin_id=r.worker.admin_id if r.worker else None,
+                shift_type="DAY",
+                start_time=r.created_at,
+                end_time=r.created_at,
+                status=status_map.get(r.status, "PENDING_REVIEW"),
+                report_data={
+                    "amount": r.amount,
+                    "screenshots": r.files,
+                    "comment": r.notes,
+                    "worker_amount": r.worker_amount,
+                    "admin_amount": r.admin_amount
+                },
+                stats={}
+            )
+            db.add(s)
+            count += 1
+    db.commit()
+    return {"migrated": count, "total": len(reports)}
+
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 
 os.makedirs("uploads", exist_ok=True)
