@@ -37,6 +37,7 @@ const getNavigation = (role: string) => {
       ]},
       { group: 'Отчеты', items: [
         { name: 'Отчеты работников', href: '/dashboard/shifts', icon: ClipboardCheck },
+        { name: 'Сводные Отчеты', href: '/dashboard/reports', icon: FileBarChart },
       ]},
       { group: 'HR & Команда', items: [
         { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
