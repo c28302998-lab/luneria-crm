@@ -42,11 +42,7 @@ const getNavigation = (role: string) => {
         { name: 'Администраторы', href: '/dashboard/admins', icon: Shield },
         { name: 'Партнеры', href: '/dashboard/partners', icon: Users },
       ]},
-      { group: 'Смены и Контроль', items: [
-        
-        
-        
-      ]},
+
       { group: 'Финансы', items: [
         { name: 'Финансы (Балансы)', href: '/dashboard/finance', icon: DollarSign },
         { name: 'Штрафы и Премии', href: '/dashboard/balance-requests', icon: DollarSign },
