@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.models.models import User, Shift, Worker, AuditLog
+from app.models.models import User, Shift, Worker, AuditLog, Candidate
 from app.core.dependencies import get_current_user, RoleChecker
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
