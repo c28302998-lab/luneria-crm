@@ -37,6 +37,7 @@ const getNavigation = (role: string) => {
       ]},
       { group: 'HR & Команда', items: [
         { name: 'Смены', href: '/dashboard/shifts', icon: ClipboardCheck },
+        { name: 'Старые отчеты', href: '/dashboard/worker-reports', icon: ClipboardCheck },
         { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
         { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
         { name: 'Администраторы', href: '/dashboard/admins', icon: Shield },
@@ -67,6 +68,8 @@ const getNavigation = (role: string) => {
       ]},
       { group: 'Рекрутинг', items: [
         { name: 'Смены', href: '/dashboard/shifts', icon: ClipboardCheck },
+        { name: 'Старые отчеты', href: '/dashboard/worker-reports', icon: ClipboardCheck },
+        { name: 'Старые отчеты', href: '/dashboard/worker-reports', icon: ClipboardCheck },
         { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
         { name: 'Источники', href: '/dashboard/sources', icon: Globe },
         { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
@@ -74,6 +77,7 @@ const getNavigation = (role: string) => {
       { group: 'Отчеты', items: [
         
         { name: 'Сводные Отчеты', href: '/dashboard/reports', icon: FileBarChart },
+        { name: 'Отчеты работников (Старые)', href: '/dashboard/worker-reports', icon: FileBarChart },
       ]},
       { group: 'Настройки', items: [
         { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
@@ -92,6 +96,7 @@ const getNavigation = (role: string) => {
       { group: 'Отчеты', items: [
         
         { name: 'Сводные Отчеты', href: '/dashboard/reports', icon: FileBarChart },
+        { name: 'Отчеты работников (Старые)', href: '/dashboard/worker-reports', icon: FileBarChart },
       ]},
       { group: 'Финансы', items: [
         { name: 'Мой баланс', href: '/dashboard/my-balance', icon: DollarSign },
@@ -128,6 +133,7 @@ const getNavigation = (role: string) => {
       { group: 'Мое Рабочее Место', items: [
         { name: 'Дашборд', href: '/dashboard', icon: LayoutDashboard },
         { name: 'Мои Смены', href: '/dashboard/my-shifts', icon: Clock },
+        { name: 'Сдать отчет (Старый)', href: '/dashboard/shift-report', icon: FileBarChart },
         { name: 'Мои аккаунты (TG)', href: '/dashboard/my-accounts', icon: Key },
         { name: 'Почты', href: '/dashboard/emails', icon: Mail },
       ]},

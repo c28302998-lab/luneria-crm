@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { ClipboardCheck, User as UserIcon, Calendar, CheckCircle2, Circle } from 'lucide-react';
+import { ClipboardCheck, User as UserIcon, Calendar, CheckCircle2, Circle, Clock } from 'lucide-react';
 import { useAuth } from '@/store/auth';
 import Link from 'next/link';
 
@@ -10,16 +10,25 @@ export default function AttendancePage() {
   const { user } = useAuth();
   const [workers, setWorkers] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<any[]>([]);
+  const [candidates, setCandidates] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [targetDate, setTargetDate] = useState(new Date().toISOString().split('T')[0]); // YYYY-MM-DD
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [{ data: wData }, { data: aData }] = await Promise.all([
+            const [{ data: wData }, { data: aData }, { data: cData }] = await Promise.all([
         api.get('/workers/'),
-        api.get('/attendance/', { params: { target_date: targetDate } })
+        api.get('/attendance/', { params: { target_date: targetDate } }),
+        api.get('/candidates/')
       ]);
+      
+      const cMap: Record<number, string> = {};
+      cData.forEach((c: any) => {
+        cMap[c.id] = c.first_name || `Кандидат #${c.id}`;
+      });
+      setCandidates(cMap);
+
       
       // Filter workers for Admin
       if (user?.role === 'ADMIN') {
@@ -103,23 +112,23 @@ export default function AttendancePage() {
     }
   };
 
-  if (loading && workers.length === 0) return <div className="p-8 text-center text-gray-500">Загрузка...</div>;
+  if (loading && workers.length === 0) return <div className="p-8 text-center text-muted-foreground">Загрузка...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-            <ClipboardCheck className="w-6 h-6 mr-2 text-indigo-600" />
+          <h2 className="text-2xl font-semibold text-foreground flex items-center">
+            <ClipboardCheck className="w-6 h-6 mr-2 text-primary" />
             Учет рабочего времени
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Отмечайте присутствие работников, их смены и аккаунты.
           </p>
         </div>
         
-        <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
-          <Calendar className="w-4 h-4 text-gray-500" />
+        <div className="flex items-center space-x-2 bg-card p-2 rounded-lg border border-border shadow-sm">
+          <Calendar className="w-4 h-4 text-muted-foreground" />
           <input 
             type="date" 
             value={targetDate}
@@ -129,21 +138,21 @@ export default function AttendancePage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-background">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Работник</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Аккаунт</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Смена (Киев)</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">На работе ({targetDate})</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Работник</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Аккаунт</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Смена (Киев)</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">На работе ({targetDate})</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-card divide-y divide-border">
               {workers.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500 text-sm">
+                  <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground text-sm">
                     Нет привязанных работников
                   </td>
                 </tr>
@@ -154,18 +163,18 @@ export default function AttendancePage() {
                   const canEdit = user?.role === 'OWNER' || (user?.role === 'ADMIN' && worker.admin_id === user.id);
                   
                   return (
-                    <tr key={worker.id} className="hover:bg-gray-50 transition">
+                    <tr key={worker.id} className="hover:bg-background transition">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <UserIcon className="h-8 w-8 text-gray-300 mr-3" />
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              <Link href={`/dashboard/workers/${worker.id}`} className="hover:text-indigo-600">
-                                Работник #{worker.id} (Кандидат #{worker.candidate_id})
+                            <div className="text-sm font-medium text-foreground">
+                              <Link href={`/dashboard/workers/${worker.id}`} className="hover:text-primary">
+                                {candidates[worker.candidate_id] || `Работник #${worker.id}`}
                               </Link>
                             </div>
                             {user?.role !== 'ADMIN' && (
-                              <div className="text-xs text-gray-500">Админ: #{worker.admin_id}</div>
+                              <div className="text-xs text-muted-foreground">Админ: #{worker.admin_id}</div>
                             )}
                           </div>
                         </div>
@@ -174,10 +183,11 @@ export default function AttendancePage() {
                         {canEdit ? (
                           <input 
                             type="text"
-                            placeholder="Название аккаунта"
+                            placeholder="Впишите аккаунт..."
                             value={worker.account_info || ''}
                             onChange={(e) => setWorkers(prev => prev.map(w => w.id === worker.id ? { ...w, account_info: e.target.value } : w))}
                             onBlur={(e) => handleInfoChange(worker.id, 'account_info', e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                             className="text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 w-full"
                           />
                         ) : (
@@ -188,10 +198,11 @@ export default function AttendancePage() {
                         {canEdit ? (
                           <input 
                             type="text"
-                            placeholder="10:00 - 18:00"
+                            placeholder="Напр. 10:00 - 18:00"
                             value={worker.shift || ''}
                             onChange={(e) => setWorkers(prev => prev.map(w => w.id === worker.id ? { ...w, shift: e.target.value } : w))}
                             onBlur={(e) => handleInfoChange(worker.id, 'shift', e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                             className="text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 w-32"
                           />
                         ) : (
@@ -205,7 +216,9 @@ export default function AttendancePage() {
                             disabled={!canEdit}
                             className={`focus:outline-none transition-transform active:scale-95 ${!canEdit ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-80'}`}
                           >
-                            {isPresent ? (
+                            {att?.status === 'PENDING' ? (
+                              <Clock className="w-8 h-8 text-yellow-500 mx-auto animate-pulse" />
+                            ) : isPresent ? (
                               <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto" />
                             ) : (
                               <Circle className="w-8 h-8 text-gray-300 mx-auto hover:text-gray-400" />
@@ -214,7 +227,7 @@ export default function AttendancePage() {
                           
                           {user?.role === 'OWNER' && (
                             <div className="flex items-center gap-1">
-                              <span className="text-gray-500 text-sm font-medium">$</span>
+                              <span className="text-muted-foreground text-sm font-medium">$</span>
                               <input
                                 type="number"
                                 placeholder="Доход"
