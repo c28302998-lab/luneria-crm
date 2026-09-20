@@ -6,8 +6,8 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Luneria CRM",
-  description: "Internal CRM system for Luneria agency",
+  title: `${process.env.NEXT_PUBLIC_AGENCY_NAME || "Lunery"} CRM`,
+  description: "Internal CRM system for Lunery agency",
 };
 
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className={`${inter.className} antialiased bg-gray-50 text-gray-900`}>
+      <body className={`${inter.className} antialiased bg-background text-foreground`}>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

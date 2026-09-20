@@ -112,62 +112,62 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-semibold text-gray-900">Аналитика</h2>
+      <h2 className="text-2xl font-semibold text-foreground">Аналитика</h2>
       
-      {loading ? <p className="text-gray-500">Загрузка данных...</p> : (
+      {loading ? <p className="text-muted-foreground">Загрузка данных...</p> : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
               <div className="flex items-center">
                 <div className="p-3 bg-blue-100 rounded-lg">
                   <Users className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Всего Кандидатов</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.candidates}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Всего Кандидатов</p>
+                  <p className="text-2xl font-semibold text-foreground">{stats.candidates}</p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
               <div className="flex items-center">
                 <div className="p-3 bg-green-100 rounded-lg">
                   <Briefcase className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Работников</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.workers}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Работников</p>
+                  <p className="text-2xl font-semibold text-foreground">{stats.workers}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
               <div className="flex items-center">
                 <div className="p-3 bg-purple-100 rounded-lg">
                   <UserCheck className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Партнеров</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.partners}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Партнеров</p>
+                  <p className="text-2xl font-semibold text-foreground">{stats.partners}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
               <div className="flex items-center">
                 <div className="p-3 bg-orange-100 rounded-lg">
                   <DollarSign className="h-6 w-6 text-orange-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Сотрудников (CRM)</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.users}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Сотрудников (CRM)</p>
+                  <p className="text-2xl font-semibold text-foreground">{stats.users}</p>
                 </div>
               </div>
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-96">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Воронка конверсии (последние 6 месяцев)</h3>
+          <div className="bg-card p-6 rounded-xl shadow-sm border border-border h-96">
+            <h3 className="text-lg font-medium text-foreground mb-4">Воронка конверсии (последние 6 месяцев)</h3>
             {chartData && (
               <div className="relative h-72 w-full">
                 <Bar 

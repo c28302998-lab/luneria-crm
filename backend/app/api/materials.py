@@ -13,12 +13,15 @@ from app.crud.audit import log_audit
 router = APIRouter()
 
 @router.get("/", response_model=List[MaterialSchema])
-def read_materials(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def read_materials(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return db.query(Material).filter(Material.is_deleted == False).order_by(Material.created_at.asc()).offset(skip).limit(limit).all()
 
 @router.post("/", response_model=MaterialSchema)
 def create_material(material_in: MaterialCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "CURATOR"]))):
-    material = Material(**material_in.dict(), created_by=current_user.id)
+    data = material_in.dict()
+    if 'notes' in data:
+        del data['notes']
+    material = Material(**data, created_by=current_user.id)
     db.add(material)
     db.commit()
     db.refresh(material)

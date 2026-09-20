@@ -45,14 +45,14 @@ export default function ShiftButton() {
     }
   };
 
-  if (loading) return <div className="h-9 w-32 bg-gray-100 animate-pulse rounded-md"></div>;
+  if (loading) return <div className="h-9 w-32 bg-muted animate-pulse rounded-md"></div>;
 
   return (
     <button
       onClick={handleToggle}
       className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
         activeShift 
-          ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100' 
+          ? 'bg-red-500/10 text-red-700 border border-red-200 hover:bg-red-100' 
           : 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
       }`}
     >

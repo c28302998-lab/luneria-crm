@@ -3,18 +3,30 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Plus, Download, FileText } from 'lucide-react';
+import { Plus, Download, FileText, Trash2 } from 'lucide-react';
 
 export default function ReportsPage() {
   const { user } = useAuth();
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
-    content: ''
+    income: '',
+    content: '',
+    proof_url: ''
   });
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Точно удалить этот отчет?")) return;
+    try {
+      await api.delete(`/reports/${id}`);
+      fetchReports();
+    } catch (e) {
+      alert("Ошибка при удалении");
+    }
+  };
 
   const fetchReports = async () => {
     try {
@@ -34,15 +46,17 @@ export default function ReportsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/reports/', {
-        type: 'CUSTOM',
+            await api.post('/reports/', {
+        type: 'DAILY_SUMMARY',
         data: {
           title: formData.title,
-          content: formData.content
+          income: formData.income,
+          content: formData.content,
+          proof_url: formData.proof_url
         }
       });
       setIsModalOpen(false);
-      setFormData({ title: '', content: '' });
+      setFormData({ title: '', income: '', content: '', proof_url: '' });
       fetchReports();
     } catch (err) {
       console.error(err);
@@ -66,52 +80,124 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-gray-900">Отчеты</h2>
+        <h2 className="text-2xl font-semibold text-foreground">Отчеты</h2>
         <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+          onClick={() => {
+          setFormData({ ...formData, content: `📊 DAILY TEAM REPORT
+
+📅 Дата: 
+
+👥 КОМАНДА
+
+👤 Всего работников: 
+🟢 Вышли на смену: 
+🔴 Не вышли: 
+🆕 Новых работников: 
+
+━━━━━━━━━━━━━━
+
+💰 ФИНАНСОВЫЙ РЕЗУЛЬТАТ
+
+💵 Общий заработок команды за сегодня: $
+
+
+━━━━━━━━━━━━━━
+
+👤 РЕЗУЛЬТАТЫ ПО РАБОТНИКАМ
+
+1. [Имя]
+   📅 Работает с: 
+   🟢 Смена: 
+   ⏱ 
+   💰 Заработал за сегодня: $
+   📊 Продаж: 
+
+2. [Имя]
+   📅 Работает с: 
+   🔴 НЕ ВЫШЕЛ
+   Причина: 
+
+━━━━━━━━━━━━━━
+
+🏆 ТОП РЕЗУЛЬТАТЫ
+
+🥇 
+🥈 
+🥉 
+
+━━━━━━━━━━━━━━
+
+⚠️ НЕ ВЫШЛИ НА СМЕНУ
+
+🔴 
+
+━━━━━━━━━━━━━━
+
+📈 ИТОГО ЗА ДЕНЬ
+
+Общий заработок: $
+Работников на смене: 
+Не вышли: 
+
+📸 Скрины статистики прикреплены.` });
+          setIsModalOpen(true);
+        }}
+          className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition"
         >
           <Plus className="h-4 w-4 mr-2" />
           Создать отчет
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {loading ? <p className="p-8 text-center text-gray-500">Загрузка...</p> : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Название</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тип</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Автор ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+        {loading ? <p className="p-8 text-center text-muted-foreground">Загрузка...</p> : (
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-background">
+                            <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Отчет</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Аналитика</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Автор</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Дата</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Действия</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-card divide-y divide-border">
               {reports.map((r: any) => (
                 <tr key={r.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <FileText className="h-5 w-5 text-gray-400 mr-2" />
-                      <span className="text-sm font-medium text-gray-900">{r.data?.title || 'Без названия'}</span>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-foreground">{r.data?.title || 'Без названия'}</span>
+                      {r.data?.income && <span className="text-xs text-green-600 font-bold mt-1">Доход: ${r.data?.income}</span>}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{r.type}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Пользователь #{r.admin_id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 text-sm text-muted-foreground max-w-xs truncate">
+                    {r.data?.content || '—'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">Админ #{r.admin_id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {new Date(r.created_at).toLocaleDateString('ru-RU')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => handleDownload(r)} className="text-indigo-600 hover:text-indigo-900 flex items-center justify-end w-full">
-                      <Download className="w-4 h-4 mr-1" />
-                      Скачать
+                    <div className="flex flex-col items-end space-y-2">
+                    {r.data?.proof_url && (
+                      <a href={(typeof r.data.proof_url === "string" && r.data.proof_url.startsWith("http")) ? r.data.proof_url : "https://" + r.data.proof_url} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700 text-xs flex items-center">
+                        <FileText className="w-3 h-3 mr-1" /> Пруфы
+                      </a>
+                    )}
+                    <button onClick={() => handleDownload(r)} className="text-primary hover:text-indigo-900 text-xs flex items-center">
+                      <Download className="w-3 h-3 mr-1" /> Скачать
                     </button>
+                    {(user?.role === 'OWNER' || user?.role === 'ADMIN') && (
+                      <button onClick={() => handleDelete(r.id)} className="text-red-500 hover:text-red-700 text-xs flex items-center mt-2">
+                        <Trash2 className="w-3 h-3 mr-1" /> Удалить
+                      </button>
+                    )}
+                    </div>
                   </td>
                 </tr>
               ))}
               {reports.length === 0 && (
-                <tr><td colSpan={5} className="p-8 text-center text-gray-500">Отчетов пока нет</td></tr>
+                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Отчетов пока нет</td></tr>
               )}
             </tbody>
           </table>
@@ -120,38 +206,58 @@ export default function ReportsPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Новый отчет</h3>
+          <div className="bg-card rounded-xl shadow-xl w-full max-w-md p-6">
+                        <h3 className="text-xl font-bold text-foreground mb-4">Ежедневный Отчет Администратора</h3>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Название</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Название отчета (Например: Сводка за 09.09)</label>
                 <input 
                   type="text" required 
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none" 
+                  className="w-full border-border bg-card rounded-lg p-2 text-sm focus:ring-primary focus:border-primary" 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Содержание</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Общая Выручка команды ($)</label>
+                <input 
+                  type="number" step="0.01" required 
+                  value={formData.income}
+                  onChange={(e) => setFormData({...formData, income: e.target.value})}
+                  className="w-full border-border bg-card rounded-lg p-2 text-sm focus:ring-primary focus:border-primary" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Аналитика / Комментарий</label>
                 <textarea 
-                  required rows={4}
+                  required rows={20} style={{ fontFamily: 'monospace' }}
                   value={formData.content}
+                  placeholder="Воркеры отработали отлично, трафик с TikTok идет хорошо. Воркер №3 просел, провел с ним беседу."
                   onChange={(e) => setFormData({...formData, content: e.target.value})}
-                  className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none" 
+                  className="w-full border-border bg-card rounded-lg p-2 text-sm focus:ring-primary focus:border-primary" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Скриншот / Доказательства (Ссылка)</label>
+                <input 
+                  type="url"
+                  placeholder="https://..."
+                  value={formData.proof_url}
+                  onChange={(e) => setFormData({...formData, proof_url: e.target.value})}
+                  className="w-full border-border bg-card rounded-lg p-2 text-sm focus:ring-primary focus:border-primary" 
                 />
               </div>
               <div className="flex justify-end space-x-3 mt-6">
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-background"
                 >
                   Отмена
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700"
+                  className="px-4 py-2 bg-primary border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary/90"
                 >
                   Сохранить
                 </button>

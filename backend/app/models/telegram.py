@@ -30,6 +30,9 @@ class TelegramAccount(Base, SoftDeleteMixin):
     
     # Who is currently assigned to this account
     assigned_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    assigned_worker_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    responsible_admin_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    worker_note = Column(Text, nullable=True)
     
     # Metrics
     total_messages_sent = Column(Integer, default=0)
@@ -38,7 +41,8 @@ class TelegramAccount(Base, SoftDeleteMixin):
     last_activity_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    assigned_user = relationship("User")
+    assigned_user = relationship("User", foreign_keys=[assigned_user_id])
+    assigned_worker = relationship("User", foreign_keys=[assigned_worker_id])
 
 class TelegramRequestStatus(str, enum.Enum):
     PENDING = "PENDING"
@@ -97,3 +101,28 @@ class TelegramChatAlias(Base):
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class AccountAssignment(Base):
+    __tablename__ = "account_assignments"
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("telegram_accounts.id"), index=True)
+    worker_id = Column(Integer, ForeignKey("users.id"), index=True)
+    admin_id = Column(Integer, ForeignKey("users.id"))
+    assigned_at = Column(DateTime, default=datetime.utcnow)
+    revoked_at = Column(DateTime, nullable=True)
+    reason = Column(String, nullable=True)
+    notes = Column(String, nullable=True)
+
+
+class AccountReview(Base):
+    __tablename__ = "account_reviews"
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("telegram_accounts.id"), index=True)
+    previous_worker_id = Column(Integer, ForeignKey("users.id"))
+    created_by = Column(String, default="SYSTEM")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    potential = Column(String, nullable=True) # HIGH, MEDIUM, LOW
+    decision = Column(String, nullable=True) # REASSIGN, RE_REGISTER, ARCHIVE
+    comment = Column(String, nullable=True)
+    completed_at = Column(DateTime, nullable=True)

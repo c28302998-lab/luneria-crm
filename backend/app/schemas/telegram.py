@@ -31,6 +31,8 @@ class TelegramAccountResponse(TelegramAccountBase):
     last_activity_at: Optional[datetime] = None
     created_at: datetime
     assigned_user: Optional[User] = None
+    assigned_worker_id: Optional[int] = None
+    worker_note: Optional[str] = None
     
     class Config:
         from_attributes = True

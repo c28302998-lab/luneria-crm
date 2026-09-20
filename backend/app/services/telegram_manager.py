@@ -6,6 +6,8 @@ from telethon.sessions import StringSession
 from telethon.errors import SessionPasswordNeededError
 from pydantic import BaseModel
 
+from dotenv import load_dotenv
+load_dotenv()
 API_ID = int(os.getenv("TELEGRAM_API_ID", "0"))
 API_HASH = os.getenv("TELEGRAM_API_HASH", "")
 
@@ -40,13 +42,46 @@ class TelegramManager:
         
         if not await client.is_user_authorized():
             await client.disconnect()
+            
+            # --- AUTOMATION TRIGGER ---
+            try:
+                from app.db.database import SessionLocal
+                from app.models.telegram import TelegramAccount
+                from app.models.models import Task, User
+                
+                db = SessionLocal()
+                acc = db.query(TelegramAccount).filter(TelegramAccount.id == account_id).first()
+                if acc:
+                    acc.status = "DISABLED"
+                    admin_id = acc.responsible_admin_id or acc.assigned_user_id
+                    if not admin_id:
+                        owner = db.query(User).filter(User.role == "OWNER").first()
+                        admin_id = owner.id if owner else 1
+                        
+                    task = Task(
+                        title=f"Автоматизация: Ошибка сессии на аккаунте #{account_id}",
+                        description=f"Telegram-аккаунт {acc.name or acc.phone} вылетел (сессия невалидна или revoked). Требуется перерегистрация/перепривязка.",
+                        priority="HIGH",
+                        assigned_user_id=admin_id,
+                        creator_id=1,
+                        status="NEW"
+                    )
+                    db.add(task)
+                    db.commit()
+                db.close()
+            except Exception as e:
+                print("Failed to trigger automation:", e)
+            # --------------------------
+            
             raise Exception("Telegram session is no longer valid or revoked")
             
         self.clients[account_id] = client
         return client
 
-    async def download_message_media(self, account_id: int, chat_id: int, message_id: int) -> bytes:
-        client = self.clients.get(account_id)
+    async def download_message_media(self, account_id: int, chat_id: int, message_id: int, session_string: str = None) -> bytes:
+        client = await self.get_client(account_id, session_string) if session_string else self.clients.get(account_id)
+        if not client:
+            raise Exception('Client not connected')
         if not client:
             raise Exception("Client not connected")
         
@@ -135,5 +170,58 @@ class TelegramManager:
         finally:
             await client.disconnect()
 
+    async def resolve_entity(self, account_id: int, query: str, session_string: str = None) -> dict:
+        client = await self.get_client(account_id, session_string) if session_string else self.clients.get(account_id)
+        if not client:
+            raise Exception('Client not connected')
+        if not client:
+            raise Exception("Client not connected")
+
+        try:
+            # If it's a phone number (starts with + or digits and > 8 chars), try to add to contacts first
+            import re
+            clean_q = re.sub(r'\D', '', query)
+            if (query.startswith('+') or query.isdigit()) and len(clean_q) >= 10:
+                from telethon.tl.functions.contacts import ImportContactsRequest
+                from telethon.tl.types import InputPhoneContact
+                phone_str = '+' + clean_q if not clean_q.startswith('+') else clean_q
+                contact = InputPhoneContact(client_id=0, phone=phone_str, first_name="Client", last_name="")
+                await client(ImportContactsRequest([contact]))
+                
+            entity = await client.get_entity(query)
+
+        except Exception as e:
+            raise ValueError(f"Could not find user or chat: {e}")
+            
+        name = getattr(entity, 'title', None)
+        if not name:
+            first = getattr(entity, 'first_name', '') or ''
+            last = getattr(entity, 'last_name', '') or ''
+            name = (first + ' ' + last).strip() or getattr(entity, 'username', 'Unknown')
+            
+        return {
+            "id": str(entity.id),
+            "name": name,
+            "username": getattr(entity, 'username', None),
+            "date": None,
+            "message": "Start a new chat",
+            "unread_count": 0,
+            "archived": False
+        }
+
+    async def get_profile_photo(self, account_id: int, entity_id: int, session_string: str = None) -> bytes:
+        client = await self.get_client(account_id, session_string) if session_string else self.clients.get(account_id)
+        if not client:
+            raise Exception('Client not connected')
+        if not client:
+            raise Exception("Client not connected")
+        try:
+            entity = await client.get_entity(entity_id)
+            return await client.download_profile_photo(entity, file=bytes)
+        except Exception:
+            return None
+
+
 # Global singleton
 telegram_manager = TelegramManager()
+

@@ -5,9 +5,9 @@ services:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_USER: luneria
+      POSTGRES_USER: lunery
       POSTGRES_PASSWORD: strongpassword
-      POSTGRES_DB: luneria_db
+      POSTGRES_DB: lunery_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -18,7 +18,7 @@ services:
     restart: always
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     environment:
-      - DATABASE_URL=postgresql://luneria:strongpassword@db:5432/luneria_db
+      - DATABASE_URL=postgresql://lunery:strongpassword@db:5432/lunery_db
       - SECRET_KEY=your_production_secret_key
       - ALLOWED_ORIGINS=https://crm.yourdomain.com
     ports:

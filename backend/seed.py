@@ -16,21 +16,57 @@ def seed():
             # Add columns if missing
             tables = ['payments', 'reports', 'tasks', 'workers', 'expenses', 'candidates']
             for table in tables:
-                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS files JSON DEFAULT '[]';"))
+                try:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN files JSON DEFAULT '[]';"))
+                except:
+                    pass
                 # Update existing nulls
-                conn.execute(text(f"UPDATE {table} SET files = '[]' WHERE files IS NULL;"))
+                try:
+                    conn.execute(text(f"UPDATE {table} SET files = '[]' WHERE files IS NULL;"))
+                except:
+                    pass
             
 
-            conn.execute(text("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR;"))
-            conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS candidate_name VARCHAR;"))
-            conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS age VARCHAR;"))
-            conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS account_type VARCHAR;"))
-            conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS admin_nickname VARCHAR;"))
-            conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS candidate_nickname VARCHAR;"))
-            conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS candidate_tg VARCHAR;"))
-            conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS questionnaire VARCHAR;"))
-            conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS partner_id INTEGER;"))
-            conn.execute(text("ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS issued_account_name VARCHAR;"))
+            try:
+                conn.execute(text("ALTER TABLE notifications ADD COLUMN type VARCHAR;"))
+            except:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE account_requests ADD COLUMN candidate_name VARCHAR;"))
+            except:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE account_requests ADD COLUMN age VARCHAR;"))
+            except:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE account_requests ADD COLUMN account_type VARCHAR;"))
+            except:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE account_requests ADD COLUMN admin_nickname VARCHAR;"))
+            except:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE account_requests ADD COLUMN candidate_nickname VARCHAR;"))
+            except:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE account_requests ADD COLUMN candidate_tg VARCHAR;"))
+            except:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE account_requests ADD COLUMN questionnaire VARCHAR;"))
+            except:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE account_requests ADD COLUMN partner_id INTEGER;"))
+            except:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE account_requests ADD COLUMN issued_account_name VARCHAR;"))
+            except:
+                pass
 
         try:
             conn.execute(text('''
@@ -50,7 +86,10 @@ def seed():
             print(f"Migration error for accounts: {e}")
 
         try:
-            conn.execute(text("ALTER TABLE accounts ADD COLUMN IF NOT EXISTS account_number VARCHAR;"))
+            try:
+                conn.execute(text("ALTER TABLE accounts ADD COLUMN account_number VARCHAR;"))
+            except:
+                pass
             print("accounts account_number added")
         except Exception as e:
             print(f"Migration error: {e}")
@@ -70,7 +109,10 @@ def seed():
             print(f"Migration error for account_emails: {e}")
 
         try:
-            conn.execute(text("ALTER TABLE account_emails ADD COLUMN IF NOT EXISTS linked_account_name VARCHAR;"))
+            try:
+                conn.execute(text("ALTER TABLE account_emails ADD COLUMN linked_account_name VARCHAR;"))
+            except:
+                pass
             print("account_emails linked_account_name added")
         except Exception as e:
             print(f"Migration error: {e}")
@@ -79,8 +121,14 @@ def seed():
 
             
             # Add new columns for attendance and shift
-            conn.execute(text("ALTER TABLE workers ADD COLUMN IF NOT EXISTS shift VARCHAR;"))
-            conn.execute(text("ALTER TABLE workers ADD COLUMN IF NOT EXISTS account_info VARCHAR;"))
+            try:
+                conn.execute(text("ALTER TABLE workers ADD COLUMN shift VARCHAR;"))
+            except:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE workers ADD COLUMN account_info VARCHAR;"))
+            except:
+                pass
             
             # Note: sources and materials are created by create_all()
             conn.commit()
@@ -94,7 +142,7 @@ def seed():
     
     try:
         # Check if owner already exists
-        existing_owner = db.query(User).filter(User.email == "owner@luneria.local").first()
+        existing_owner = db.query(User).filter(User.email == "owner@lunery.local").first()
         if existing_owner:
             print("Database already seeded!")
             return
@@ -102,7 +150,7 @@ def seed():
         # 1 Owner
         owner = User(
             name="Owner User",
-            email="owner@luneria.local",
+            email="owner@lunery.local",
             password_hash=get_password_hash("password123"),
             role="OWNER"
         )
@@ -111,7 +159,7 @@ def seed():
         # 1 Finance
         finance = User(
             name="Finance User",
-            email="finance@luneria.local",
+            email="finance@lunery.local",
             password_hash=get_password_hash("password123"),
             role="FINANCE"
         )
@@ -120,7 +168,7 @@ def seed():
         # 2 Curators
         curator1 = User(
             name="Curator 1",
-            email="curator1@luneria.local",
+            email="curator1@lunery.local",
             password_hash=get_password_hash("password123"),
             role="CURATOR"
         )
@@ -132,7 +180,7 @@ def seed():
         for i in range(1, 4):
             admin = User(
                 name=f"Admin {i}",
-                email=f"admin{i}@luneria.local",
+                email=f"admin{i}@lunery.local",
                 password_hash=get_password_hash("password123"),
                 role="ADMIN",
                 curator_id=curator1.id
@@ -153,13 +201,19 @@ if __name__ == "__main__":
 try:
     with engine.begin() as conn:
         from sqlalchemy import text
-        conn.execute(text("ALTER TABLE telegram_accounts RENAME COLUMN assigned_worker_id TO assigned_user_id"))
+        try:
+            conn.execute(text("ALTER TABLE telegram_accounts RENAME COLUMN assigned_worker_id TO assigned_user_id"))
+        except:
+            pass
 except Exception as e:
     pass # Column already renamed or table doesn't exist
 try:
     with engine.begin() as conn:
         from sqlalchemy import text
-        conn.execute(text("ALTER TABLE telegram_requests RENAME COLUMN worker_id TO user_id"))
+        try:
+            conn.execute(text("ALTER TABLE telegram_requests RENAME COLUMN worker_id TO user_id"))
+        except:
+            pass
 except Exception as e:
     pass
 
@@ -167,7 +221,10 @@ except Exception as e:
 try:
     with engine.begin() as conn:
         from sqlalchemy import text
-        conn.execute(text("ALTER TABLE telegram_accounts ADD COLUMN mask_client_names BOOLEAN DEFAULT FALSE"))
+        try:
+            conn.execute(text("ALTER TABLE telegram_accounts ADD COLUMN mask_client_names BOOLEAN DEFAULT FALSE"))
+        except:
+            pass
 except Exception as e:
     pass
 

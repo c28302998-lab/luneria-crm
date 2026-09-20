@@ -20,8 +20,8 @@ export default function LoginPage() {
 
     try {
       const formData = new URLSearchParams();
-      formData.append('username', email);
-      formData.append('password', password);
+      formData.append('username', email.trim());
+      formData.append('password', password.trim());
 
       const { data } = await api.post('/auth/login', formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -38,11 +38,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-10 shadow-lg border border-gray-100">
+    <div className="flex h-screen w-full items-center justify-center bg-background">
+      <div className="w-full max-w-md space-y-8 rounded-xl bg-card p-10 shadow-lg border border-border">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-indigo-600">Luneria CRM</h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <h2 className="text-3xl font-bold tracking-tight text-primary">{process.env.NEXT_PUBLIC_AGENCY_NAME ? process.env.NEXT_PUBLIC_AGENCY_NAME + " CRM" : "Lunery CRM"}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
             Войдите в систему
           </p>
         </div>
@@ -53,7 +53,7 @@ export default function LoginPage() {
               <input
                 type="email"
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm text-foreground focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -63,7 +63,7 @@ export default function LoginPage() {
               <input
                 type="password"
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm text-foreground focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -75,7 +75,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+            className="group relative flex w-full justify-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
           >
             {loading ? 'Вход...' : 'Войти'}
           </button>

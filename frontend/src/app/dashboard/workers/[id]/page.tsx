@@ -3,66 +3,99 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { ArrowLeft, UserCircle } from 'lucide-react';
-import { MessageCircle } from 'lucide-react';
-import Link from 'next/link';
 import { useAuth } from '@/store/auth';
-
-interface Worker {
-  id: number;
-  status: string;
-  created_at: string;
-  candidate_id: number;
-  admin_id: number;
-  partner_id: number | null;
-  referrer_id: number | null;
-}
-
-interface Partner {
-  id: number;
-  company_name: string;
-}
-
-interface AdminUser {
-  id: number;
-  name: string;
-}
-
-const STATUSES = ['ACTIVE', 'ON_LEAVE', 'TERMINATED'];
-const STATUS_LABELS: Record<string, string> = {
-  ACTIVE: 'Активен',
-  ON_LEAVE: 'В отпуске',
-  TERMINATED: 'Уволен'
-};
+import { ArrowLeft, DollarSign, Clock, Activity, Key, CheckCircle2, Circle, FileText, Upload, Download, MessageCircle, ExternalLink, Calendar , UserMinus } from 'lucide-react';
+import Link from 'next/link';
 
 export default function WorkerDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const [worker, setWorker] = useState<Worker | null>(null);
-  const [partners, setPartners] = useState<Partner[]>([]);
-  const [admins, setAdmins] = useState<AdminUser[]>([]);
-  const [allWorkers, setAllWorkers] = useState<any[]>([]);
+  
   const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState<{telegram: any[], email: any[]}>({telegram: [], email: []});
+  const [worker, setWorker] = useState<any>(null);
+  const [candidate, setCandidate] = useState<any>(null);
+  const [userAccount, setUserAccount] = useState<any>(null);
+  const [reports, setReports] = useState<any[]>([]);
+  const [admin, setAdmin] = useState<any>(null);
+  
+  const [generatedCreds, setGeneratedCreds] = useState<{email: string, password?: string, message: string} | null>(null);
+  
+  // Balance requests
+  const [fineAmount, setFineAmount] = useState('');
+  const [fineReason, setFineReason] = useState('');
+  const [fineType, setFineType] = useState('FINE');
+  const [fineProofUrl, setFineProofUrl] = useState('');
+  const [showFineModal, setShowFineModal] = useState(false);
+  const [balanceRequests, setBalanceRequests] = useState<any[]>([]);
+  
+  // Attendance
+  const [attendance, setAttendance] = useState<any>(null);
+  const [targetDate, setTargetDate] = useState(new Date().toISOString().split('T')[0]);
+  const [accountInfo, setAccountInfo] = useState('');
+  const [shiftInfo, setShiftInfo] = useState('');
+
+  // Comments and Files
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      await api.patch(`/workers/${id}/status?status=${newStatus}`);
+      setWorker({...worker, status: newStatus});
+    } catch (err) {
+      alert('Ошибка при изменении статуса');
+    }
+  };
 
   const fetchData = async () => {
     try {
-      const [{ data: wData }, { data: pData }, { data: uData }, { data: cData }, { data: allWData }] = await Promise.all([
-        api.get(`/workers/${id}`),
-        api.get('/partners/'),
-        api.get('/users/'),
-        api.get(`/comments/worker/${id}`).catch(() => ({ data: [] })),
-        api.get('/workers/')
+      setLoading(true);
+            const { data: workerData } = await api.get(`/workers/${id}`);
+      console.log("WORKER DATA:", workerData);
+      setWorker(workerData);
+      setAccountInfo(workerData.account_info || '');
+      setShiftInfo(workerData.shift || '');
+
+      // Fetch candidate
+      const { data: candidateData } = await api.get(`/candidates/${workerData.candidate_id}`);
+      setCandidate(candidateData);
+
+      // Fetch admin user
+      const { data: users } = await api.get('/users/');
+      const adminUser = users.find((u: any) => u.id === workerData.admin_id);
+      setAdmin(adminUser);
+
+      // Find user account by candidate email
+      const uAccount = users.find((u: any) => u.email === candidateData.email);
+      setUserAccount(uAccount);
+
+      // Fetch shift reports
+      const { data: allReports } = await api.get('/shift-reports/');
+      setReports(allReports.filter((r: any) => r.worker_id === workerData.id));
+
+      // Extra data
+      const [cData, brData, attData] = await Promise.all([
+        api.get(`/comments/candidate/${workerData.candidate_id}`),
+        api.get(`/balance-requests/`),
+        api.get('/attendance/', { params: { target_date: targetDate } })
       ]);
-      setWorker(wData);
-      setPartners(pData);
-      setAdmins(uData.filter((u: any) => u.role === 'ADMIN'));
-      setComments(cData);
-      setAllWorkers(allWData);
-    } catch (err) {
-      console.error(err);
+      setComments(cData.data);
+      if (uAccount) {
+        setBalanceRequests(brData.data.filter((r: any) => r.worker_id === uAccount.id));
+      }
+      
+      const att = attData.data.find((a: any) => a.worker_id === workerData.id);
+      setAttendance(att || null);
+
+        } catch (err: any) {
+      console.error("DEBUG FETCH ERROR:", err);
+      if (err.response?.status === 404 || err.response?.status === 403) {
+        router.push('/dashboard/workers');
+      }
     } finally {
       setLoading(false);
     }
@@ -70,233 +103,471 @@ export default function WorkerDetailPage() {
 
   useEffect(() => {
     fetchData();
-  }, [id]);
+  }, [id, targetDate]);
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!worker || newStatus === worker.status) return;
+  
+  const handleLeave = async () => {
+    if (!confirm('Вы уверены, что хотите уволить этого работника? Все его аккаунты будут отвязаны, и будут созданы ревью для аккаунтов.')) return;
     try {
-      await api.patch(`/workers/${worker.id}/status`, null, { params: { status: newStatus } });
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      alert('Ошибка при изменении статуса. Проверьте права.');
+      await api.post(`/workers/${id}/leave`);
+      alert('Работник уволен. Аккаунты отвязаны.');
+      window.location.reload();
+    } catch (e: any) {
+      alert(e.response?.data?.detail || 'Ошибка при увольнении');
     }
   };
 
-
-  const handleReferrerChange = async (newReferrerId: string) => {
-    if (!worker) return;
+  const handleCreateAccount = async () => {
     try {
-      await api.patch(`/workers/${worker.id}`, { referrer_id: newReferrerId ? parseInt(newReferrerId) : null });
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      alert('Ошибка при смене реферера.');
+      const { data } = await api.post(`/workers/${id}/create-account`);
+      setGeneratedCreds(data);
+      fetchData(); // refresh
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Ошибка создания аккаунта');
     }
   };
 
-  const handleAdminChange = async (newAdminId: string) => {
-    if (!worker) return;
-    try {
-      await api.patch(`/workers/${worker.id}/admin`, null, { params: { admin_id: newAdminId } });
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      alert('Ошибка при изменении администратора. Убедитесь, что у вас есть права.');
-    }
-  };
-
-  const handlePartnerChange = async (partnerId: string) => {
-    if (!worker) return;
-    try {
-      await api.patch(`/workers/${worker.id}/partner`, null, { params: { partner_id: partnerId } });
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      alert('Ошибка при назначении партнера. Убедитесь, что у вас есть права.');
-    }
-  };
-
-    const handleDeleteComment = async (commentId: number) => {
-    if (!confirm('Удалить заметку?')) return;
-    try {
-      await api.delete(`/comments/${commentId}`);
-      const { data } = await api.get(`/comments/worker/${id}`);
-      setComments(data);
-    } catch (err) {
-      alert('Ошибка при удалении заметки');
-    }
-  };
-
-  const handleAddComment = async (e: React.FormEvent) => {
+  const handleSubmitFine = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
     try {
-      await api.post(`/comments/worker/${id}`, { text: newComment });
-      setNewComment('');
-      const { data } = await api.get(`/comments/worker/${id}`);
-      setComments(data);
-    } catch (err) {
-      alert('Ошибка при добавлении комментария');
+      await api.post('/balance-requests/', {
+        worker_id: userAccount.id,
+        type: fineType,
+        amount: parseFloat(fineAmount),
+        reason: fineReason,
+        proof_url: fineProofUrl || null
+      });
+      alert('Заявка отправлена Овнеру на проверку');
+      setShowFineModal(false);
+      setFineAmount('');
+      setFineReason('');
+      setFineProofUrl('');
+      fetchData();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Ошибка');
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Загрузка...</div>;
+    const handleInfoChange = async (field: 'account_info' | 'shift', value: string) => {
+    try {
+      await api.patch(`/workers/${id}/info`, null, { params: { [field]: value } });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAttendanceToggle = async (currentStatus: boolean) => {
+    try {
+      await api.post('/attendance/', {
+        worker_id: parseInt(id as string),
+        date: targetDate,
+        is_present: !currentStatus
+      });
+      fetchData();
+    } catch (err) {
+      alert('Ошибка при сохранении посещаемости');
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !candidate) return;
+    try {
+      await api.post(`/comments/candidate/${candidate.id}`, { text: newComment });
+      setNewComment('');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !candidate) return;
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    setUploading(true);
+    try {
+      await api.post(`/candidates/${candidate.id}/files`, formData, {
+        headers: { 'Content-Type': undefined }
+      });
+      fetchData();
+    } catch (err: any) {
+      alert('Ошибка загрузки файла');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center">Загрузка...</div>;
   if (!worker) return <div className="p-8 text-center text-red-500">Работник не найден</div>;
 
-  const canEdit = user?.role === 'OWNER' || (user?.role === 'ADMIN' && worker.admin_id === user.id);
-  const isOwner = user?.role === 'OWNER';
-  const adminAssigned = admins.find(a => a.id === worker.admin_id);
-  const partnerAssigned = partners.find(p => p.id === worker.partner_id);
+  const canEdit = user?.role === 'OWNER' || (user?.role === 'ADMIN' && Number(worker.admin_id) === Number(user.id));
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center space-x-4">
-        <Link href="/dashboard/workers" className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-          <UserCircle className="w-6 h-6 mr-2 text-gray-400" />
-          Работник #{worker.id}
-        </h2>
-        
-        {canEdit ? (
-          <select 
-            value={worker.status}
-            onChange={(e) => handleStatusChange(e.target.value)}
-                        className={`px-3 py-1 border rounded-full text-sm font-medium focus:outline-none cursor-pointer ${
-              worker.status === 'ACTIVE' ? 'bg-green-50 text-green-800 border-green-200' :
-              worker.status === 'TERMINATED' ? 'bg-red-50 text-red-800 border-red-200' :
-              'bg-gray-50 text-gray-800 border-gray-200'
-            }`}
-          >
-            {STATUSES.map(s => (
-              <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>
-            ))}
-          </select>
-        ) : (
-          <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-            {STATUS_LABELS[worker.status] || worker.status}
-          </span>
-        )}
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div className="flex items-center text-sm text-slate-500 mb-4 hover:text-slate-800 transition-colors w-max cursor-pointer" onClick={() => router.back()}>
+        <ArrowLeft className="w-4 h-4 mr-1" />
+        Назад к списку
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Информация о работнике</h3>
-          <div className="space-y-4">
+      {/* HEADER CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="p-8">
+            <h2 className="text-3xl font-bold text-slate-800 mb-2">
+              {candidate?.first_name || `Worker #${worker.id}`}
+            </h2>
+            <div className="flex items-center text-sm text-slate-500 mb-6">
+              <Key className="w-4 h-4 mr-1" /> Worker ID #{worker.id}
+            </div>
+            <div className="mt-4">
+              <button
+                onClick={handleLeave}
+                className="flex items-center px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
+              >
+                <UserMinus className="w-4 h-4 mr-2" />
+                Уволить воркера (отвязать аккаунты)
+              </button>
+            </div>
 
-            {isOwner && (
-              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                <span className="text-gray-500 text-sm">Кто привел (Реферер):</span>
-                <select 
-                  value={worker.referrer_id || ''}
-                  onChange={(e) => handleReferrerChange(e.target.value)}
-                  className="font-medium text-gray-900 text-sm border-gray-300 rounded-md py-1 pl-2 pr-8 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
-                >
-                  <option value="">-- Никто --</option>
-                  {allWorkers.filter(w => w.id !== worker.id).map(w => (
-                    <option key={w.id} value={w.id}>Работник #{w.id}</option>
-                  ))}
-                </select>
+            <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+              <div>
+                <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Telegram</p>
+                <p className="font-medium">{candidate?.telegram || '—'}</p>
               </div>
-            )}
-
-            <div className="flex justify-between border-b border-gray-100 pb-2">
-              <span className="text-gray-500 text-sm">ID Кандидата:</span>
-              <span className="font-medium text-gray-900 text-sm">
-                <Link href={`/dashboard/candidates/${worker.candidate_id}`} className="text-indigo-600 hover:underline">
-                  #{worker.candidate_id}
-                </Link>
-              </span>
-            </div>
-            <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-              <span className="text-gray-500 text-sm">Ответственный Администратор:</span>
-              {isOwner ? (
-                <select 
-                  value={worker.admin_id || ''}
-                  onChange={(e) => handleAdminChange(e.target.value)}
-                  className="font-medium text-gray-900 text-sm border-gray-300 rounded-md py-1 pl-2 pr-8 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
-                >
-                  {admins.map(a => (
-                    <option key={a.id} value={a.id}>{a.name}</option>
-                  ))}
-                </select>
-              ) : (
-                <span className="font-medium text-gray-900 text-sm">
-                  {adminAssigned ? adminAssigned.name : `Пользователь #${worker.admin_id}`}
-                </span>
-              )}
-            </div>
-            {isOwner && (
-            <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-              <span className="text-gray-500 text-sm">Назначенный Партнер:</span>
-              {isOwner ? (
-                <select 
-                  value={worker.partner_id || ''}
-                  onChange={(e) => handlePartnerChange(e.target.value)}
-                  className="font-medium text-gray-900 text-sm border-gray-300 rounded-md py-1 pl-2 pr-8 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
-                >
-                  <option value="" disabled>Выберите партнера</option>
-                  {partners.map(p => (
-                    <option key={p.id} value={p.id}>{p.company_name}</option>
-                  ))}
-                </select>
-              ) : (
-                <span className="font-medium text-gray-900 text-sm">
-                  {partnerAssigned ? partnerAssigned.company_name : 'Не назначен'}
-                </span>
-              )}
-            </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-gray-500 text-sm">Дата перевода:</span>
-              <span className="font-medium text-gray-900 text-sm">{new Date(worker.created_at).toLocaleDateString('ru-RU')}</span>
+              <div>
+                <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Email (Логин)</p>
+                <p className="font-medium">{candidate?.email || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Админ</p>
+                <p className="font-medium">{admin?.name || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Статус</p>
+                {user?.role === 'ADMIN' || user?.role === 'OWNER' ? (
+                  <select 
+                    value={worker.status}
+                    onChange={(e) => handleStatusChange(e.target.value)}
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold mt-1 border-0 cursor-pointer focus:ring-0 ${
+                      worker.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 
+                      worker.status === 'TERMINATED' ? 'bg-red-100 text-red-800' : 
+                      'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    <option value="ACTIVE" className="bg-white text-black">ACTIVE</option>
+                    <option value="PAUSED" className="bg-white text-black">PAUSED</option>
+                    <option value="TERMINATED" className="bg-white text-black">TERMINATED</option>
+                  </select>
+                ) : (
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold mt-1 ${
+                    worker.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 
+                    worker.status === 'TERMINATED' ? 'bg-red-100 text-red-800' : 
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {worker.status}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <MessageCircle className="w-5 h-5 mr-2 text-gray-400" />
-          Внутренние заметки
-        </h3>
-        
-        <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2">
-          {comments.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">Нет заметок. Будьте первым!</p>
-          ) : (
-            comments.map(c => (
-              <div key={c.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                <div className="flex justify-between items-start mb-1">
-                  <span className="font-semibold text-sm text-gray-900">{c.user?.name || `Пользователь #${c.user_id}`}</span>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString('ru-RU')}</span>
-                    {user?.role === 'OWNER' && (
-                      <button onClick={() => handleDeleteComment(c.id)} className="text-red-500 hover:text-red-700 text-xs">Удалить</button>
-                    )}
-                  </div>
-                </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{c.text}</p>
+
+        <div className="bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl shadow-sm p-6 text-white flex flex-col justify-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+          <div className="relative z-10 text-center">
+            <DollarSign className="w-8 h-8 mx-auto mb-2 opacity-80" />
+            <h4 className="text-pink-100 font-medium text-sm uppercase tracking-wider">Текущий Баланс</h4>
+            <div className="text-5xl font-extrabold mt-2">
+              ${(userAccount?.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </div>
+            {userAccount ? (
+              <>
+                <p className="text-xs text-pink-200 mt-4">ID Аккаунта: {userAccount.id}</p>
+                {canEdit && (
+                  <button onClick={() => setShowFineModal(true)} className="mt-4 text-xs bg-white text-purple-700 px-4 py-2 rounded-full font-bold shadow-sm hover:bg-pink-50 transition-colors">
+                    Выписать Штраф / Премию
+                  </button>
+                )}
+              </>
+            ) : (
+              <div className="mt-4 flex flex-col items-center">
+                <p className="text-xs text-yellow-200 mb-2">Системный аккаунт еще не создан</p>
+                <button onClick={handleCreateAccount} className="text-xs bg-white text-purple-700 px-3 py-1.5 rounded-full font-bold shadow-sm hover:bg-pink-50 transition-colors flex items-center">
+                  <Key className="w-3 h-3 mr-1" /> Выдать доступ в CRM
+                </button>
               </div>
-            ))
-          )}
+            )}
+            
+            {generatedCreds && (
+              <div className="absolute inset-0 bg-purple-900/95 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 text-left">
+                <h4 className="text-white font-bold mb-2 text-center">{generatedCreds.message}</h4>
+                {generatedCreds.password && (
+                  <div className="w-full bg-black/30 rounded p-3 text-sm space-y-1">
+                    <p><span className="text-purple-300">Логин:</span> {generatedCreds.email}</p>
+                    <p><span className="text-purple-300">Пароль:</span> <span className="font-mono bg-white/10 px-1 rounded">{generatedCreds.password}</span></p>
+                  </div>
+                )}
+                <p className="text-xs text-purple-200 mt-2 text-center">Скопируйте и передайте работнику.</p>
+                <button onClick={() => setGeneratedCreds(null)} className="mt-4 px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-full text-xs font-bold transition-colors">Закрыть</button>
+              </div>
+            )}
+          </div>
         </div>
-        
-        <form onSubmit={handleAddComment} className="flex space-x-2">
-          <input 
-            type="text" 
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Написать заметку (видна только команде)..."
-            className="flex-1 rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none"
-          />
-          <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition">
-            Сохранить
-          </button>
-        </form>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* CONTROL SECTION (Учет времени и аккаунты) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold flex items-center">
+              <Calendar className="w-5 h-5 text-indigo-500 mr-2" />
+              Управление сменой
+            </h3>
+            <input 
+              type="date" 
+              value={targetDate}
+              onChange={(e) => setTargetDate(e.target.value)}
+              className="text-sm border-gray-300 rounded-md focus:ring-indigo-500 font-medium"
+            />
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-500 mb-1">Рабочий Аккаунт (OF/TG)</label>
+              <input 
+                type="text"
+                placeholder="Впишите аккаунт..."
+                value={accountInfo}
+                onChange={(e) => setAccountInfo(e.target.value)}
+                onBlur={(e) => handleInfoChange('account_info', e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                disabled={!canEdit}
+                className="w-full text-sm border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-slate-50 disabled:text-slate-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-500 mb-1">Смена (Киев)</label>
+              <input 
+                type="text"
+                placeholder="Напр. 10:00 - 18:00"
+                value={shiftInfo}
+                onChange={(e) => setShiftInfo(e.target.value)}
+                onBlur={(e) => handleInfoChange('shift', e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                disabled={!canEdit}
+                className="w-full text-sm border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-slate-50 disabled:text-slate-500"
+              />
+            </div>
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+              <div>
+                <p className="font-medium text-slate-800">Присутствие на смене</p>
+                <p className="text-xs text-slate-500">Отметить работника за {targetDate}</p>
+              </div>
+              <button 
+                onClick={() => handleAttendanceToggle(attendance?.is_present)}
+                disabled={!canEdit}
+                className={`focus:outline-none transition-transform active:scale-95 ${!canEdit ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-80'}`}
+              >
+                {attendance?.is_present ? (
+                  <CheckCircle2 className="w-10 h-10 text-green-500" />
+                ) : (
+                  <Circle className="w-10 h-10 text-gray-300 hover:text-gray-400" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* COMMENTS SECTION */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col h-full">
+          <div className="flex items-center mb-6">
+            <MessageCircle className="w-5 h-5 text-blue-500 mr-2" />
+            <h3 className="text-xl font-bold">Внутренние комментарии</h3>
+          </div>
+          <div className="flex-1 overflow-y-auto min-h-[200px] mb-4 space-y-4 pr-2">
+            {comments.length === 0 ? (
+              <p className="text-center text-slate-400 text-sm mt-10">Нет комментариев.</p>
+            ) : (
+              comments.map((c: any) => (
+                <div key={c.id} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-sm text-slate-800">{c.user?.name || c.author_name || "Неизвестный"}</span>
+                    <span className="text-xs text-slate-400">{new Date(c.created_at).toLocaleString('ru-RU')}</span>
+                  </div>
+                  <p className="text-sm text-slate-600 whitespace-pre-wrap">{c.text}</p>
+                </div>
+              ))
+            )}
+          </div>
+          {canEdit && (
+            <div className="flex items-end gap-2 mt-auto">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Добавить комментарий..."
+                className="flex-1 text-sm border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 resize-none"
+                rows={2}
+              />
+              <button 
+                onClick={handleAddComment}
+                disabled={!newComment.trim()}
+                className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                Отправить
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* FILES SECTION */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold flex items-center">
+              <FileText className="w-5 h-5 text-orange-500 mr-2" />
+              Документы и резюме
+            </h3>
+            {canEdit && (
+              <label className="cursor-pointer text-sm font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-lg flex items-center transition-colors">
+                <Upload className="w-4 h-4 mr-2" />
+                {uploading ? 'Загрузка...' : 'Загрузить'}
+                <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+              </label>
+            )}
+          </div>
+          {!candidate?.files || candidate.files.length === 0 ? (
+            <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl bg-slate-50">
+              <p className="text-sm text-slate-400">Нет прикрепленных файлов</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-slate-100 bg-slate-50 rounded-xl border border-slate-100">
+              {candidate.files.map((fileUrl: string, idx: number) => {
+                const parts = fileUrl.split('/');
+                const fileName = parts[parts.length - 1];
+                return (
+                  <li key={idx} className="flex items-center justify-between p-3 hover:bg-slate-100 transition-colors rounded-xl">
+                    <span className="text-sm font-medium text-slate-700 truncate mr-4">{fileName}</span>
+                    <a href={api.defaults.baseURL?.replace('/api/v1', '') + fileUrl} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-orange-500">
+                      <Download className="w-4 h-4" />
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* REPORTS HISTORY */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 overflow-y-auto max-h-[400px]">
+          <div className="flex items-center mb-6">
+            <Clock className="w-6 h-6 text-pink-500 mr-2" />
+            <h3 className="text-xl font-bold">История Смен</h3>
+          </div>
+          {reports.length === 0 ? (
+            <div className="text-center py-8 text-slate-400 bg-slate-50 rounded-xl border border-dashed">
+              <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p>Нет отправленных отчетов</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {reports.map((r: any) => (
+                <div key={r.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-pink-200 transition-colors">
+                  <div>
+                    <div className="font-bold text-slate-800">Смена #{r.id}</div>
+                    <div className="text-sm text-slate-500 mt-1">{new Date(r.created_at).toLocaleString('ru-RU')}</div>
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <div className="text-right">
+                      <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Выручка</p>
+                      <span className="font-bold text-lg text-green-600">${r.amount}</span>
+                    </div>
+                    <span className={`px-3 py-1 text-xs font-bold rounded-full ${r.status === 'APPROVED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                      {r.status === 'APPROVED' ? 'Одобрен' : 'Ожидает'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 mt-6">
+        <h3 className="text-lg font-medium text-foreground mb-4">История аккаунтов</h3>
+        
+        <h4 className="text-md font-medium text-muted-foreground mt-4 mb-2">Telegram</h4>
+        {!history.telegram || history.telegram.length === 0 ? <p className="text-sm text-muted-foreground">Нет истории</p> : (
+          <div className="space-y-3">
+            {history.telegram.map((h: any, i: number) => (
+              <div key={i} className="flex justify-between text-sm p-3 bg-muted rounded-lg">
+                <div>
+                  <span className="font-medium text-foreground">Аккаунт ID: {h.account_id}</span>
+                  <p className="text-muted-foreground text-xs">Причина отвязки: {h.reason || 'Активен'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-foreground">{new Date(h.assigned_at).toLocaleDateString()}</p>
+                  <p className="text-muted-foreground text-xs">{h.revoked_at ? new Date(h.revoked_at).toLocaleDateString() : 'По сей день'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <h4 className="text-md font-medium text-muted-foreground mt-6 mb-2">Email</h4>
+        {!history.email || history.email.length === 0 ? <p className="text-sm text-muted-foreground">Нет истории</p> : (
+          <div className="space-y-3">
+            {history.email.map((h: any, i: number) => (
+              <div key={i} className="flex justify-between text-sm p-3 bg-muted rounded-lg">
+                <div>
+                  <span className="font-medium text-foreground">Аккаунт ID: {h.email_account_id}</span>
+                  <p className="text-muted-foreground text-xs">Причина отвязки: {h.reason || 'Активен'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-foreground">{new Date(h.assigned_at).toLocaleDateString()}</p>
+                  <p className="text-muted-foreground text-xs">{h.revoked_at ? new Date(h.revoked_at).toLocaleDateString() : 'По сей день'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showFineModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-xl font-bold text-foreground mb-4">Заявка на Штраф / Премию</h3>
+            <form onSubmit={handleSubmitFine} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Тип</label>
+                <select value={fineType} onChange={e => setFineType(e.target.value)} className="w-full border-border rounded-lg bg-card text-foreground">
+                  <option value="FINE">Штраф</option>
+                  <option value="BONUS">Премия</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Сумма ($)</label>
+                <input type="number" required min="0.01" step="0.01" value={fineAmount} onChange={e => setFineAmount(e.target.value)} className="w-full border-border rounded-lg bg-card text-foreground" placeholder="Например: 50" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Причина</label>
+                <textarea required value={fineReason} onChange={e => setFineReason(e.target.value)} className="w-full border-border rounded-lg bg-card text-foreground" rows={3} placeholder="Подробно опишите причину..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Ссылка на доказательство (Скриншот)</label>
+                <input type="url" value={fineProofUrl} onChange={e => setFineProofUrl(e.target.value)} className="w-full border-border rounded-lg bg-card text-foreground" placeholder="https://..." />
+                <p className="text-xs text-muted-foreground mt-1">Загрузите скриншот на любой хостинг (например, imgur) и вставьте ссылку</p>
+              </div>
+              <div className="flex justify-end space-x-3 pt-4 border-t border-border mt-6">
+                <button type="button" onClick={() => setShowFineModal(false)} className="px-4 py-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors">Отмена</button>
+                <button type="submit" className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors">Отправить заявку</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

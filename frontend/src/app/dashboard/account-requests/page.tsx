@@ -91,9 +91,9 @@ export default function AccountRequestsPage() {
       ACCEPTED: 'bg-blue-100 text-blue-800', // legacy
       READY: 'bg-emerald-100 text-emerald-800',
       ISSUED: 'bg-green-100 text-green-800',
-      ISSUED_TO_ADMIN: 'bg-indigo-100 text-indigo-800',
+      ISSUED_TO_ADMIN: 'bg-primary/20 text-primary-foreground',
       ISSUE: 'bg-red-100 text-red-800',
-      CANCELLED: 'bg-gray-100 text-gray-800'
+      CANCELLED: 'bg-muted text-foreground'
     };
     const labels: Record<string, string> = {
       NEW: 'Новая',
@@ -113,19 +113,19 @@ export default function AccountRequestsPage() {
     );
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Загрузка...</div>;
+  if (loading) return <div className="p-8 text-center text-muted-foreground">Загрузка...</div>;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-          <Key className="w-6 h-6 text-indigo-600" />
+        <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+          <Key className="w-6 h-6 text-primary" />
           Заявки на аккаунты
         </h1>
         {(user?.role === 'ADMIN' || user?.role === 'CURATOR' || user?.role === 'OWNER') && (
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition"
           >
             <Plus className="w-4 h-4" />
             Создать заявку
@@ -133,50 +133,50 @@ export default function AccountRequestsPage() {
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-x-auto">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-background">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Кандидат / ТГ</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Анкета</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Админ</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тип / Возраст</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Дата</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Кандидат / ТГ</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Анкета</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Админ</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Тип / Возраст</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Статус</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Действия</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-card divide-y divide-border">
             {requests.map((req) => (
               <tr key={req.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {new Date(req.created_at.endsWith('Z') ? req.created_at : req.created_at + 'Z').toLocaleDateString('ru-RU')}
                 </td>
                 <td className="px-6 py-4">
-                  <div className="font-medium text-gray-900">{req.candidate_name} {req.candidate_nickname && `(${req.candidate_nickname})`}</div>
+                  <div className="font-medium text-foreground">{req.candidate_name} {req.candidate_nickname && `(${req.candidate_nickname})`}</div>
                   <div className="text-sm text-blue-600">{req.candidate_tg}</div>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                <td className="px-6 py-4 text-sm text-muted-foreground max-w-xs">
                   <div className="flex flex-col gap-1 items-start">
                     <span className="truncate w-full">{req.questionnaire}</span>
                     <button
                       onClick={() => setViewQuestionnaire(req.questionnaire)}
-                      className="text-indigo-600 hover:text-indigo-800 font-medium underline decoration-indigo-300 underline-offset-2 flex items-center gap-1 text-xs mt-1"
+                      className="text-primary hover:text-primary-foreground font-medium underline decoration-indigo-300 underline-offset-2 flex items-center gap-1 text-xs mt-1"
                     >
                       Посмотреть анкету
                     </button>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                   {req.admin_nickname}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <span className="font-medium text-gray-900">{req.account_type}</span> / {req.age} лет
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">{req.account_type}</span> / {req.age} лет
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {getStatusBadge(req.status)}
                   {req.partner_id && (
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       Партнер: {partners.find(p => p.id === req.partner_id)?.company_name || 'Неизвестно'}
                     </div>
                   )}
@@ -229,7 +229,7 @@ export default function AccountRequestsPage() {
             ))}
             {requests.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">Нет заявок</td>
+                <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">Нет заявок</td>
               </tr>
             )}
           </tbody>
@@ -239,10 +239,10 @@ export default function AccountRequestsPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900">Заявка на аккаунт</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
+          <div className="bg-card rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-border flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-foreground">Заявка на аккаунт</h2>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-muted-foreground">&times;</button>
             </div>
             
             <div className="p-6 overflow-y-auto">
@@ -313,11 +313,11 @@ export default function AccountRequestsPage() {
               </form>
             </div>
             
-            <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end gap-3">
-              <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+            <div className="p-6 border-t border-border bg-background rounded-b-xl flex justify-end gap-3">
+              <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-foreground">
                 Отмена
               </button>
-              <button type="submit" form="reqForm" className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+              <button type="submit" form="reqForm" className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition">
                 Отправить заявку
               </button>
             </div>
@@ -330,37 +330,37 @@ export default function AccountRequestsPage() {
       {/* Admin Checklist Modal */}
       {showChecklist && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-blue-50">
-              <h3 className="text-lg font-bold text-gray-900">Чек-лист перед выдачей аккаунта</h3>
-              <button onClick={() => setShowChecklist(false)} className="text-gray-400 hover:text-gray-600 transition">
+          <div className="bg-card rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-border flex justify-between items-center bg-blue-500/10">
+              <h3 className="text-lg font-bold text-foreground">Чек-лист перед выдачей аккаунта</h3>
+              <button onClick={() => setShowChecklist(false)} className="text-gray-400 hover:text-muted-foreground transition">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
             <div className="p-6 space-y-3 text-sm text-gray-700">
-              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+              <label className="flex items-start gap-3 p-2 hover:bg-background rounded-lg cursor-pointer">
+                <input type="checkbox" className="mt-1 w-4 h-4 text-primary rounded border-gray-300 focus:ring-indigo-500" />
                 <span>Зайти на профиль в антидетект браузере (или устройстве).</span>
               </label>
-              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+              <label className="flex items-start gap-3 p-2 hover:bg-background rounded-lg cursor-pointer">
+                <input type="checkbox" className="mt-1 w-4 h-4 text-primary rounded border-gray-300 focus:ring-indigo-500" />
                 <span>Проверить работоспособность Telegram аккаунта, убедиться, что нет спам-блока.</span>
               </label>
-              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+              <label className="flex items-start gap-3 p-2 hover:bg-background rounded-lg cursor-pointer">
+                <input type="checkbox" className="mt-1 w-4 h-4 text-primary rounded border-gray-300 focus:ring-indigo-500" />
                 <span>Очистить старые чаты и лишние сессии (кроме текущей).</span>
               </label>
-              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+              <label className="flex items-start gap-3 p-2 hover:bg-background rounded-lg cursor-pointer">
+                <input type="checkbox" className="mt-1 w-4 h-4 text-primary rounded border-gray-300 focus:ring-indigo-500" />
                 <span>Установить/изменить Облачный пароль (2FA) для безопасности.</span>
               </label>
-              <label className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+              <label className="flex items-start gap-3 p-2 hover:bg-background rounded-lg cursor-pointer">
+                <input type="checkbox" className="mt-1 w-4 h-4 text-primary rounded border-gray-300 focus:ring-indigo-500" />
                 <span>Выдать данные от аккаунта (лог/пасс или tdata) кандидату или куратору.</span>
               </label>
             </div>
-            <div className="p-4 bg-gray-50 flex justify-end border-t border-gray-100">
-              <button onClick={() => setShowChecklist(false)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Понятно</button>
+            <div className="p-4 bg-background flex justify-end border-t border-border">
+              <button onClick={() => setShowChecklist(false)} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition">Понятно</button>
             </div>
           </div>
         </div>
@@ -369,18 +369,18 @@ export default function AccountRequestsPage() {
       {/* Questionnaire View Modal */}
       {viewQuestionnaire && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h3 className="text-lg font-bold text-gray-900">Анкета кандидата</h3>
-              <button onClick={() => setViewQuestionnaire(null)} className="text-gray-400 hover:text-gray-600 transition">
+          <div className="bg-card rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-border flex justify-between items-center bg-background">
+              <h3 className="text-lg font-bold text-foreground">Анкета кандидата</h3>
+              <button onClick={() => setViewQuestionnaire(null)} className="text-gray-400 hover:text-muted-foreground transition">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            <div className="p-6 overflow-y-auto whitespace-pre-wrap text-sm text-gray-700 font-mono bg-slate-50 border-b border-gray-100">
+            <div className="p-6 overflow-y-auto whitespace-pre-wrap text-sm text-gray-700 font-mono bg-muted/50 border-b border-border">
               {viewQuestionnaire}
             </div>
-            <div className="p-4 bg-white flex justify-end">
-              <button onClick={() => setViewQuestionnaire(null)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Закрыть</button>
+            <div className="p-4 bg-card flex justify-end">
+              <button onClick={() => setViewQuestionnaire(null)} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition">Закрыть</button>
             </div>
           </div>
         </div>

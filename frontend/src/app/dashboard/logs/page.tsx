@@ -63,51 +63,51 @@ export default function LogsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-gray-900">Журнал активности (Логи)</h2>
+        <h2 className="text-2xl font-semibold text-foreground">Журнал активности (Логи)</h2>
         <div className="flex items-center space-x-2">
           <button 
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="p-2 border border-gray-200 rounded-md bg-white disabled:opacity-50"
+            className="p-2 border border-border rounded-md bg-card disabled:opacity-50"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+            <ChevronLeft className="w-5 h-5 text-muted-foreground" />
           </button>
-          <span className="text-sm text-gray-600 font-medium">Страница {page}</span>
+          <span className="text-sm text-muted-foreground font-medium">Страница {page}</span>
           <button 
             onClick={() => setPage(p => p + 1)}
             disabled={!hasMore}
-            className="p-2 border border-gray-200 rounded-md bg-white disabled:opacity-50"
+            className="p-2 border border-border rounded-md bg-card disabled:opacity-50"
           >
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
       </div>
 
-      <div className="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-card shadow-sm rounded-xl border border-border overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Загрузка...</div>
+          <div className="p-8 text-center text-muted-foreground">Загрузка...</div>
         ) : logs.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">История действий пуста.</div>
+          <div className="p-8 text-center text-muted-foreground">История действий пуста.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-background">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Пользователь</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действие</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Сущность</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Детали (JSON)</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Дата</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Пользователь</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Действие</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Сущность</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Детали (JSON)</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {logs.map(log => (
-                  <tr key={log.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center">
+                  <tr key={log.id} className="hover:bg-background">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground flex items-center">
                       <Clock className="w-4 h-4 mr-2 text-gray-400" />
                       {new Date(log.created_at).toLocaleString('ru-RU')}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                       {getUserName(log.user_id)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -115,17 +115,17 @@ export default function LogsPage() {
                         log.action === 'CREATE' ? 'bg-green-100 text-green-800' :
                         log.action === 'UPDATE' ? 'bg-blue-100 text-blue-800' :
                         log.action === 'DELETE' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
+                        'bg-muted text-foreground'
                       }`}>
                         {log.action}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {log.entity_type} #{log.entity_id}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                    <td className="px-6 py-4 text-sm text-muted-foreground max-w-xs">
                       {log.changes && Object.keys(log.changes).length > 0 ? (
-                        <pre className="text-xs font-mono bg-gray-50 p-2 rounded border border-gray-100 overflow-x-auto whitespace-pre-wrap">
+                        <pre className="text-xs font-mono bg-background p-2 rounded border border-border overflow-x-auto whitespace-pre-wrap">
                           {JSON.stringify(log.changes, null, 2)}
                         </pre>
                       ) : (

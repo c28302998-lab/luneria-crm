@@ -1,6 +1,6 @@
-# Luneria CRM
+# Lunery CRM
 
-Внутренняя операционная система агентства Luneria.
+Внутренняя операционная система агентства Lunery.
 
 ## Структура проекта
 - `/backend` - FastAPI приложение, SQLAlchemy модели.
@@ -50,10 +50,10 @@ Frontend будет доступен по адресу: http://localhost:3000
 
 ## Тестовые логины (После выполнения Seed Database)
 
-- **Owner**: `owner@luneria.local` / `password123`
-- **Curator**: `curator1@luneria.local` / `password123`
-- **Admin**: `admin1@luneria.local` / `password123`
-- **Finance**: `finance@luneria.local` / `password123`
+- **Owner**: `owner@lunery.local` / `password123`
+- **Curator**: `curator1@lunery.local` / `password123`
+- **Admin**: `admin1@lunery.local` / `password123`
+- **Finance**: `finance@lunery.local` / `password123`
 
 ## Разработка
 Для локального запуска одной командой можно использовать скрипт:

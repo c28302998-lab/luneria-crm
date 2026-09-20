@@ -50,35 +50,35 @@ export default function TelegramRequests() {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             Заявки Telegram
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Запросы на изменение настроек или сессий от администраторов</p>
+          <p className="text-sm text-muted-foreground mt-1">Запросы на изменение настроек или сессий от администраторов</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-background">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Пользователь</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тип запроса</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Причина</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Дата</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Пользователь</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Тип запроса</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Статус</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Причина</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Действия</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-card divide-y divide-border">
             {requests.map((req) => (
               <tr key={req.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {new Date(req.created_at).toLocaleString('ru-RU')}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                   {req.user ? `${req.user.name}` : `ID: ${req.user_id}`}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
                   {req.request_type}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -86,12 +86,12 @@ export default function TelegramRequests() {
                     req.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                     req.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
                     req.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
+                    'bg-muted text-foreground'
                   }`}>
                     {req.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title={req.reason}>
+                <td className="px-6 py-4 text-sm text-muted-foreground max-w-xs truncate" title={req.reason}>
                   {req.reason}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -122,7 +122,7 @@ export default function TelegramRequests() {
             ))}
             {requests.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
                   Нет активных заявок
                 </td>
               </tr>

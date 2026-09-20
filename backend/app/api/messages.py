@@ -11,7 +11,7 @@ from app.core.dependencies import get_current_user
 router = APIRouter()
 
 @router.get("/", response_model=List[MessageSchema])
-def read_messages(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def read_messages(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return db.query(Message).filter(
         or_(Message.sender_id == current_user.id, Message.receiver_id == current_user.id)
     ).order_by(Message.created_at.desc()).offset(skip).limit(limit).all()

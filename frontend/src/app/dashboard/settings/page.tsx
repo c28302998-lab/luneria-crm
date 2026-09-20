@@ -83,19 +83,19 @@ const [users, setUsers] = useState<any[]>([]);
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Настройки</h2>
-        <p className="mt-1 text-sm text-gray-500">Управление параметрами вашей учетной записи и системы.</p>
+        <h2 className="text-2xl font-semibold text-foreground">Настройки</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Управление параметрами вашей учетной записи и системы.</p>
       </div>
 
-      <div className="flex space-x-8 border-b border-gray-200">
+      <div className="flex space-x-8 border-b border-border">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`pb-4 text-sm font-medium border-b-2 transition-colors ${
               activeTab === tab.id 
-                ? 'border-indigo-600 text-indigo-600' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-indigo-600 text-primary' 
+                : 'border-transparent text-muted-foreground hover:text-gray-700 hover:border-gray-300'
             }`}
           >
             {tab.label}
@@ -105,8 +105,8 @@ const [users, setUsers] = useState<any[]>([]);
 
       <div className="pt-4">
         {activeTab === 'profile' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-2xl">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Информация о профиле</h3>
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6 max-w-2xl">
+            <h3 className="text-lg font-medium text-foreground mb-4">Информация о профиле</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Имя</label>
@@ -114,7 +114,7 @@ const [users, setUsers] = useState<any[]>([]);
                   type="text" 
                   disabled
                   value={user.name}
-                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 border p-2 text-sm text-gray-900" 
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-background border p-2 text-sm text-foreground" 
                 />
               </div>
               <div>
@@ -123,7 +123,7 @@ const [users, setUsers] = useState<any[]>([]);
                   type="email" 
                   disabled
                   value={user.email}
-                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 border p-2 text-sm text-gray-900" 
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-background border p-2 text-sm text-foreground" 
                 />
               </div>
               <div>
@@ -132,7 +132,7 @@ const [users, setUsers] = useState<any[]>([]);
                   type="text" 
                   disabled
                   value={user.role}
-                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 border p-2 text-sm text-gray-900" 
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-background border p-2 text-sm text-foreground" 
                 />
               </div>
             </div>
@@ -140,29 +140,29 @@ const [users, setUsers] = useState<any[]>([]);
         )}
 
         {activeTab === 'users' && user.role === 'OWNER' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Все пользователи системы</h3>
-              <p className="text-sm text-gray-500">Управление доступом сотрудников (Finance, Admin, Curator).</p>
+          <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+            <div className="p-6 border-b border-border">
+              <h3 className="text-lg font-medium text-foreground mb-2">Все пользователи системы</h3>
+              <p className="text-sm text-muted-foreground">Управление доступом сотрудников (Finance, Admin, Curator).</p>
             </div>
             
-            {loadingUsers ? <p className="p-8 text-center text-gray-500">Загрузка...</p> : (
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            {loadingUsers ? <p className="p-8 text-center text-muted-foreground">Загрузка...</p> : (
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-background">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Роль</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Имя / Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Роль</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Имя / Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Статус</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Действия</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-card divide-y divide-border">
                   {users.map((u: any) => (
                     <tr key={u.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.role}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{u.role}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{u.name}</div>
-                        <div className="text-sm text-gray-500">{u.email}</div>
+                        <div className="text-sm text-foreground">{u.name}</div>
+                        <div className="text-sm text-muted-foreground">{u.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -175,7 +175,7 @@ const [users, setUsers] = useState<any[]>([]);
                         {u.role !== 'OWNER' && (
                           <button 
                             onClick={() => toggleStatus(u.id, u.status)}
-                            className="text-indigo-600 hover:text-indigo-900"
+                            className="text-primary hover:text-indigo-900"
                           >
                             {u.status === 'ACTIVE' ? 'Заблокировать' : 'Разблокировать'}
                           </button>
@@ -190,10 +190,10 @@ const [users, setUsers] = useState<any[]>([]);
         )}
 
         {activeTab === 'security' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-2xl">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Смена пароля</h3>
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6 max-w-2xl">
+            <h3 className="text-lg font-medium text-foreground mb-4">Смена пароля</h3>
             {passwordMsg.text && (
-              <div className={`mb-4 p-3 rounded text-sm ${passwordMsg.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+              <div className={`mb-4 p-3 rounded text-sm ${passwordMsg.type === 'error' ? 'bg-red-500/10 text-red-700' : 'bg-green-50 text-green-700'}`}>
                 {passwordMsg.text}
               </div>
             )}
@@ -218,7 +218,7 @@ const [users, setUsers] = useState<any[]>([]);
                   className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none" 
                 />
               </div>
-              <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700">
+              <button type="submit" className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90">
                 Сохранить
               </button>
             </form>
@@ -226,37 +226,37 @@ const [users, setUsers] = useState<any[]>([]);
         )}
 
         {activeTab === 'roles' && user.role === 'OWNER' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-4xl">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Управление ролями и правами</h3>
-            <p className="text-sm text-gray-500 mb-6">В системе жестко закодированы базовые роли (RBAC) согласно бизнес-логике. Настроек кастомных ролей на данном этапе (MVP) не предусмотрено.</p>
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6 max-w-4xl">
+            <h3 className="text-lg font-medium text-foreground mb-4">Управление ролями и правами</h3>
+            <p className="text-sm text-muted-foreground mb-6">В системе жестко закодированы базовые роли (RBAC) согласно бизнес-логике. Настроек кастомных ролей на данном этапе (MVP) не предусмотрено.</p>
             
             <div className="space-y-4">
-              <div className="border border-gray-200 rounded-lg p-4">
+              <div className="border border-border rounded-lg p-4">
                 <h4 className="font-semibold text-indigo-900 mb-2">OWNER (Владелец)</h4>
-                <p className="text-sm text-gray-600">Полный доступ ко всем модулям. Может создавать Кураторов, Админов и Финансистов. Только Владелец видит аналитику, финансы (все) и управление ролями.</p>
+                <p className="text-sm text-muted-foreground">Полный доступ ко всем модулям. Может создавать Кураторов, Админов и Финансистов. Только Владелец видит аналитику, финансы (все) и управление ролями.</p>
               </div>
-              <div className="border border-gray-200 rounded-lg p-4">
+              <div className="border border-border rounded-lg p-4">
                 <h4 className="font-semibold text-indigo-900 mb-2">CURATOR (Куратор)</h4>
-                <p className="text-sm text-gray-600">Может создавать и управлять подчиненными Администраторами. Не имеет доступа к финансам и настройкам безопасности системы.</p>
+                <p className="text-sm text-muted-foreground">Может создавать и управлять подчиненными Администраторами. Не имеет доступа к финансам и настройкам безопасности системы.</p>
               </div>
-              <div className="border border-gray-200 rounded-lg p-4">
+              <div className="border border-border rounded-lg p-4">
                 <h4 className="font-semibold text-indigo-900 mb-2">ADMIN (Администратор)</h4>
-                <p className="text-sm text-gray-600">Добавляет Кандидатов, Работников, ведет переписку. Базовый уровень управления операционной деятельностью.</p>
+                <p className="text-sm text-muted-foreground">Добавляет Кандидатов, Работников, ведет переписку. Базовый уровень управления операционной деятельностью.</p>
               </div>
-              <div className="border border-gray-200 rounded-lg p-4">
+              <div className="border border-border rounded-lg p-4">
                 <h4 className="font-semibold text-indigo-900 mb-2">FINANCE (Финансист)</h4>
-                <p className="text-sm text-gray-600">Имеет доступ только к модулю Финансов (Выплаты) и Отчетам. Не может управлять пользователями.</p>
+                <p className="text-sm text-muted-foreground">Имеет доступ только к модулю Финансов (Выплаты) и Отчетам. Не может управлять пользователями.</p>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === 'archive' && user.role === 'OWNER' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-4xl">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Архив системы</h3>
-            <p className="text-sm text-gray-500 mb-6">Здесь хранятся удаленные (Soft Delete) записи Кандидатов, Работников и Партнеров.</p>
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6 max-w-4xl">
+            <h3 className="text-lg font-medium text-foreground mb-4">Архив системы</h3>
+            <p className="text-sm text-muted-foreground mb-6">Здесь хранятся удаленные (Soft Delete) записи Кандидатов, Работников и Партнеров.</p>
             
-            <div className="bg-gray-50 p-8 text-center rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400">
+            <div className="bg-background p-8 text-center rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400">
               <p>В данный момент корзина архива пуста.</p>
               <p className="text-sm mt-2">При удалении профиля кандидата он попадет сюда, и вы сможете восстановить его.</p>
             </div>

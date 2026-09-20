@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from app.api import (
     users, candidates, workers, partners, payments, tasks, 
-    trainings, reports, notifications, messages, audit_logs, search, comments, materials, sources, files, attendance, account_requests, accounts, telegram_admin, telegram_proxy
+    trainings, reports, notifications, messages, audit_logs, search, comments, materials, sources, files, attendance, account_requests, accounts, telegram_admin, telegram_proxy, shift_reports, admin_payouts, balance_requests, emails
 )
 
 api_router = APIRouter()
@@ -27,3 +27,8 @@ api_router.include_router(attendance.router, prefix="/attendance", tags=["attend
 api_router.include_router(accounts.router, prefix="/accounts", tags=["accounts"])
 api_router.include_router(telegram_admin.router, tags=["telegram_admin"])
 api_router.include_router(telegram_proxy.router, tags=["telegram_proxy"])
+api_router.include_router(shift_reports.router, prefix="/shift-reports", tags=["shift-reports"])
+api_router.include_router(admin_payouts.router, prefix="/admin-payouts", tags=["admin-payouts"])
+api_router.include_router(balance_requests.router, prefix="/balance-requests", tags=["balance-requests"])
+
+api_router.include_router(emails.router, prefix="/emails", tags=["emails"])

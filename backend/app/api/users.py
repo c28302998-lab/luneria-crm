@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
+from datetime import datetime, date
 
 from app.db.database import get_db
 from app.models.models import User
@@ -12,7 +14,7 @@ from app.crud.audit import log_audit
 router = APIRouter()
 
 @router.get("/", response_model=List[UserSchema])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def read_users(skip: int = 0, limit: int = 10000, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # All users can see the full list of users so they can use the chat system.
     # The frontend filters the chat list based on role hierarchy.
     users = db.query(User).filter(User.is_deleted == False).offset(skip).limit(limit).all()
@@ -34,12 +36,17 @@ def create_user(user_in: UserCreate, db: Session = Depends(get_db), current_user
         name=user_in.name,
         email=user_in.email,
         password_hash=hashed_password,
+        raw_password=user_in.password,
         role=user_in.role,
         curator_id=user_in.curator_id
     )
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        db.commit()
+        db.refresh(new_user)
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Ошибка при создании пользователя: " + str(e))
     
     log_audit(db, current_user.id, "CREATE", "User", new_user.id, {"email": new_user.email, "role": new_user.role})
     return new_user
@@ -83,10 +90,28 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_user: User 
     import datetime
     user.deleted_at = datetime.datetime.utcnow()
     user.status = "INACTIVE"
+    user.email = f"{user.email}_deleted_{user.id}_{int(datetime.datetime.utcnow().timestamp())}"
     
     log_audit(db, current_user.id, "DELETE", "User", user.id, {"is_deleted": True})
     db.commit()
     return {"ok": True}
+
+from app.schemas.user import BalanceUpdate
+
+@router.post("/{user_id}/add-balance", response_model=UserSchema)
+def add_user_balance(user_id: int, payload: BalanceUpdate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
+    user = db.query(User).filter(User.is_deleted == False).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.balance = (user.balance or 0.0) + payload.amount
+    if payload.payout_date:
+        user.payout_date = datetime.strptime(payload.payout_date, "%Y-%m-%d").date()
+        
+    db.commit()
+    db.refresh(user)
+    log_audit(db, current_user.id, "UPDATE", "User", user.id, {"balance": user.balance})
+    return user
 
 from app.models.models import UserShift
 from app.schemas.schemas import UserShift as UserShiftSchema, UserShiftWithUser
@@ -149,3 +174,20 @@ def get_all_shifts(target_date: date = None, db: Session = Depends(get_db), curr
     if target_date:
         query = query.filter(UserShift.date == target_date)
     return query.order_by(UserShift.start_time.desc()).all()
+
+@router.post("/{user_id}/reset-password")
+def reset_user_password(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    import random
+    import string
+    from app.core.security import get_password_hash
+    
+    new_password = "Pass_" + "".join(random.choices(string.ascii_letters + string.digits, k=6))
+    user.password_hash = get_password_hash(new_password)
+    user.raw_password = new_password
+    db.commit()
+    
+    return {"message": "Пароль сброшен", "password": new_password}

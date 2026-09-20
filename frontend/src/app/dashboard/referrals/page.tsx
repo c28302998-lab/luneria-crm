@@ -42,15 +42,15 @@ export default function ReferralsPage() {
     return (
       <div className="flex flex-col">
         <div 
-          className="flex items-center p-3 mb-2 bg-white border border-gray-200 rounded-lg shadow-sm"
+          className="flex items-center p-3 mb-2 bg-card border border-border rounded-lg shadow-sm"
           style={{ marginLeft: `${depth * 2}rem` }}
         >
           <User className="w-5 h-5 text-indigo-500 mr-3" />
           <div className="flex-1">
-            <div className="font-medium text-gray-900">Работник #{node.id}</div>
-            <div className="text-xs text-gray-500">Кандидат #{node.candidate_id} | Партнер #{node.partner_id || 'Нет'}</div>
+            <div className="font-medium text-foreground">Работник #{node.id}</div>
+            <div className="text-xs text-muted-foreground">Кандидат #{node.candidate_id} | Партнер #{node.partner_id || 'Нет'}</div>
           </div>
-          <div className="text-sm font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
+          <div className="text-sm font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-1 rounded">
             Привел: {children.length}
           </div>
         </div>
@@ -65,19 +65,19 @@ export default function ReferralsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-            <Users className="w-6 h-6 mr-2 text-indigo-600" />
+          <h2 className="text-2xl font-semibold text-foreground flex items-center">
+            <Users className="w-6 h-6 mr-2 text-primary" />
             Реферальная структура
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Кто кого пригласил. Доступно только Владельцу.
           </p>
         </div>
       </div>
 
-      <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 min-h-[500px]">
+      <div className="bg-background p-6 rounded-xl border border-border min-h-[500px]">
         {roots.length === 0 ? (
-          <div className="text-center text-gray-500 mt-10">Нет данных о работниках</div>
+          <div className="text-center text-muted-foreground mt-10">Нет данных о работниках</div>
         ) : (
           roots.map(root => (
             <RenderNode key={root.id} node={root} />

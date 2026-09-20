@@ -1,6 +1,6 @@
 import os
 
-base_dir = "/Users/thf/.gemini/antigravity/scratch/luneria/frontend/src/app/dashboard"
+base_dir = "/Users/thf/.gemini/antigravity/scratch/lunery/frontend/src/app/dashboard"
 
 pages = {
     "messages": "Сообщения",

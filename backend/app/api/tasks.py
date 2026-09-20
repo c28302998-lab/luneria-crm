@@ -14,7 +14,7 @@ from app.crud.audit import log_audit
 router = APIRouter()
 
 @router.get("/", response_model=List[TaskSchema])
-def read_tasks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def read_tasks(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     query = db.query(Task).filter(Task.is_deleted == False)
     if current_user.role == "OWNER":
         return query.offset(skip).limit(limit).all()

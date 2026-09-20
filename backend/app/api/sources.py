@@ -13,7 +13,7 @@ from app.crud.audit import log_audit
 router = APIRouter()
 
 @router.get("/", response_model=List[SourceSchema])
-def read_sources(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def read_sources(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return db.query(Source).filter(Source.is_deleted == False).order_by(Source.created_at.asc()).offset(skip).limit(limit).all()
 
 @router.post("/", response_model=SourceSchema)

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { Plus } from 'lucide-react';
+import { Plus, DollarSign } from 'lucide-react';
 
 export default function AdminsPage() {
   const { user } = useAuth();
@@ -19,6 +19,11 @@ export default function AdminsPage() {
     curator_id: '',
     role: 'ADMIN'
   });
+
+  const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState<any>(null);
+  const [balanceAmount, setBalanceAmount] = useState('');
+  const [payoutDate, setPayoutDate] = useState('');
 
   const fetchUsers = async () => {
     try {
@@ -88,15 +93,41 @@ export default function AdminsPage() {
     }
   };
 
+  const handleAddBalance = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedAdmin) return;
+    try {
+      await api.post(`/users/${selectedAdmin.id}/add-balance`, {
+        amount: parseFloat(balanceAmount),
+        payout_date: payoutDate || null
+      });
+      setIsBalanceModalOpen(false);
+      setSelectedAdmin(null);
+      setBalanceAmount('');
+      setPayoutDate('');
+      fetchUsers();
+    } catch (err) {
+      console.error(err);
+      alert('Ошибка при начислении баланса');
+    }
+  };
+
+  const openBalanceModal = (admin: any) => {
+    setSelectedAdmin(admin);
+    setBalanceAmount('');
+    setPayoutDate(admin.payout_date || '');
+    setIsBalanceModalOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-gray-900">Администраторы и Финансисты</h2>
+        <h2 className="text-2xl font-semibold text-foreground">Администраторы и Финансисты</h2>
         
         {user?.role === 'OWNER' && (
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+            className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition"
           >
             <Plus className="h-4 w-4 mr-2" />
             Добавить
@@ -104,48 +135,66 @@ export default function AdminsPage() {
         )}
       </div>
 
-      <div className="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-card shadow-sm rounded-xl border border-border overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Загрузка...</div>
+          <div className="p-8 text-center text-muted-foreground">Загрузка...</div>
         ) : users.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Пользователи не найдены</div>
+          <div className="p-8 text-center text-muted-foreground">Пользователи не найдены</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-background">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Имя</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Роль</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Куратор</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Имя</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Роль</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Баланс</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Куратор</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Статус</th>
                   {user?.role === 'OWNER' && (
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Действия</th>
                   )}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {users.map(u => {
                   const assignedCurator = curators.find(c => c.id === u.curator_id);
                   return (
-                    <tr key={u.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{u.id}</td>
+                    <tr key={u.id} className="hover:bg-background">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">#{u.id}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{u.name}</div>
+                        <div className="text-sm font-medium text-foreground">{u.name}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/20 text-primary-foreground">
                           {u.role === 'FINANCE' ? 'Финансист' : 'Админ'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{u.email}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">${u.balance || 0}</span>
+                          {user?.role === 'OWNER' && u.role === 'ADMIN' && (
+                            <button 
+                              onClick={() => openBalanceModal(u)}
+                              className="p-1 hover:bg-muted rounded text-primary transition-colors"
+                              title="Начислить баланс"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                        {u.payout_date && (
+                          <div className="text-[10px] text-muted-foreground mt-1">До {new Date(u.payout_date).toLocaleDateString()}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {user?.role === 'OWNER' ? (
                           <select 
                             value={u.curator_id || ''}
                             onChange={(e) => handleCuratorChange(u.id, e.target.value)}
-                            className="font-medium text-gray-900 text-sm border-gray-300 rounded-md py-1 pl-2 pr-8 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                            className="font-medium text-foreground text-sm border-gray-300 rounded-md py-1 pl-2 pr-8 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                           >
                             <option value="">Не назначен</option>
                             {curators.map(c => (
@@ -190,44 +239,45 @@ export default function AdminsPage() {
         )}
       </div>
 
+      {/* Модалка добавления администратора */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Новый сотрудник</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-lg font-medium text-foreground mb-4">Новый сотрудник</h3>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Имя</label>
+                <label className="block text-sm font-medium text-muted-foreground">Имя</label>
                 <input 
                   type="text" required 
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none" 
+                  className="mt-1 block w-full rounded-md border-border bg-background border p-2 text-sm text-foreground focus:border-primary focus:outline-none" 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <label className="block text-sm font-medium text-muted-foreground">Email</label>
                 <input 
                   type="email" required 
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none" 
+                  className="mt-1 block w-full rounded-md border-border bg-background border p-2 text-sm text-foreground focus:border-primary focus:outline-none" 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Пароль</label>
+                <label className="block text-sm font-medium text-muted-foreground">Пароль</label>
                 <input 
                   type="password" required 
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none" 
+                  className="mt-1 block w-full rounded-md border-border bg-background border p-2 text-sm text-foreground focus:border-primary focus:outline-none" 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Роль</label>
+                <label className="block text-sm font-medium text-muted-foreground">Роль</label>
                 <select 
                   value={formData.role}
                   onChange={(e) => setFormData({...formData, role: e.target.value})}
-                  className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  className="mt-1 block w-full rounded-md border-border bg-background border p-2 text-sm text-foreground focus:border-primary focus:outline-none"
                 >
                   <option value="ADMIN">Администратор</option>
                   <option value="FINANCE">Финансист</option>
@@ -235,11 +285,11 @@ export default function AdminsPage() {
               </div>
               {user?.role === 'OWNER' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Куратор (опционально)</label>
+                  <label className="block text-sm font-medium text-muted-foreground">Куратор (опционально)</label>
                   <select 
                     value={formData.curator_id}
                     onChange={(e) => setFormData({...formData, curator_id: e.target.value})}
-                    className="mt-1 block w-full rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none"
+                    className="mt-1 block w-full rounded-md border-border bg-background border p-2 text-sm text-foreground focus:border-primary focus:outline-none"
                   >
                     <option value="">Без куратора</option>
                     {curators.map(c => (
@@ -252,15 +302,62 @@ export default function AdminsPage() {
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-border rounded-md text-sm font-medium text-muted-foreground hover:bg-background"
                 >
                   Отмена
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700"
+                  className="px-4 py-2 bg-primary border border-transparent rounded-md text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
                   Создать
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Модалка начисления баланса */}
+      {isBalanceModalOpen && selectedAdmin && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-xl shadow-xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-medium text-foreground mb-1">Начислить баланс</h3>
+            <p className="text-sm text-muted-foreground mb-4">Для {selectedAdmin.name}</p>
+            <form onSubmit={handleAddBalance} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground">Сумма добавления ($)</label>
+                <input 
+                  type="number" required step="0.01"
+                  value={balanceAmount}
+                  placeholder="Например: 150.50"
+                  onChange={(e) => setBalanceAmount(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-border bg-background border p-2 text-sm text-foreground focus:border-primary focus:outline-none" 
+                />
+                <p className="text-xs text-muted-foreground mt-1">Текущий баланс: ${selectedAdmin.balance || 0}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground">Новая дата выплаты (опционально)</label>
+                <input 
+                  type="date"
+                  value={payoutDate}
+                  onChange={(e) => setPayoutDate(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-border bg-background border p-2 text-sm text-foreground focus:border-primary focus:outline-none" 
+                />
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button 
+                  type="button" 
+                  onClick={() => setIsBalanceModalOpen(false)}
+                  className="px-4 py-2 border border-border rounded-md text-sm font-medium text-muted-foreground hover:bg-background"
+                >
+                  Отмена
+                </button>
+                <button 
+                  type="submit"
+                  className="px-4 py-2 bg-primary border border-transparent rounded-md text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Сохранить
                 </button>
               </div>
             </form>

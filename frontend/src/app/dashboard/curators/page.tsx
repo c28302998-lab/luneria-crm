@@ -76,11 +76,11 @@ export default function CuratorsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-gray-900">Кураторы</h2>
+        <h2 className="text-2xl font-semibold text-foreground">Кураторы</h2>
         {isOwner && (
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+            className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition"
           >
             <Plus className="h-4 w-4 mr-2" />
             Добавить куратора
@@ -88,22 +88,22 @@ export default function CuratorsPage() {
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {loading ? <p className="p-8 text-center text-gray-500">Загрузка...</p> : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+        {loading ? <p className="p-8 text-center text-muted-foreground">Загрузка...</p> : (
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-background">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Имя</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Имя</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Статус</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Действия</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-card divide-y divide-border">
               {users.map((u: any) => (
                 <tr key={u.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{u.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{u.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       u.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -116,7 +116,7 @@ export default function CuratorsPage() {
                       <>
                         <button 
                           onClick={() => toggleStatus(u.id, u.status)}
-                          className="text-indigo-600 hover:text-indigo-900"
+                          className="text-primary hover:text-indigo-900"
                         >
                           {u.status === 'ACTIVE' ? 'Заблокировать' : 'Разблокировать'}
                         </button>
@@ -132,7 +132,7 @@ export default function CuratorsPage() {
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan={4} className="p-8 text-center text-gray-500">Кураторов пока нет</td></tr>
+                <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">Кураторов пока нет</td></tr>
               )}
             </tbody>
           </table>
@@ -141,8 +141,8 @@ export default function CuratorsPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Новый куратор</h3>
+          <div className="bg-card rounded-xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-lg font-medium text-foreground mb-4">Новый куратор</h3>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Имя</label>
@@ -175,13 +175,13 @@ export default function CuratorsPage() {
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-background"
                 >
                   Отмена
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700"
+                  className="px-4 py-2 bg-primary border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary/90"
                 >
                   Создать
                 </button>

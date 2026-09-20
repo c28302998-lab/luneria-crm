@@ -1,4 +1,7 @@
+from app.core.dependencies import RoleChecker
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from app.services.google_sheets import sync_account_to_sheets
+import datetime
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
@@ -11,6 +14,32 @@ from .auth import get_current_user
 from ..services.telegram_manager import telegram_manager
 
 router = APIRouter(prefix="/telegram/admin", tags=["Telegram Admin"])
+
+
+def get_assigned_email(db: Session, worker_user_id: int) -> str:
+    if not worker_user_id:
+        return ""
+    from ..models.email import EmailAccount
+    email_acc = db.query(EmailAccount).filter(EmailAccount.assigned_worker_id == worker_user_id, EmailAccount.is_deleted == False).first()
+    if email_acc:
+        return email_acc.email_address
+    return ""
+
+def get_partner_name(db: Session, worker_user_id: int) -> Optional[str]:
+    if not worker_user_id:
+        return None
+    from ..models.models import User, Worker, Partner
+    user = db.query(User).filter(User.id == worker_user_id).first()
+    if not user or not user.candidate_id:
+        return None
+    worker = db.query(Worker).filter(Worker.candidate_id == user.candidate_id).first()
+    if not worker or not worker.partner_id:
+        return None
+    partner = db.query(Partner).filter(Partner.id == worker.partner_id).first()
+    if partner:
+        return partner.company_name
+    return None
+
 
 def check_owner(user: User = Depends(get_current_user)):
     if user.role != "OWNER":
@@ -35,7 +64,7 @@ async def send_code(req: SendCodeRequest, current_user: User = Depends(check_own
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/auth/verify-code")
-async def verify_code(req: VerifyCodeRequest, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+async def verify_code(req: VerifyCodeRequest, db: Session = Depends(get_db), current_user: User = Depends(check_owner), bg_tasks: BackgroundTasks = BackgroundTasks()):
     try:
         session_string, username = await telegram_manager.auth_sign_in(req.phone, req.code, req.password)
         
@@ -66,6 +95,24 @@ async def verify_code(req: VerifyCodeRequest, db: Session = Depends(get_db), cur
             db.rollback()
             print(f"Failed to save audit log: {e}")
         
+        # Google Sheets Sync
+        try:
+            bg_tasks.add_task(
+                sync_account_to_sheets,
+                account_id=acc.id,
+                account_name=acc.name,
+                phone=acc.phone,
+                password=acc.two_fa_password,
+                worker_name="Свободен",
+                admin_name="Без админа",
+                start_date=datetime.datetime.now().strftime("%d.%m.%Y %H:%M"),
+                action="Добавление аккаунта",
+                partner_name=get_partner_name(db, acc.assigned_worker_id),
+            email_address=get_assigned_email(db, acc.assigned_worker_id)
+            )
+        except Exception as e:
+            print(f"Error scheduling Sheets sync: {e}")
+            
         return {"status": "success", "account_id": acc.id}
         
     except ValueError as e:
@@ -105,25 +152,32 @@ class EditPasswordRequest(BaseModel):
     password: Optional[str] = None
 
 @router.put("/accounts/{acc_id}/2fa-password")
-def edit_2fa_password_admin(acc_id: int, req: EditPasswordRequest, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+def edit_2fa_password_admin(acc_id: int, req: EditPasswordRequest, db: Session = Depends(get_db), current_user: User = Depends(check_owner), bg_tasks: BackgroundTasks = BackgroundTasks()):
     acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
     if not acc:
         raise HTTPException(status_code=404, detail="Account not found")
     acc.two_fa_password = req.password
     db.commit()
-    
-    # Trigger sheets sync
-    assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
-    admin_name = assigned_user.name if assigned_user else "Unknown"
-    account_data = {
-        "account_name": acc.name,
-        "account_number": acc.phone or "",
-        "admin_name": admin_name,
-        "password_tg": acc.two_fa_password or "",
-        "status": "Акаунт выдан"
-    }
-    background_tasks.add_task(sheets_service.sync_issued_account, account_data)
-    
+    # Google Sheets Sync
+    try:
+        w_name = acc.assigned_worker.name if acc.assigned_worker else "Свободен"
+        a_name = acc.assigned_user.name if acc.assigned_user else "Без админа"
+        bg_tasks.add_task(
+            sync_account_to_sheets,
+            account_id=acc.id,
+            account_name=acc.name,
+            phone=acc.phone,
+            password=acc.two_fa_password,
+            worker_name=w_name,
+            admin_name=a_name,
+            start_date=datetime.datetime.now().strftime("%d.%m.%Y %H:%M"),
+            action="Смена пароля 2FA",
+            partner_name=get_partner_name(db, acc.assigned_worker_id),
+            email_address=get_assigned_email(db, acc.assigned_worker_id)
+        )
+    except Exception as e:
+        print(f"Error scheduling Sheets sync: {e}")
+        
     return {"status": "ok"}
 
 @router.get("/accounts", response_model=List[TelegramAccountResponse])
@@ -132,17 +186,53 @@ def get_accounts(db: Session = Depends(get_db), current_user: User = Depends(che
 
 class AssignAccountRequest(BaseModel):
     user_id: Optional[int]
+    worker_id: Optional[int] = None
+    worker_note: Optional[str] = None
 
 @router.patch("/accounts/{acc_id}/assign")
-async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user), bg_tasks: BackgroundTasks = BackgroundTasks()):
     try:
+        if current_user.role not in ["OWNER", "ADMIN"]:
+            raise HTTPException(status_code=403, detail="Not allowed")
+            
         acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
         if not acc:
             raise HTTPException(status_code=404, detail="Account not found")
             
+        if current_user.role == "ADMIN" and acc.assigned_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not assigned to you")
+            
         old_user = acc.assigned_user_id
-        acc.assigned_user_id = req.user_id
+        
+        # --- NEW HISTORY LOGIC ---
+        from datetime import datetime
+        active_assignment = db.query(AccountAssignment).filter(
+            AccountAssignment.account_id == acc.id,
+            AccountAssignment.revoked_at == None
+        ).first()
+        
+        if active_assignment:
+            active_assignment.revoked_at = datetime.utcnow()
+            active_assignment.reason = "REASSIGNED"
+            
+        new_assignment = AccountAssignment(
+            account_id=acc.id,
+            worker_id=req.worker_id,
+            admin_id=req.user_id if current_user.role == "OWNER" else acc.assigned_user_id,
+            assigned_at=datetime.utcnow()
+        )
+        db.add(new_assignment)
+        # -------------------------
+
+        if current_user.role == "OWNER":
+            acc.assigned_user_id = req.user_id
+        
+        acc.assigned_worker_id = req.worker_id
+        if req.worker_note is not None:
+            acc.worker_note = req.worker_note
+            
         db.commit()
+        db.refresh(acc)
         
         # Audit log
         try:
@@ -162,6 +252,26 @@ async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = D
         if old_user != req.user_id:
             await telegram_manager.disconnect_account(acc.id)
             
+        # Google Sheets Sync
+        try:
+            w_name = acc.assigned_worker.name if acc.assigned_worker else "Свободен"
+            a_name = acc.assigned_user.name if acc.assigned_user else "Без админа"
+            bg_tasks.add_task(
+                sync_account_to_sheets,
+                account_id=acc.id,
+                account_name=acc.name,
+                phone=acc.phone,
+                password=acc.two_fa_password,
+                worker_name=w_name,
+                admin_name=a_name,
+                start_date=datetime.datetime.now().strftime("%d.%m.%Y %H:%M"),
+                action="Передача аккаунта",
+                partner_name=get_partner_name(db, acc.assigned_worker_id),
+            email_address=get_assigned_email(db, acc.assigned_worker_id)
+            )
+        except Exception as e:
+            print(f"Error scheduling Sheets sync: {e}")
+            
         return {"status": "success"}
     except HTTPException:
         raise
@@ -175,7 +285,18 @@ async def revoke_account(acc_id: int, db: Session = Depends(get_db), current_use
     if not acc:
         raise HTTPException(status_code=404, detail="Account not found")
         
+    from datetime import datetime
+    active_assignment = db.query(AccountAssignment).filter(
+        AccountAssignment.account_id == acc.id,
+        AccountAssignment.revoked_at == None
+    ).first()
+    
+    if active_assignment:
+        active_assignment.revoked_at = datetime.utcnow()
+        active_assignment.reason = "REVOKED_BY_OWNER"
+        
     acc.assigned_user_id = None
+    acc.assigned_worker_id = None
     acc.status = TelegramAccountStatus.DISABLED
     db.commit()
     
@@ -197,10 +318,10 @@ async def revoke_account(acc_id: int, db: Session = Depends(get_db), current_use
     return {"status": "success"}
 
 @router.get("/audit", response_model=List[TelegramAuditLogResponse])
-def get_audit_logs(limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+def get_audit_logs(limit: int = 1000, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
     return db.query(TelegramAuditLog).order_by(TelegramAuditLog.created_at.desc()).limit(limit).all()
 
-from app.models.telegram import TelegramRequest, TelegramRequestStatus
+from app.models.telegram import AccountAssignment, TelegramRequest, TelegramRequestStatus
 
 @router.get("/requests")
 def get_requests(db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
@@ -308,7 +429,7 @@ class AliasCreate(BaseModel):
     tg_chat_id: str
     custom_name: str
 
-from app.models.telegram import TelegramChatAlias
+from app.models.telegram import AccountAssignment, TelegramChatAlias
 
 @router.post("/accounts/{acc_id}/aliases")
 def set_chat_alias(acc_id: int, req: AliasCreate, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
@@ -322,7 +443,7 @@ def set_chat_alias(acc_id: int, req: AliasCreate, db: Session = Depends(get_db),
     return {"status": "success"}
 
 @router.delete("/accounts/{acc_id}")
-def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(check_owner), bg_tasks: BackgroundTasks = BackgroundTasks()):
     acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
     if not acc:
         raise HTTPException(status_code=404, detail="Account not found")
@@ -330,19 +451,24 @@ def delete_account(acc_id: int, db: Session = Depends(get_db), current_user: Use
     # We soft delete it
     acc.is_deleted = True
     db.commit()
-    
-    # Trigger sheets sync
-    assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
-    admin_name = assigned_user.name if assigned_user else "Unknown"
-    account_data = {
-        "account_name": acc.name,
-        "account_number": acc.phone or "",
-        "admin_name": admin_name,
-        "password_tg": acc.two_fa_password or "",
-        "status": "Акаунт выдан"
-    }
-    background_tasks.add_task(sheets_service.sync_issued_account, account_data)
-    
+    # Google Sheets Sync
+    try:
+        bg_tasks.add_task(
+            sync_account_to_sheets,
+            account_id=acc.id,
+            account_name=acc.name,
+            phone=acc.phone,
+            password="",
+            worker_name="",
+            admin_name="",
+            start_date=datetime.datetime.now().strftime("%d.%m.%Y %H:%M"),
+            action="Удаление аккаунта",
+            partner_name=get_partner_name(db, acc.assigned_worker_id),
+            email_address=get_assigned_email(db, acc.assigned_worker_id)
+        )
+    except Exception as e:
+        print(f"Error scheduling Sheets sync: {e}")
+        
     return {"status": "ok"}
 
 class UpdateChecklistRequest(BaseModel):
@@ -356,81 +482,37 @@ def update_checklist(acc_id: int, req: UpdateChecklistRequest, db: Session = Dep
     
     acc.setup_checklist = req.setup_checklist
     db.commit()
-    
-    # Trigger sheets sync
-    assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
-    admin_name = assigned_user.name if assigned_user else "Unknown"
-    account_data = {
-        "account_name": acc.name,
-        "account_number": acc.phone or "",
-        "admin_name": admin_name,
-        "password_tg": acc.two_fa_password or "",
-        "status": "Акаунт выдан"
-    }
-    background_tasks.add_task(sheets_service.sync_issued_account, account_data)
-    
     return {"status": "ok"}
 
 @router.post("/accounts/{acc_id}/approve-issue")
-def approve_issue(acc_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
-    from app.models.models import Account
-    from datetime import datetime
-    
+def approve_issue(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
     acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
     if not acc:
         raise HTTPException(status_code=404, detail="Account not found")
     
     acc.issue_request_status = 'APPROVED'
-    
-    # Auto-link/create in manual Accounts table
-    login_str = acc.phone if acc.phone else acc.name
-    if login_str:
-        existing = db.query(Account).filter(Account.login == login_str).first()
-        if existing:
-            existing.status = "ISSUED"
-            existing.issued_at = datetime.utcnow()
-        else:
-            new_acc = Account(
-                login=login_str,
-                status="ISSUED",
-                issued_at=datetime.utcnow()
-            )
-            db.add(new_acc)
-            
     db.commit()
-    
-    # Trigger sheets sync
-    assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
-    admin_name = assigned_user.name if assigned_user else "Unknown"
-    account_data = {
-        "account_name": acc.name,
-        "account_number": acc.phone or "",
-        "admin_name": admin_name,
-        "password_tg": acc.two_fa_password or "",
-        "status": "Акаунт выдан"
-    }
-    background_tasks.add_task(sheets_service.sync_issued_account, account_data)
-    
     return {"status": "ok"}
 
-@router.post("/accounts/{account_id}/deny-issue")
-async def deny_issue(account_id: int, user: User = Depends(check_owner), db: Session = Depends(get_db)):
-    acc = db.query(TelegramAccount).filter(TelegramAccount.id == account_id).first()
+@router.post("/accounts/{acc_id}/sync")
+async def sync_account(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(check_owner)):
+    acc = db.query(TelegramAccount).filter(TelegramAccount.id == acc_id).first()
     if not acc:
         raise HTTPException(status_code=404, detail="Account not found")
-    acc.issue_request_status = 'NONE'
-    db.commit()
     
-    # Trigger sheets sync
-    assigned_user = db.query(User).filter(User.id == acc.assigned_user_id).first()
-    admin_name = assigned_user.name if assigned_user else "Unknown"
-    account_data = {
-        "account_name": acc.name,
-        "account_number": acc.phone or "",
-        "admin_name": admin_name,
-        "password_tg": acc.two_fa_password or "",
-        "status": "Акаунт выдан"
-    }
-    background_tasks.add_task(sheets_service.sync_issued_account, account_data)
-    
-    return {"status": "ok"}
+    try:
+        client = await telegram_manager.get_client(acc.id, acc.session_string)
+        me = await client.get_me()
+        if me:
+            acc.name = f"{me.first_name or ''} {me.last_name or ''}".strip() or "No Name"
+            acc.username = me.username
+            acc.phone = me.phone
+            db.commit()
+            return {"status": "success", "username": acc.username, "name": acc.name, "phone": acc.phone}
+        return {"status": "error", "detail": "Could not get user info"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/accounts/{acc_id}/history")
+def get_account_history(acc_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "ADMIN"]))):
+    return db.query(AccountAssignment).filter(AccountAssignment.account_id == acc_id).order_by(AccountAssignment.assigned_at.desc()).all()

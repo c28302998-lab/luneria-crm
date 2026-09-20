@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.models import User
 from app.schemas.user import Token, User as UserSchema
-from app.core.security import verify_password, create_access_token
+from app.core.security import verify_password, create_access_token, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.core.dependencies import get_current_user
 
 router = APIRouter()
@@ -21,7 +21,7 @@ def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    ip = form_data.username # We use username as key since we don't have request.client.host easily here without Request object.
+    ip = form_data.username.strip() # We use username as key since we don't have request.client.host easily here without Request object.
     
     # Rate limiting logic (simple brute-force protection)
     now = time.time()
@@ -35,7 +35,7 @@ def login_access_token(
                 detail="Too many failed login attempts. Please try again in 5 minutes."
             )
             
-    user = db.query(User).filter(User.is_deleted == False).filter(User.email == form_data.username).first()
+    user = db.query(User).filter(User.is_deleted == False).filter(User.email.ilike(form_data.username.strip())).first()
     
     if not user or not verify_password(form_data.password, user.password_hash):
         if ip in login_attempts:
@@ -90,3 +90,36 @@ def change_password(
     current_user.password_hash = get_password_hash(data.new_password)
     db.commit()
     return {"ok": True}
+
+from app.models.models import InviteToken
+from datetime import datetime
+
+class InviteAcceptRequest(BaseModel):
+    token: str
+    password: str
+
+@router.post("/invite/accept")
+def accept_invite(req: InviteAcceptRequest, db: Session = Depends(get_db)):
+    invite = db.query(InviteToken).filter(InviteToken.token == req.token).first()
+    if not invite:
+        raise HTTPException(status_code=404, detail="Invalid token")
+    if invite.is_used:
+        raise HTTPException(status_code=400, detail="Token already used")
+    if invite.expires_at and invite.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Token expired")
+        
+    user = db.query(User).filter(User.id == invite.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    user.password_hash = get_password_hash(req.password)
+    user.raw_password = None # Clear raw password
+    invite.is_used = True
+    db.commit()
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email, "role": user.role, "id": user.id}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer", "user": {"id": user.id, "email": user.email, "name": user.name, "role": user.role}}
+

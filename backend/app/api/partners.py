@@ -1,18 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
-from app.services.google_sheets import sheets_service
 from app.models.models import User, Partner
 from app.schemas.schemas import Partner as PartnerSchema, PartnerCreate
 from app.core.dependencies import get_current_user, RoleChecker
 from app.crud.audit import log_audit
+from app.services.google_sheets import sync_partner_to_sheets
+from fastapi import BackgroundTasks
 
 router = APIRouter()
 
 @router.get("/", response_model=List[PartnerSchema])
-def read_partners(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def read_partners(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     partners = db.query(Partner).filter(Partner.is_deleted == False).offset(skip).limit(limit).all()
     for p in partners:
         p.workers_count = len([w for w in p.workers if not w.is_deleted])
@@ -28,17 +29,17 @@ def create_partner(partner_in: PartnerCreate, background_tasks: BackgroundTasks,
     db.refresh(partner)
     log_audit(db, current_user.id, "CREATE", "Partner", partner.id, partner_in.dict())
     
-    partner_data = {
-        "name": partner.company_name,
-        "contact": partner.contact or "",
-        "notes": "",
-        "schedule": ""
-    }
-    background_tasks.add_task(sheets_service.sync_partner, partner_data)
+    background_tasks.add_task(
+        sync_partner_to_sheets,
+        partner.id, partner.company_name, partner.contact, partner.country, 
+        partner.seats, partner.payment_terms, partner.experience, 
+        partner.registration_time, partner.response_time, partner.rating, partner.last_contact_date, partner.advances, partner.schedules
+    )
+    
     return partner
 
 @router.put("/{partner_id}", response_model=PartnerSchema)
-def update_partner(partner_id: int, partner_in: PartnerCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
+def update_partner(partner_id: int, partner_in: PartnerCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER"]))):
     partner = db.query(Partner).filter(Partner.is_deleted == False).filter(Partner.id == partner_id).first()
     if not partner:
         raise HTTPException(status_code=404, detail="Partner not found")
@@ -49,6 +50,14 @@ def update_partner(partner_id: int, partner_in: PartnerCreate, db: Session = Dep
     db.commit()
     db.refresh(partner)
     log_audit(db, current_user.id, "UPDATE", "Partner", partner.id, partner_in.dict())
+    
+    background_tasks.add_task(
+        sync_partner_to_sheets,
+        partner.id, partner.company_name, partner.contact, partner.country, 
+        partner.seats, partner.payment_terms, partner.experience, 
+        partner.registration_time, partner.response_time, partner.rating, partner.last_contact_date, partner.advances, partner.schedules
+    )
+    
     return partner
 
 @router.delete("/{partner_id}")

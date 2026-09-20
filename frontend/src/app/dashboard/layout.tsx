@@ -8,87 +8,139 @@ import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, Users, Briefcase, 
   Settings, LogOut, DollarSign, CheckSquare, 
-  FileBarChart, MessageSquare, Shield, Activity, Bell
+  FileBarChart, MessageSquare, Mail, Shield, Activity, Bell
 , GraduationCap, Globe, Key, Menu, X , MessageCircle, ShieldAlert, MonitorSmartphone } from 'lucide-react';
-import { ClipboardCheck, Clock } from 'lucide-react';
+import { ClipboardCheck, Clock, Moon } from 'lucide-react';
 import ShiftButton from '@/components/ShiftButton';
 
 const getNavigation = (role: string) => {
   const base = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Telegram', href: '/dashboard/telegram', icon: MessageCircle },
+    { name: 'Почты', href: '/dashboard/emails', icon: Mail },
     { name: 'Сообщения', href: '/dashboard/messages', icon: MessageSquare },
   ];
 
   if (role === 'OWNER') {
     return [
-      ...base,
-      { name: 'Кураторы', href: '/dashboard/curators', icon: Shield },
-      { name: 'Администраторы', href: '/dashboard/admins', icon: Users },
-      { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
-      { name: 'Заявки на аккаунт', href: '/dashboard/account-requests', icon: Key },
-      { name: 'Аккаунты', href: '/dashboard/accounts', icon: Key },
-      { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
-      { name: 'Рабочее время', href: '/dashboard/work-logs', icon: Clock },
-      { name: 'Контроль', href: '/dashboard/attendance', icon: ClipboardCheck },
-      { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
-      { name: 'Источники', href: '/dashboard/sources', icon: Globe },
-      { name: 'Партнеры', href: '/dashboard/partners', icon: Briefcase },
-      { name: 'Финансы', href: '/dashboard/finance', icon: DollarSign },
-      { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
-      { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
-      { name: 'Аналитика', href: '/dashboard/analytics', icon: FileBarChart },
-      { name: 'Логи', href: '/dashboard/logs', icon: Activity },
-      { name: 'TG Аккаунты', href: '/dashboard/telegram-accounts', icon: MonitorSmartphone },
-      { name: 'TG Заявки', href: '/dashboard/telegram-requests', icon: ShieldAlert },
-      { name: 'TG Аудит', href: '/dashboard/telegram-audit', icon: ShieldAlert },
-      { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
+      { group: 'Главное', items: [
+        { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+        { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
+        { name: 'Сообщения', href: '/dashboard/messages', icon: MessageSquare },
+      ]},
+      { group: 'Рабочие Инструменты', items: [
+        { name: 'Telegram', href: '/dashboard/telegram', icon: MessageCircle },
+        { name: 'TG Аккаунты', href: '/dashboard/telegram-accounts', icon: MonitorSmartphone },
+        { name: 'Ревью Аккаунтов', href: '/dashboard/reviews', icon: CheckSquare },
+        { name: 'Почтовые Аккаунты', href: '/dashboard/emails', icon: Mail },
+        { name: 'Другие Аккаунты', href: '/dashboard/crm-accounts', icon: Users },
+      ]},
+      { group: 'HR & Команда', items: [
+        { name: 'Смены', href: '/dashboard/shifts', icon: ClipboardCheck },
+        { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
+        { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
+        { name: 'Администраторы', href: '/dashboard/admins', icon: Shield },
+        { name: 'Партнеры', href: '/dashboard/partners', icon: Users },
+      ]},
+      { group: 'Смены и Контроль', items: [
+        
+        
+        
+      ]},
+      { group: 'Финансы', items: [
+        { name: 'Финансы (Балансы)', href: '/dashboard/finance', icon: DollarSign },
+        { name: 'Штрафы и Премии', href: '/dashboard/balance-requests', icon: DollarSign },
+        { name: 'Выплаты Админам', href: '/dashboard/admin-payouts', icon: DollarSign },
+      ]},
+      { group: 'Система', items: [
+        { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
+        { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
+        { name: 'Источники', href: '/dashboard/sources', icon: Globe },
+        { name: 'TG Аудит', href: '/dashboard/telegram-audit', icon: ShieldAlert },
+      ]}
     ];
   }
   
   if (role === 'CURATOR') {
     return [
-      ...base,
-      { name: 'Администраторы', href: '/dashboard/admins', icon: Users },
-      { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
-      { name: 'Заявки на аккаунт', href: '/dashboard/account-requests', icon: Key },
-      { name: 'Аккаунты', href: '/dashboard/accounts', icon: Key },
-      { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
-      { name: 'Контроль', href: '/dashboard/attendance', icon: ClipboardCheck },
-      { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
-      { name: 'Источники', href: '/dashboard/sources', icon: Globe },
-      { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
-      { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
-      { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
+      { group: 'Главное', items: base },
+      { group: 'Команда', items: [
+        { name: 'Администраторы', href: '/dashboard/admins', icon: Users },
+        { name: 'Работники', href: '/dashboard/workers', icon: Briefcase },
+        
+      ]},
+      { group: 'Рекрутинг', items: [
+        { name: 'Смены', href: '/dashboard/shifts', icon: ClipboardCheck },
+        { name: 'Кандидаты', href: '/dashboard/candidates', icon: Users },
+        { name: 'Источники', href: '/dashboard/sources', icon: Globe },
+        { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
+      ]},
+      { group: 'Отчеты', items: [
+        
+        { name: 'Сводные Отчеты', href: '/dashboard/reports', icon: FileBarChart },
+      ]},
+      { group: 'Настройки', items: [
+        { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
+      ]}
     ];
   }
 
   if (role === 'ADMIN') {
     return [
-      ...base,
-      { name: 'Мои Кандидаты', href: '/dashboard/candidates', icon: Users },
-      { name: 'Мои Работники', href: '/dashboard/workers', icon: Briefcase },
-      { name: 'Мои Аккаунты', href: '/dashboard/accounts', icon: Key },
-      { name: 'Контроль', href: '/dashboard/attendance', icon: ClipboardCheck },
-      { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
-      { name: 'Источники', href: '/dashboard/sources', icon: Globe },
-      { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
-      { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
-      { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
+      { group: 'Главное', items: base },
+      { group: 'Моя команда', items: [
+        { name: 'Мои Кандидаты', href: '/dashboard/candidates', icon: Users },
+        { name: 'Мои Работники', href: '/dashboard/workers', icon: Briefcase },
+      ]},
+      { group: 'Отчеты', items: [
+        
+        { name: 'Сводные Отчеты', href: '/dashboard/reports', icon: FileBarChart },
+      ]},
+      { group: 'Финансы', items: [
+        { name: 'Мой баланс', href: '/dashboard/my-balance', icon: DollarSign },
+        { name: 'Мои Выплаты', href: '/dashboard/admin-payouts', icon: DollarSign },
+      ]},
+      { group: 'Доступы', items: [
+        { name: 'TG Аккаунты', href: '/dashboard/telegram-accounts', icon: MonitorSmartphone },
+        { name: 'Ревью Аккаунтов', href: '/dashboard/reviews', icon: CheckSquare },
+      ]},
+      { group: 'Управление', items: [
+        { name: 'Задачи', href: '/dashboard/tasks', icon: CheckSquare },
+      ]},
+      { group: 'Система', items: [
+        { name: 'Обучение', href: '/dashboard/training', icon: GraduationCap },
+        { name: 'Источники', href: '/dashboard/sources', icon: Globe },
+        { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
+      ]},
     ];
   }
 
   if (role === 'FINANCE') {
     return [
-      ...base,
-      { name: 'Финансы', href: '/dashboard/finance', icon: DollarSign },
-      { name: 'Партнеры', href: '/dashboard/partners', icon: Briefcase },
-      { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
-      { name: 'Настройки', href: '/dashboard/settings', icon: Settings },
+      { group: 'Главное', items: base },
+      { group: 'Отчеты и Финансы', items: [
+        { name: 'Финансы', href: '/dashboard/finance', icon: DollarSign },
+        { name: 'Отчеты', href: '/dashboard/reports', icon: FileBarChart },
+        { name: 'Выплаты Админам', href: '/dashboard/admin-payouts', icon: DollarSign },
+      ]}
     ];
   }
 
-  return base;
+  if (role === 'WORKER') {
+    return [
+      { group: 'Мое Рабочее Место', items: [
+        { name: 'Дашборд', href: '/dashboard', icon: LayoutDashboard },
+        { name: 'Мои Смены', href: '/dashboard/my-shifts', icon: Clock },
+        { name: 'Мои аккаунты (TG)', href: '/dashboard/my-accounts', icon: Key },
+        { name: 'Почты', href: '/dashboard/emails', icon: Mail },
+      ]},
+      { group: 'Коммуникация', items: [
+        { name: 'Сообщения', href: '/dashboard/messages', icon: MessageSquare },
+      ]}
+    ];
+  }
+
+  return [{ group: 'Меню', items: base }];
 };
 
 export default function DashboardLayout({
@@ -96,13 +148,6 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  useEffect(() => {
-    api.get('/run-migration-6').catch(console.error);
-    api.get('/run-migration-5').catch(console.error);
-    api.get('/run-migration-4').catch(console.error);
-    api.get('/run-migration-3').catch(console.error);
-  }, []);
-
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -129,11 +174,23 @@ export default function DashboardLayout({
     };
 
     fetchUnread();
+
+    // TEMPORARY FIX: auto-call fix endpoint
+    if (user?.role === 'OWNER') {
+      api.get('/workers/tools/fix-deleted-users').catch(() => {});
+    }
+
     fetchNotifications();
     
     // Poll every 10 seconds for new messages
     const interval = setInterval(() => {
       fetchUnread();
+
+    // TEMPORARY FIX: auto-call fix endpoint
+    if (user?.role === 'OWNER') {
+      api.get('/workers/tools/fix-deleted-users').catch(() => {});
+    }
+
       fetchNotifications();
     }, 10000);
 
@@ -153,7 +210,7 @@ export default function DashboardLayout({
   const navigation = getNavigation(user.role);
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-muted">
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -163,43 +220,50 @@ export default function DashboardLayout({
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 w-64 bg-[#0f172a] text-slate-300 border-r border-slate-800 flex flex-col shadow-2xl z-50 transition-transform duration-300 ease-in-out`}>
-        <div className="h-16 flex items-center px-6 border-b border-slate-800">
-          <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-indigo-500/30">
-            <span className="text-white font-bold text-lg">L</span>
+      <div className={`fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 w-64 bg-white text-slate-600 border-r border-pink-100 flex flex-col shadow-sm z-50 transition-transform duration-300 ease-in-out`}>
+        <div className="h-16 flex items-center px-6 border-b border-pink-100">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3 overflow-hidden bg-transparent">
+            <img src="/logo.png" alt="Lunery Logo" className="w-full h-full object-cover" />
           </div>
-          <span className="text-xl font-bold text-white tracking-wide">Luneria</span>
+          <span className="text-xl font-bold text-slate-900 tracking-wide">{process.env.NEXT_PUBLIC_AGENCY_NAME ? process.env.NEXT_PUBLIC_AGENCY_NAME + " CRM" : "Lunery CRM"}</span>
         </div>
         
         <div className="flex-1 overflow-y-auto py-6">
-          <nav className="space-y-1 px-3">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href;
-              const isMessages = item.href === '/dashboard/messages';
-              return (
-                <Link
-                  key={item.name}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  href={item.href}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all ${isActive ? 'bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}
-                >
-                  <item.icon className={`mr-3 flex-shrink-0 h-5 w-5 ${isActive ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
-                  <span className="flex-1">{item.name}</span>
-                  {isMessages && unreadCount > 0 && (
-                    <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                      {unreadCount}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-            {user?.role === 'OWNER' && (
+                    <nav className="space-y-4 px-3">
+            {navigation.map((group, groupIdx) => (
+              <div key={groupIdx}>
+                <h3 className="px-3 text-xs font-bold text-pink-400 uppercase tracking-wider mb-2">{group.group}</h3>
+                <div className="space-y-1">
+                  {group.items.map((item: any) => {
+                    const isActive = pathname === item.href;
+                    const isMessages = item.href === '/dashboard/messages';
+                    return (
+                      <Link
+                        key={item.name}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        href={item.href}
+                        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all group ${isActive ? 'bg-pink-50 text-pink-700 border-l-2 border-pink-500' : 'text-slate-500 hover:text-pink-600 hover:bg-pink-50'}`}
+                      >
+                        <item.icon className={`mr-3 flex-shrink-0 h-5 w-5 ${isActive ? 'text-pink-600' : 'text-slate-400 group-hover:text-pink-500'}`} />
+                        <span className="flex-1">{item.name}</span>
+                        {isMessages && unreadCount > 0 && (
+                          <span className="bg-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+{user?.role === 'OWNER' && (
               <Link
                 href="/dashboard/referrals"
                 className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   pathname === '/dashboard/referrals'
-                    ? 'bg-indigo-50 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-primary/10 text-indigo-700'
+                    : 'text-muted-foreground hover:bg-background hover:text-foreground'
                 }`}
               >
                 <Users className="w-5 h-5 mr-3" />
@@ -215,11 +279,11 @@ export default function DashboardLayout({
               <p className="text-sm font-medium text-gray-700">
                 {user.name} <span className="text-gray-400 font-normal">#{user.id}</span>
               </p>
-              <p className="text-xs font-medium text-gray-500">{user.role}</p>
+              <p className="text-xs font-medium text-muted-foreground">{user.role}</p>
             </div>
             <button 
               onClick={logout}
-              className="ml-auto text-slate-500 hover:text-white transition-colors"
+              className="ml-auto text-muted-foreground hover:text-white transition-colors"
             >
               <LogOut className="h-5 w-5" />
             </button>
@@ -229,16 +293,16 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 justify-between shrink-0">
+        <header className="h-16 bg-card border-b border-border flex items-center px-4 md:px-6 justify-between shrink-0">
           <div className="flex items-center gap-3">
             <button 
-              className="p-2 md:hidden text-gray-600 hover:text-gray-900 focus:outline-none" 
+              className="p-2 md:hidden text-muted-foreground hover:text-foreground focus:outline-none" 
               onClick={() => setIsMobileMenuOpen(true)}
             >
               <Menu className="w-6 h-6" />
             </button>
-            <h1 className="text-lg font-medium text-gray-900 truncate max-w-[150px] sm:max-w-xs">
-              {navigation.find(n => n.href === pathname)?.name || 'Dashboard'}
+            <h1 className="text-lg font-medium text-foreground truncate max-w-[150px] sm:max-w-xs">
+              {navigation.flatMap(g => g.items).find(n => n.href === pathname)?.name || 'Dashboard'}
             </h1>
           </div>
           
@@ -249,28 +313,28 @@ export default function DashboardLayout({
           <div className="relative">
             <button 
               onClick={() => setIsNotifOpen(!isNotifOpen)}
-              className="p-2 text-gray-400 hover:text-gray-500 relative"
+              className="p-2 text-gray-400 hover:text-muted-foreground relative"
             >
               <Bell className="w-6 h-6" />
               {notifications.filter(n => !n.is_read).length > 0 && (
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500/100 border-2 border-white rounded-full"></span>
               )}
             </button>
             
             {isNotifOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50 max-h-[400px] overflow-y-auto">
-                <h3 className="px-4 py-2 font-semibold text-gray-900 border-b border-gray-100">Уведомления</h3>
+              <div className="absolute right-0 mt-2 w-80 bg-card rounded-xl shadow-lg border border-border py-2 z-50 max-h-[400px] overflow-y-auto">
+                <h3 className="px-4 py-2 font-semibold text-foreground border-b border-border">Уведомления</h3>
                 {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-gray-500">Нет новых уведомлений</div>
+                  <div className="p-4 text-center text-sm text-muted-foreground">Нет новых уведомлений</div>
                 ) : (
                   notifications.map(n => (
                     <div 
                       key={n.id} 
                       onClick={() => markNotificationRead(n.id)}
-                      className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0 ${!n.is_read ? 'bg-indigo-50/50' : 'opacity-70'}`}
+                      className={`px-4 py-3 hover:bg-background cursor-pointer border-b border-border last:border-0 ${!n.is_read ? 'bg-primary/10/50' : 'opacity-70'}`}
                     >
-                      <h4 className={`text-sm font-medium ${!n.is_read ? 'text-indigo-900' : 'text-gray-900'}`}>{n.type}</h4>
-                      <p className="text-xs text-gray-500 mt-1">{n.message}</p>
+                      <h4 className={`text-sm font-medium ${!n.is_read ? 'text-indigo-900' : 'text-foreground'}`}>{n.type}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{n.message}</p>
                       <span className="text-[10px] text-gray-400 mt-2 block">{new Date(n.created_at).toLocaleString('ru-RU')}</span>
                     </div>
                   ))

@@ -23,6 +23,8 @@ export default function SourcesPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
 
   const fetchSources = async () => {
     try {
@@ -41,6 +43,7 @@ export default function SourcesPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const res = await api.post('/sources/', formData);
       const newSourceId = res.data.id;
@@ -49,7 +52,7 @@ export default function SourcesPage() {
         const fd = new FormData();
         fd.append('file', file);
         await api.post(`/sources/${newSourceId}/files`, fd, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 'Content-Type': undefined }
         });
       }
 
@@ -60,6 +63,8 @@ export default function SourcesPage() {
     } catch (err) {
       alert('Ошибка при создании источника');
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -74,15 +79,18 @@ export default function SourcesPage() {
   };
 
   const handleFileUpload = async (sourceId: number, file: File) => {
+    setUploadingId(sourceId);
     const fd = new FormData();
     fd.append('file', file);
     try {
       await api.post(`/sources/${sourceId}/files`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': undefined }
       });
       fetchSources();
     } catch (err) {
       alert('Ошибка загрузки файла');
+    } finally {
+      setUploadingId(null);
     }
   };
 
@@ -92,13 +100,13 @@ export default function SourcesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
                 <div>
-          <h2 className="text-2xl font-semibold text-gray-900">Источники и Шаблоны</h2>
-          <p className="text-sm text-gray-500 mt-1">Если хотите добавить источник, пишите Owner'у в личные сообщения на сайте.</p>
+          <h2 className="text-2xl font-semibold text-foreground">Источники и Шаблоны</h2>
+          <p className="text-sm text-muted-foreground mt-1">Если хотите добавить источник, пишите Owner'у в личные сообщения на сайте.</p>
         </div>
         {canEdit && (
           <button 
             onClick={() => { setIsModalOpen(true); setSelectedFiles([]); setFormData({ title: '', content: '' }); }}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+            className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition"
           >
             <Plus className="h-4 w-4 mr-2" />
             Добавить
@@ -107,25 +115,25 @@ export default function SourcesPage() {
       </div>
 
       {loading ? (
-        <div className="p-8 text-center text-gray-500">Загрузка...</div>
+        <div className="p-8 text-center text-muted-foreground">Загрузка...</div>
       ) : sources.length === 0 ? (
-        <div className="p-8 text-center bg-white rounded-xl shadow-sm border border-gray-200 text-gray-500">
+        <div className="p-8 text-center bg-card rounded-xl shadow-sm border border-border text-muted-foreground">
           Источники пока не добавлены
         </div>
       ) : (
         <div className="space-y-4">
           {sources.map(m => (
-            <div key={m.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div key={m.id} className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
               <div 
-                className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50"
+                className="p-4 flex justify-between items-center cursor-pointer hover:bg-background"
                 onClick={() => setExpandedId(expandedId === m.id ? null : m.id)}
               >
                 <div className="flex items-center space-x-3">
                   <Globe className="text-indigo-500 h-5 w-5" />
-                  <h3 className="font-semibold text-gray-900">{m.title}</h3>
+                  <h3 className="font-semibold text-foreground">{m.title}</h3>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     {new Date(m.created_at).toLocaleDateString('ru-RU')}
                   </span>
                   {expandedId === m.id ? <ChevronUp className="h-5 w-5 text-gray-400" /> : <ChevronDown className="h-5 w-5 text-gray-400" />}
@@ -133,21 +141,21 @@ export default function SourcesPage() {
               </div>
               
               {expandedId === m.id && (
-                <div className="p-4 border-t border-gray-100 bg-gray-50">
+                <div className="p-4 border-t border-border bg-background">
                   <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap mb-4">
                     {m.content}
                   </div>
                   
                   {m.files && m.files.length > 0 && (
                     <div className="mt-4">
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Прикрепленные файлы</h4>
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Прикрепленные файлы</h4>
                       <div className="flex flex-wrap gap-2">
                         {m.files.map((fileUrl, idx) => (
                           <a 
                             key={idx} 
                             href={(api.defaults.baseURL || '') + fileUrl}
                             target="_blank" rel="noreferrer"
-                            className="flex items-center px-3 py-1.5 bg-white border border-gray-200 rounded-md text-xs hover:border-indigo-500 transition"
+                            className="flex items-center px-3 py-1.5 bg-card border border-border rounded-md text-xs hover:border-indigo-500 transition"
                           >
                             <FileText className="h-3 w-3 mr-1.5 text-gray-400" />
                             Файл {idx + 1}
@@ -158,21 +166,28 @@ export default function SourcesPage() {
                   )}
 
                   {canEdit && (
-                    <div className="mt-6 flex items-center justify-between pt-4 border-t border-gray-200">
+                    <div className="mt-6 flex items-center justify-between pt-4 border-t border-border">
                       <div>
-                        <label className="flex items-center px-3 py-1.5 border border-indigo-200 text-indigo-700 rounded-md text-xs font-medium cursor-pointer hover:bg-indigo-50">
-                          <Upload className="h-3 w-3 mr-1.5" />
-                          Прикрепить файл
-                          <input 
-                            type="file" 
-                            className="hidden" 
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                handleFileUpload(m.id, e.target.files[0]);
-                              }
-                            }}
-                          />
-                        </label>
+                        {uploadingId === m.id ? (
+                          <div className="flex items-center px-3 py-1.5 text-indigo-700 text-xs font-medium">
+                            <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-indigo-700 mr-1.5"></span>
+                            Загрузка...
+                          </div>
+                        ) : (
+                          <label className="flex items-center px-3 py-1.5 border border-indigo-200 text-indigo-700 rounded-md text-xs font-medium cursor-pointer hover:bg-primary/10">
+                            <Upload className="h-3 w-3 mr-1.5" />
+                            Прикрепить файл
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleFileUpload(m.id, e.target.files[0]);
+                                }
+                              }}
+                            />
+                          </label>
+                        )}
                       </div>
                       <button 
                         onClick={() => handleDelete(m.id)}
@@ -192,8 +207,8 @@ export default function SourcesPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Новый источник/шаблон</h3>
+          <div className="bg-card rounded-xl shadow-xl w-full max-w-2xl p-6">
+            <h3 className="text-lg font-medium text-foreground mb-4">Новый источник/шаблон</h3>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Название (Тема)</label>
@@ -222,29 +237,28 @@ export default function SourcesPage() {
                   type="file" 
                   multiple
                   onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))}
-                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                  className="mt-1 block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-indigo-700 hover:file:bg-primary/20"
                 />
                 {selectedFiles.length > 0 && (
-                  <div className="mt-2 text-xs text-gray-500 flex flex-col space-y-1">
+                  <div className="mt-2 text-xs text-muted-foreground flex flex-col space-y-1">
                     {selectedFiles.map((f, i) => (
                       <span key={i}>- {f.name}</span>
                     ))}
                   </div>
                 )}
               </div>
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+              <div className="flex justify-end space-x-3 pt-4 border-t border-border">
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-background"
                 >
                   Отмена
                 </button>
-                <button 
-                  type="submit"
-                  className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700"
-                >
-                  Сохранить
+                <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-primary border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 flex items-center">
+                  {isSubmitting ? (
+                    <><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span> Создание...</>
+                  ) : "Сохранить"}
                 </button>
               </div>
             </form>

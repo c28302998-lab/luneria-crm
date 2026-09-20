@@ -123,7 +123,7 @@ export default function TasksPage() {
     formData.append('file', file);
     try {
       await api.post(`/tasks/${taskId}/files`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': undefined }
       });
       fetchData();
     } catch (err) {
@@ -149,9 +149,9 @@ export default function TasksPage() {
   );
 
   return (
-      <div key={task.id} className={`bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition ${isOverdue ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
+      <div key={task.id} className={`bg-card rounded-xl shadow-sm border p-5 hover:shadow-md transition ${isOverdue ? 'border-red-300 bg-red-500/10' : 'border-border'}`}>
         <div className="flex justify-between items-start mb-4">
-          <h3 className="text-lg font-medium text-gray-900 line-clamp-2">{task.title}</h3>
+          <h3 className="text-lg font-medium text-foreground line-clamp-2">{task.title}</h3>
           <div className="flex items-center gap-2">
             <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
               task.priority === 'HIGH' ? 'bg-red-100 text-red-700' :
@@ -171,32 +171,32 @@ export default function TasksPage() {
             )}
           </div>
         </div>
-        <p className="text-sm text-gray-500 mb-4 line-clamp-3">{task.description}</p>
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-3">{task.description}</p>
         
-        <div className="mb-4 text-sm text-gray-600">
+        <div className="mb-4 text-sm text-muted-foreground">
           <span className="font-medium">Исполнитель:</span> {getAssigneeName(task.assigned_user_id)}
         </div>
 
         {task.deadline && (
-          <div className={`text-xs mb-3 font-semibold ${isOverdue ? 'text-red-600' : 'text-gray-500'}`}>
+          <div className={`text-xs mb-3 font-semibold ${isOverdue ? 'text-red-600' : 'text-muted-foreground'}`}>
             Срок: {new Date(task.deadline).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' })}
           </div>
         )}
         
         
-          <div className="flex items-center text-xs text-gray-500">
+          <div className="flex items-center text-xs text-muted-foreground">
             <Clock className="w-4 h-4 mr-1" />
             {task.status}
           </div>
           
         {task.files && task.files.length > 0 && (
           <div className="mb-4">
-            <p className="text-xs font-semibold text-gray-500 mb-2">ПРИКРЕПЛЕННЫЕ ФАЙЛЫ:</p>
+            <p className="text-xs font-semibold text-muted-foreground mb-2">ПРИКРЕПЛЕННЫЕ ФАЙЛЫ:</p>
             <div className="flex flex-col gap-1">
               {task.files.map((fileUrl: string, idx: number) => {
                 const fileName = fileUrl.split('/').pop() || `Файл ${idx+1}`;
                 return (
-                  <a key={idx} href={(api.defaults.baseURL || '') + fileUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 p-1.5 rounded-md">
+                  <a key={idx} href={(api.defaults.baseURL || '') + fileUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs text-primary hover:text-primary-foreground bg-primary/10 p-1.5 rounded-md">
                     <FileText className="w-3 h-3 mr-1" />
                     {fileName.substring(fileName.indexOf('_')+1)}
                   </a>
@@ -206,14 +206,14 @@ export default function TasksPage() {
           </div>
         )}
         
-        <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
+        <div className="flex flex-col gap-2 pt-4 border-t border-border">
           <div className="flex items-center justify-between">
-            <div className="flex items-center text-xs text-gray-500">
+            <div className="flex items-center text-xs text-muted-foreground">
               <Clock className="w-4 h-4 mr-1" />
               {task.status}
             </div>
             
-            <label className="flex items-center cursor-pointer text-xs font-medium text-gray-500 hover:text-indigo-600">
+            <label className="flex items-center cursor-pointer text-xs font-medium text-muted-foreground hover:text-primary">
               <Upload className="w-4 h-4 mr-1" />
               Прикрепить
               <input type="file" className="hidden" onChange={(e) => {
@@ -223,7 +223,7 @@ export default function TasksPage() {
           </div>
           
           
-          <button onClick={() => toggleComments(task.id)} className="flex items-center text-xs font-medium text-gray-500 hover:text-indigo-600">
+          <button onClick={() => toggleComments(task.id)} className="flex items-center text-xs font-medium text-muted-foreground hover:text-primary">
             <MessageCircle className="w-4 h-4 mr-1" />
             {allComments.filter(c => c.entity_id === task.id).length}
           </button>
@@ -231,7 +231,7 @@ export default function TasksPage() {
           {task.status !== 'COMPLETED' && (
             <button 
               onClick={() => handleComplete(task.id)}
-              className="flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-900"
+              className="flex items-center text-sm font-medium text-primary hover:text-indigo-900"
             >
               <CheckCircle className="w-4 h-4 mr-1" />
               Завершить
@@ -240,18 +240,18 @@ export default function TasksPage() {
         </div>
         
         {expandedComments[task.id] && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-4 pt-4 border-t border-border">
             <div className="space-y-3 mb-3 max-h-40 overflow-y-auto">
               {allComments.filter(c => c.entity_id === task.id).length === 0 ? (
                  <p className="text-xs text-gray-400 text-center">Нет комментариев</p>
               ) : (
                 allComments.filter(c => c.entity_id === task.id).map(c => (
-                  <div key={c.id} className="bg-gray-50 p-2 rounded-md">
+                  <div key={c.id} className="bg-background p-2 rounded-md">
                     <div className="flex justify-between text-[10px] text-gray-400 mb-1">
                       <span className="font-medium text-gray-700">{c.user?.name || `Пользователь #${c.user_id}`}</span>
                       <span>{new Date(c.created_at).toLocaleString('ru-RU')}</span>
                     </div>
-                    <p className="text-xs text-gray-800">{c.text}</p>
+                    <p className="text-xs text-foreground">{c.text}</p>
                   </div>
                 ))
               )}
@@ -262,11 +262,11 @@ export default function TasksPage() {
                 value={newComment[task.id] || ''}
                 onChange={(e) => setNewComment(prev => ({...prev, [task.id]: e.target.value}))}
                 placeholder="Комментарий..."
-                className="flex-1 border border-gray-200 rounded text-xs px-2 py-1 focus:outline-none focus:border-indigo-500"
+                className="flex-1 border border-border rounded text-xs px-2 py-1 focus:outline-none focus:border-indigo-500"
               />
               <button 
                 onClick={() => handleAddComment(task.id)}
-                className="bg-indigo-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-indigo-700"
+                className="bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium hover:bg-primary/90"
               >
                 Отправить
               </button>
@@ -294,12 +294,12 @@ export default function TasksPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-gray-900">Задачи</h2>
+        <h2 className="text-2xl font-semibold text-foreground">Задачи</h2>
         
         {(user?.role === 'OWNER' || user?.role === 'CURATOR') && (
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+            className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition"
           >
             <Plus className="h-4 w-4 mr-2" />
             Новая задача
@@ -308,9 +308,9 @@ export default function TasksPage() {
       </div>
 
       {loading ? (
-        <div className="p-8 text-center text-gray-500">Загрузка...</div>
+        <div className="p-8 text-center text-muted-foreground">Загрузка...</div>
       ) : filteredTasks.length === 0 ? (
-        <div className="p-8 text-center text-gray-500 bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="p-8 text-center text-muted-foreground bg-card rounded-xl shadow-sm border border-border">
           <p>Задач пока нет</p>
         </div>
       ) : (
@@ -327,10 +327,10 @@ export default function TasksPage() {
           )}
           
           <div>
-            <h3 className="text-lg font-bold text-gray-800 mb-4 mt-6">Текущие задачи</h3>
+            <h3 className="text-lg font-bold text-foreground mb-4 mt-6">Текущие задачи</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {activeTasks.length > 0 ? activeTasks.map(renderTaskCard) : (
-                <div className="col-span-3 text-gray-500">Все текущие задачи выполнены или пропущены.</div>
+                <div className="col-span-3 text-muted-foreground">Все текущие задачи выполнены или пропущены.</div>
               )}
             </div>
           </div>
@@ -339,8 +339,8 @@ export default function TasksPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Новая задача</h3>
+          <div className="bg-card rounded-xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-lg font-medium text-foreground mb-4">Новая задача</h3>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Заголовок</label>
@@ -398,17 +398,17 @@ export default function TasksPage() {
                   />
                 </div>
               </div>
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+              <div className="flex justify-end space-x-3 pt-4 border-t border-border">
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-background"
                 >
                   Отмена
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700"
+                  className="px-4 py-2 bg-primary border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary/90"
                 >
                   Создать
                 </button>

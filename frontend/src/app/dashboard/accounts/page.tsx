@@ -166,38 +166,38 @@ export default function AccountsPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'FREE': return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Свободен</span>;
+      case 'FREE': return <span className="px-2 py-1 bg-muted text-foreground rounded-full text-xs font-medium">Свободен</span>;
       case 'ISSUED': return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Выдан</span>;
       case 'IN_PROGRESS': return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">В работе</span>;
       case 'ISSUE': return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Проблема</span>;
       case 'NEEDS_REPLACEMENT': return <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">На замену</span>;
-      case 'RETURNED': return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Возвращен</span>;
+      case 'RETURNED': return <span className="px-2 py-1 bg-muted text-foreground rounded-full text-xs font-medium">Возвращен</span>;
       case 'RECEIVED': return <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Получен</span>;
-      default: return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">{status}</span>;
+      default: return <span className="px-2 py-1 bg-muted text-foreground rounded-full text-xs font-medium">{status}</span>;
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Загрузка...</div>;
+  if (loading) return <div className="p-8 text-center text-muted-foreground">Загрузка...</div>;
 
   const displayAccounts = activeTab === 'FREE' ? accounts.filter(a => a.status === 'FREE') : accounts;
 
   return (
     <div className="space-y-6 max-w-6xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-          <Key className="w-6 h-6 mr-3 text-indigo-600" />
+        <h1 className="text-2xl font-bold text-foreground flex items-center">
+          <Key className="w-6 h-6 mr-3 text-primary" />
           Инвентарь аккаунтов
         </h1>
         {(user?.role === 'OWNER' || user?.role === 'CURATOR') && activeTab !== 'EMAILS' && (
           <div className="flex items-center gap-2">
-            <button onClick={handleSyncLegacy} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition">Синхронизировать TG</button>
-            <button onClick={() => setShowModal(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">+ Добавить аккаунт</button>
+            <button onClick={handleSyncLegacy} className="bg-gray-200 text-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition">Синхронизировать TG</button>
+            <button onClick={() => setShowModal(true)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition">+ Добавить аккаунт</button>
           </div>
         )}
         {(user?.role === 'OWNER' || user?.role === 'CURATOR') && activeTab === 'EMAILS' && (
           <button 
             onClick={() => setShowEmailModal(true)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition"
           >
             + Добавить почту
           </button>
@@ -205,22 +205,22 @@ export default function AccountsPage() {
       </div>
 
       {(user?.role === 'OWNER' || user?.role === 'CURATOR') && (
-        <div className="flex space-x-6 border-b border-gray-200">
+        <div className="flex space-x-6 border-b border-border">
           <button 
             onClick={() => setActiveTab('ALL')} 
-            className={`pb-2 text-sm font-medium transition-colors ${activeTab === 'ALL' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-2 text-sm font-medium transition-colors ${activeTab === 'ALL' ? 'border-b-2 border-indigo-600 text-primary' : 'text-muted-foreground hover:text-gray-700'}`}
           >
             Все аккаунты
           </button>
           <button 
             onClick={() => setActiveTab('FREE')} 
-            className={`pb-2 text-sm font-medium transition-colors ${activeTab === 'FREE' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-2 text-sm font-medium transition-colors ${activeTab === 'FREE' ? 'border-b-2 border-indigo-600 text-primary' : 'text-muted-foreground hover:text-gray-700'}`}
           >
             Свободные / Новые
           </button>
           <button 
             onClick={() => setActiveTab('EMAILS')} 
-            className={`pb-2 text-sm font-medium transition-colors ${activeTab === 'EMAILS' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-2 text-sm font-medium transition-colors ${activeTab === 'EMAILS' ? 'border-b-2 border-indigo-600 text-primary' : 'text-muted-foreground hover:text-gray-700'}`}
           >
             Почты к аккаунтам
           </button>
@@ -228,17 +228,17 @@ export default function AccountsPage() {
       )}
 
       {activeTab !== 'EMAILS' ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-gray-50/50 border-b border-gray-100">
+              <thead className="bg-background/50 border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">ID / Логин / Номер</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">За кем закреплен</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Партнер</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Дата выдачи</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Статус</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Действия</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">ID / Логин / Номер</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">За кем закреплен</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Партнер</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Дата выдачи</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Статус</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Действия</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -249,18 +249,18 @@ export default function AccountsPage() {
                   const workerName = workerCandidate ? `${workerCandidate.first_name} ${workerCandidate.last_name}`.trim() : 'Worker';
                   
                   return (
-                    <tr key={acc.id} className="hover:bg-gray-50/50 transition-colors">
+                    <tr key={acc.id} className="hover:bg-background/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div className="font-medium text-gray-900">#{acc.id} {acc.login}</div>
-                        {acc.account_number && <div className="text-gray-500 text-xs">Номер: {acc.account_number}</div>}
+                        <div className="font-medium text-foreground">#{acc.id} {acc.login}</div>
+                        {acc.account_number && <div className="text-muted-foreground text-xs">Номер: {acc.account_number}</div>}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {worker ? `${workerName} (Админ: ID ${worker.admin_id})` : 'Не закреплен'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {partner ? partner.company_name : 'Не выбран'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {acc.issued_at ? new Date(acc.issued_at).toLocaleDateString() : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -272,7 +272,7 @@ export default function AccountsPage() {
                             {acc.status !== 'RECEIVED' && (
                               <button onClick={() => handleUpdateStatus(acc.id, 'RECEIVED')} className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded border border-green-200 hover:bg-green-100">Получил</button>
                             )}
-                            <button onClick={() => handleUpdateStatus(acc.id, 'ISSUE')} className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded border border-red-200 hover:bg-red-100">Проблема</button>
+                            <button onClick={() => handleUpdateStatus(acc.id, 'ISSUE')} className="text-xs bg-red-500/10 text-red-600 px-2 py-1 rounded border border-red-200 hover:bg-red-100">Проблема</button>
                             <button onClick={() => handleUpdateStatus(acc.id, 'NEEDS_REPLACEMENT')} className="text-xs bg-orange-50 text-orange-600 px-2 py-1 rounded border border-orange-200 hover:bg-orange-100">Нужна замена</button>
                           </div>
                         ) : (
@@ -308,7 +308,7 @@ export default function AccountsPage() {
                 })}
                 {displayAccounts.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">Нет аккаунтов</td>
+                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">Нет аккаунтов</td>
                   </tr>
                 )}
               </tbody>
@@ -316,24 +316,24 @@ export default function AccountsPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
           <table className="w-full text-left">
-            <thead className="bg-gray-50/50 border-b border-gray-100">
+            <thead className="bg-background/50 border-b border-border">
               <tr>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Адрес почты</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Привязана к аккаунту</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Действия</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">ID</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Адрес почты</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Привязана к аккаунту</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Действия</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {emails.map(email => {
                 const linkedAcc = accounts.find(a => a.id === email.account_id);
                 return (
-                  <tr key={email.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{email.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{email.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <tr key={email.id} className="hover:bg-background/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">#{email.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{email.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {email.linked_account_name || 'Не привязана'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -346,7 +346,7 @@ export default function AccountsPage() {
               })}
               {emails.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">Нет сохраненных почт</td>
+                  <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">Нет сохраненных почт</td>
                 </tr>
               )}
             </tbody>
@@ -356,8 +356,8 @@ export default function AccountsPage() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Добавить аккаунт {activeTab === 'FREE' && '(Свободный)'}</h3>
+          <div className="bg-card rounded-2xl w-full max-w-md p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-foreground mb-4">Добавить аккаунт {activeTab === 'FREE' && '(Свободный)'}</h3>
             <form onSubmit={handleCreateAccount} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Имя аккаунта (Логин / Ник) *</label>
@@ -432,13 +432,13 @@ export default function AccountsPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  className="px-4 py-2 text-gray-700 bg-muted rounded-lg hover:bg-gray-200"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                  className="px-4 py-2 text-white bg-primary rounded-lg hover:bg-primary/90"
                 >
                   Сохранить
                 </button>
@@ -450,8 +450,8 @@ export default function AccountsPage() {
 
       {showEmailModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Добавить почту</h3>
+          <div className="bg-card rounded-2xl w-full max-w-md p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-foreground mb-4">Добавить почту</h3>
             <form onSubmit={handleCreateEmail} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Адрес почты *</label>
@@ -479,13 +479,13 @@ export default function AccountsPage() {
                 <button
                   type="button"
                   onClick={() => setShowEmailModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  className="px-4 py-2 text-gray-700 bg-muted rounded-lg hover:bg-gray-200"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                  className="px-4 py-2 text-white bg-primary rounded-lg hover:bg-primary/90"
                 >
                   Сохранить
                 </button>
@@ -498,8 +498,8 @@ export default function AccountsPage() {
       {/* Edit Account Modal */}
       {editingAccount && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Редактировать аккаунт</h3>
+          <div className="bg-card rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Редактировать аккаунт</h3>
             <form onSubmit={handleEditAccount} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Имя аккаунта (Логин / Ник) *</label>
@@ -556,13 +556,13 @@ export default function AccountsPage() {
                 <button
                   type="button"
                   onClick={() => setEditingAccount(null)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-muted rounded-lg hover:bg-gray-200"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90"
                 >
                   Сохранить
                 </button>

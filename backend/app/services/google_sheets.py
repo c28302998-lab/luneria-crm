@@ -1,215 +1,188 @@
-import os
 import json
-from concurrent.futures import ThreadPoolExecutor
-import asyncio
-from datetime import datetime
-
-try:
-    import gspread
-    from google.oauth2.service_account import Credentials
-except ImportError:
-    gspread = None
-    Credentials = None
+import os
+import gspread
+from google.oauth2.service_account import Credentials
+from typing import Optional, Dict
+import traceback
 
 SCOPES = [
-    'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive'
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
 ]
 
-executor = ThreadPoolExecutor(max_workers=3)
+DEFAULT_CREDS = {"type": "service_account"}
 
-class GoogleSheetsService:
-    def __init__(self):
-        self.credentials_json = os.getenv("GOOGLE_SHEETS_CREDENTIALS")
-        self.spreadsheet_id = os.getenv("GOOGLE_SHEETS_ID")
-        self.client = None
+DEFAULT_SHEET_ID = "1nBXm-dvnGWs9Lf79q2nz7RnvANc5kgPBIFVGmCGbZIg"
 
-        if not gspread or not Credentials:
-            print("Google Sheets dependencies not installed.")
-            return
-
-        if self.credentials_json and self.spreadsheet_id:
-            try:
-                creds_dict = json.loads(self.credentials_json)
-                credentials = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
-                self.client = gspread.authorize(credentials)
-            except Exception as e:
-                print(f"Failed to initialize Google Sheets: {e}")
-
-    def _sync_new_worker_sync(self, worker_data: dict):
-        if not self.client:
-            return
+def get_gspread_client() -> Optional[gspread.Client]:
+    creds_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+    creds_dict = DEFAULT_CREDS
+    
+    if creds_json:
         try:
-            sheet = self.client.open_by_key(self.spreadsheet_id)
-            
-            # 1. Запись на лист "Люди"
+            creds_dict = json.loads(creds_json)
+        except Exception:
+            pass
+
+    try:
+        creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+        return gspread.authorize(creds)
+    except Exception as e:
+        print(f"Error authenticating with Google Sheets: {e}")
+        return None
+
+def sync_account_to_sheets(
+    account_id: int, 
+    account_name: str, 
+    phone: str, 
+    password: str, 
+    worker_name: str, 
+    admin_name: str, 
+    start_date: str,
+    action: str = "UPDATE",
+    partner_name: str = None,
+    email_address: str = ""
+):
+    sheet_id = os.environ.get("GOOGLE_SHEET_ID") or DEFAULT_SHEET_ID
+        
+    client = get_gspread_client()
+    if not client:
+        return
+
+    try:
+        sheet = client.open_by_key(sheet_id).sheet1
+        
+        # 1. Update Main Accounts Sheet
+        
+        # Check if this CRM instance has a custom tab name configured in Render Env Vars
+        import os
+        custom_tab_name = os.environ.get("GOOGLE_SHEET_TAB_NAME")
+        
+        target_tab_name = partner_name or custom_tab_name
+        
+        if target_tab_name:
             try:
-                ws_people = sheet.worksheet("Люди")
-                col_a = ws_people.col_values(1)
-                next_row = len(col_a) + 1
-                new_id = f"id {next_row-1:03d}" if next_row > 1 else "id 001"
-                
-                row_data_people = [
-                    new_id,
-                    worker_data.get("candidate_name", ""),
-                    worker_data.get("referrer_name", ""),
-                    worker_data.get("created_at", datetime.now().strftime("%d.%m.%Y")),
-                    worker_data.get("status", "В работе"),
-                    worker_data.get("telegram", ""),
-                    worker_data.get("partner_name", "")
-                ]
-                ws_people.update(f"A{next_row}", [row_data_people])
-            except Exception as e:
-                print(f"Error updating Люди: {e}")
-
-            # 2. Заготовка в Реферальной структуре
-            partner = worker_data.get("partner_name", "")
-            if partner:
-                try:
-                    ws_ref = sheet.worksheet(f"Реферальная структура {partner}")
-                    ref_col_a = ws_ref.col_values(1)
-                    ref_next_row = len(ref_col_a) + 1
-                    row_data_ref = [
-                        worker_data.get("candidate_name", ""), # Человек
-                        worker_data.get("referrer_name", ""), # Реферер
-                        worker_data.get("status", "В работе"), # Статус
-                        worker_data.get("created_at", datetime.now().strftime("%d.%m.%Y")), # Дата регистрации
-                        "", # Дата первой смены
-                        worker_data.get("telegram", ""), # Telegram
-                        "0", # Доход
-                        "", # Аккаунт человека
-                        "", # Аккаунт реферера
-                        partner # Агенция
-                    ]
-                    ws_ref.update(f"A{ref_next_row}", [row_data_ref])
-                except gspread.exceptions.WorksheetNotFound:
-                    print(f"Worksheet Реферальная структура {partner} not found")
-                except Exception as e:
-                    print(f"Error updating Реферальная: {e}")
-
-        except Exception as e:
-            print(f"Google Sheets sync error (worker): {e}")
-
-    async def sync_new_worker(self, worker_data: dict):
-        if not self.client:
-            return
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(executor, self._sync_new_worker_sync, worker_data)
-
-    def _sync_issued_account_sync(self, account_data: dict):
-        if not self.client:
-            return
-        try:
-            sheet = self.client.open_by_key(self.spreadsheet_id)
-            try:
-                worksheet = sheet.worksheet("Аккаунты")
+                sheet = client.open_by_key(sheet_id).worksheet(target_tab_name)
             except gspread.exceptions.WorksheetNotFound:
-                return
-
-            col_a = worksheet.col_values(1)
-            next_row = len(col_a) + 1
-            new_id = f"ID {next_row-1:03d}" if next_row > 1 else "ID 001"
-            
+                sheet = client.open_by_key(sheet_id).add_worksheet(title=target_tab_name, rows="1000", cols="20")
+                sheet.insert_row(["ID", "Имя аккаунта", "Номер", "Пароль 2FA", "Воркер", "Админ", "Дата назначения", "Дата выхода", "Почта"], 1)
+        
+        records = sheet.get_all_records(expected_headers=[])
+        if not records and not sheet.row_values(1):
+            sheet.insert_row(["ID", "Имя аккаунта", "Номер", "Пароль 2FA", "Воркер", "Админ", "Дата назначения", "Дата выхода", "Почта"], 1)
+        
+        # Find row by account_id
+        try:
+            cell = sheet.find(str(account_id), in_column=1)
+        except gspread.exceptions.CellNotFound:
+            cell = None
+        
+        if action == "Удаление аккаунта":
+            if cell:
+                sheet.delete_rows(cell.row)
+        else:
             row_data = [
-                new_id,
-                account_data.get("account_name", ""),
-                account_data.get("account_number", ""),
-                account_data.get("admin_name", ""), # Закреплен за
-                account_data.get("status", "В работе"),
-                account_data.get("password_tg", ""),
-                "", # Gmail
-                "", # Password Gmail
-                "" # Status 2
+                str(account_id),
+                account_name or "",
+                phone or "",
+                password or "",
+                worker_name or "Свободен",
+                admin_name or "Без админа",
+                start_date or "",
+                "", # Дата выхода (leave empty on create/update)
+                email_address or ""
             ]
-            worksheet.update(f"A{next_row}", [row_data])
-        except Exception as e:
-            print(f"Google Sheets sync error (account): {e}")
+            if cell:
+                sheet.update(f"A{cell.row}:I{cell.row}", [row_data])
+            else:
+                sheet.append_row(row_data)
 
-    async def sync_issued_account(self, account_data: dict):
-        if not self.client:
-            return
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(executor, self._sync_issued_account_sync, account_data)
-
-    def _sync_income_sync(self, income_data: dict):
-        if not self.client:
-            return
+        # 2. Log changes to 'Логи' sheet
         try:
-            sheet = self.client.open_by_key(self.spreadsheet_id)
-            partner = income_data.get("partner_name", "")
-            if not partner:
-                return
-                
-            try:
-                worksheet = sheet.worksheet(f"Реферальная структура {partner}")
-            except gspread.exceptions.WorksheetNotFound:
-                return
-
-            names = worksheet.col_values(1) # Column A is Человек
-            worker_name = income_data.get("worker_name", "")
+            log_sheet = client.open_by_key(sheet_id).worksheet("Логи")
+        except gspread.exceptions.WorksheetNotFound:
+            log_sheet = client.open_by_key(sheet_id).add_worksheet(title="Логи", rows="1000", cols="5")
+            log_sheet.insert_row(["Дата и Время", "Аккаунт", "Действие", "Воркер", "Админ"], 1)
             
+        import datetime
+        now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_sheet.append_row([
+            now_str, 
+            account_name or str(account_id),
+            action,
+            worker_name or "Свободен",
+            admin_name or "Без админа"
+        ])
+
+    except Exception as e:
+        print(f"Error syncing to Google Sheets: {e}")
+        traceback.print_exc()
+
+
+def set_shift_date_for_accounts(account_ids: list, shift_date: str):
+    sheet_id = os.environ.get("GOOGLE_SHEET_ID") or DEFAULT_SHEET_ID
+    client = get_gspread_client()
+    if not client: return
+    
+    try:
+        sheet = client.open_by_key(sheet_id).sheet1
+        for acc_id in account_ids:
             try:
-                row_idx = names.index(worker_name) + 1
-            except ValueError:
-                # Person not found, append a new row
-                row_idx = len(names) + 1
-                worksheet.update(f"A{row_idx}", [[worker_name, "", "", "", "", "", "0"]])
-                
-            # Update Date of first shift (Col E) if empty
-            col_e = worksheet.col_values(5)
-            first_shift = col_e[row_idx-1] if row_idx <= len(col_e) else ""
-            if not first_shift or first_shift.strip() == "":
-                worksheet.update(f"E{row_idx}", [[income_data.get("date", "")]])
-                
-            # Add Income (Col G)
-            col_g = worksheet.col_values(7)
-            current_income = col_g[row_idx-1] if row_idx <= len(col_g) else "0"
-            try:
-                # Try to sum it up if it's a number
-                curr_val = float(current_income.replace(",", "."))
-                new_val = float(income_data.get("income", 0))
-                total = curr_val + new_val
-                worksheet.update(f"G{row_idx}", [[str(total)]])
-            except:
-                # If parsing fails, just overwrite
-                worksheet.update(f"G{row_idx}", [[str(income_data.get("income", 0))]])
+                cell = sheet.find(str(acc_id), in_column=1)
+                if cell:
+                    # Column H (8) is "Дата первой смены" (First Shift)
+                    current_first_shift = sheet.cell(cell.row, 8).value
+                    if not current_first_shift:
+                        sheet.update_cell(cell.row, 8, shift_date)
+                    
+                    # Column J (10) is "Дата текущей/последней смены" (Current Shift)
+                    sheet.update_cell(cell.row, 10, shift_date)
+            except gspread.exceptions.CellNotFound:
+                continue
+    except Exception as e:
+        print(f"Error setting shift date in Sheets: {e}")
 
-        except Exception as e:
-            print(f"Google Sheets sync error (income): {e}")
-
-    async def sync_income(self, income_data: dict):
-        if not self.client:
-            return
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(executor, self._sync_income_sync, income_data)
-
-    def _sync_partner_sync(self, partner_data: dict):
-        if not self.client:
-            return
+def sync_partner_to_sheets(partner_id: int, company_name: str, contact: str, country: str, seats: int, payment_terms: str, experience: str, registration_time: str, response_time: str, rating: float, last_contact_date: str, advances: str, schedules: str):
+    try:
+        client = get_gspread_client()
+        if not client: return
+        sheet = client.open_by_key(DEFAULT_SHEET_ID)
+        
         try:
-            sheet = self.client.open_by_key(self.spreadsheet_id)
-            try:
-                worksheet = sheet.worksheet("Partner")
-            except gspread.exceptions.WorksheetNotFound:
-                return
-
-            col_a = worksheet.col_values(1)
-            next_row = len(col_a) + 1
+            worksheet = sheet.worksheet("Партнеры")
+        except gspread.exceptions.WorksheetNotFound:
+            worksheet = sheet.add_worksheet(title="Партнеры", rows="1000", cols="20")
+            headers = ["ID", "Агентство", "Контакт", "Страна", "Места", "Оплата", "Опыт", "Регистрация", "Ответ", "Рейтинг", "Последний контакт", "Авансы", "Графики"]
+            worksheet.append_row(headers)
             
-            row_data = [
-                partner_data.get("name", ""),
-                partner_data.get("contact", ""),
-                partner_data.get("notes", ""),
-                partner_data.get("schedule", "")
-            ]
-            worksheet.update(f"A{next_row}", [row_data])
-        except Exception as e:
-            print(f"Google Sheets sync error (partner): {e}")
-
-    async def sync_partner(self, partner_data: dict):
-        if not self.client:
-            return
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(executor, self._sync_partner_sync, partner_data)
-
-sheets_service = GoogleSheetsService()
+        records = worksheet.get_all_records()
+        row_idx = None
+        for i, record in enumerate(records):
+            if str(record.get("ID", "")) == str(partner_id):
+                row_idx = i + 2
+                break
+                
+        row_data = [
+            str(partner_id),
+            company_name or "",
+            contact or "",
+            country or "",
+            str(seats) if seats is not None else "0",
+            payment_terms or "",
+            experience or "",
+            registration_time or "",
+            response_time or "",
+            str(rating) if rating is not None else "",
+            last_contact_date or "",
+            advances or "",
+            schedules or ""
+        ]
+        
+        if row_idx:
+            worksheet.update(f"A{row_idx}:M{row_idx}", [row_data])
+        else:
+            worksheet.append_row(row_data)
+            
+    except Exception as e:
+        print("Error syncing partner to sheets:", e)
+        traceback.print_exc()

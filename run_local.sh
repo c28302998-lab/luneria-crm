@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Запуск локальной версии Luneria CRM..."
+echo "Запуск локальной версии Lunery CRM..."
 
 echo "1. Установка зависимостей Backend..."
 cd backend
@@ -8,7 +8,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 pip install python-multipart
 # Запуск миграций / seed.py для SQLite
-export DATABASE_URL="sqlite:///./luneria_local.db"
+export DATABASE_URL="sqlite:///./lunery_local.db"
 export SECRET_KEY="local_secret"
 python seed.py
 

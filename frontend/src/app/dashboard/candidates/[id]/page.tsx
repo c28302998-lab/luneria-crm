@@ -62,7 +62,7 @@ export default function CandidateDetailPage() {
     setUploadError('');
     try {
       const res = await api.post(`/candidates/${id}/files`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': undefined }
       });
       // reload candidate
       fetchCandidate();
@@ -132,7 +132,7 @@ const fetchCandidate = async () => {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Загрузка...</div>;
+  if (loading) return <div className="p-8 text-center text-muted-foreground">Загрузка...</div>;
   if (!candidate) return <div className="p-8 text-center text-red-500">Кандидат не найден</div>;
 
   const canEdit = user?.role === 'OWNER' || (user?.role === 'ADMIN' && candidate.admin_id === user.id);
@@ -140,8 +140,12 @@ const fetchCandidate = async () => {
   const handleConvertToWorker = async () => {
     if (!confirm('Вы уверены, что хотите перевести этого кандидата в Работники? Он появится в разделе "Работники".')) return;
     try {
-      await api.post('/workers/', { candidate_id: candidate.id });
-      alert('Кандидат успешно переведен в работники!');
+      const { data } = await api.post('/workers/', { candidate_id: candidate.id });
+      if (data.invite_link) {
+         prompt('Кандидат успешно переведен в работники! Скопируйте ссылку-приглашение и отправьте работнику для установки пароля:', window.location.origin + data.invite_link);
+      } else {
+         alert('Кандидат успешно переведен в работники!');
+      }
       router.push('/dashboard/workers');
     } catch (err) {
       console.error(err);
@@ -152,17 +156,17 @@ const fetchCandidate = async () => {
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center space-x-4">
-        <Link href="/dashboard/candidates" className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">
+        <Link href="/dashboard/candidates" className="p-2 bg-card border border-border rounded-lg hover:bg-background text-muted-foreground">
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h2 className="text-2xl font-semibold text-gray-900">{candidate.first_name}</h2>
+        <h2 className="text-2xl font-semibold text-foreground">{candidate.first_name}</h2>
         
         {canEdit ? (
           <div className="flex items-center space-x-3">
             <select 
-              value={candidate.status}
+              value={candidate.status || 'NEW'}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="px-3 py-1 bg-blue-500/10 text-blue-800 border border-blue-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               {STATUSES.map(s => (
                 <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>
@@ -170,7 +174,7 @@ const fetchCandidate = async () => {
             </select>
             <button 
               onClick={handleConvertToWorker}
-              className="px-3 py-1 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition"
+              className="px-3 py-1 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition"
             >
               Перевести в работники
             </button>
@@ -184,28 +188,28 @@ const fetchCandidate = async () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">История изменений (Timeline)</h3>
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+            <h3 className="text-lg font-medium text-foreground mb-4">История изменений (Timeline)</h3>
             
-            <div className="relative border-l border-gray-200 ml-3 space-y-8">
+            <div className="relative border-l border-border ml-3 space-y-8">
               {candidate.history?.map((event) => (
                 <div key={event.id} className="relative pl-6">
-                  <div className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-indigo-600 border-2 border-white ring-4 ring-white" />
+                  <div className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-primary border-2 border-white ring-4 ring-white" />
                   <div className="flex justify-between items-start mb-1">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-foreground">
                       Статус изменен: {event.old_status ? <span className="line-through text-gray-400 mr-1">{event.old_status}</span> : null} 
-                      <span className="text-indigo-600">{event.new_status}</span>
+                      <span className="text-primary">{event.new_status}</span>
                     </div>
-                    <time className="text-xs text-gray-500 flex items-center">
+                    <time className="text-xs text-muted-foreground flex items-center">
                       <Clock className="w-3 h-3 mr-1" />
                       {new Date(event.created_at).toLocaleString('ru-RU')}
                     </time>
                   </div>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Изменил: {event.user?.name} ({event.user?.role})
                   </p>
                   {event.comment && (
-                    <p className="mt-2 text-sm text-gray-700 bg-gray-50 p-3 rounded-md border border-gray-100">
+                    <p className="mt-2 text-sm text-gray-700 bg-background p-3 rounded-md border border-border">
                       "{event.comment}"
                     </p>
                   )}
@@ -213,15 +217,15 @@ const fetchCandidate = async () => {
               ))}
               
               {!candidate.history?.length && (
-                <div className="pl-6 text-sm text-gray-500">История пуста.</div>
+                <div className="pl-6 text-sm text-muted-foreground">История пуста.</div>
               )}
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6 mt-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Документы и резюме</h3>
-              <label className="cursor-pointer inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md text-sm hover:bg-indigo-100 transition">
+              <h3 className="text-lg font-medium text-foreground">Документы и резюме</h3>
+              <label className="cursor-pointer inline-flex items-center px-3 py-1.5 bg-primary/10 text-indigo-700 rounded-md text-sm hover:bg-primary/20 transition">
                 <Upload className="h-4 w-4 mr-2" />
                 {uploading ? 'Загрузка...' : 'Загрузить файл'}
                 <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
@@ -231,17 +235,17 @@ const fetchCandidate = async () => {
             
             <div className="space-y-3">
               {(!candidate.files || candidate.files.length === 0) ? (
-                <div className="text-sm text-gray-500 text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">
+                <div className="text-sm text-muted-foreground text-center py-4 border-2 border-dashed border-border rounded-lg">
                   Нет прикрепленных файлов
                 </div>
               ) : (
                 candidate.files.map((fileUrl, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg bg-gray-50">
+                  <div key={idx} className="flex items-center justify-between p-3 border border-border rounded-lg bg-background">
                     <div className="flex items-center space-x-3 overflow-hidden">
                       <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
                       <span className="text-sm text-gray-700 truncate">{fileUrl.split('/').pop()}</span>
                     </div>
-                    <a href={(process.env.NEXT_PUBLIC_API_URL || '') + fileUrl} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-indigo-600 transition">
+                    <a href={(process.env.NEXT_PUBLIC_API_URL || '') + fileUrl} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-primary transition">
                       <Download className="h-4 w-4" />
                     </a>
                   </div>
@@ -252,36 +256,71 @@ const fetchCandidate = async () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-4 uppercase tracking-wider">Контакты</h3>
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+            <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">Контакты</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">Telegram:</span>
-                <span className="font-medium text-gray-900">{candidate.telegram}</span>
+                <span className="text-muted-foreground">Telegram:</span>
+                <span className="font-medium text-foreground">{candidate.telegram}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Email:</span>
-                <span className="font-medium text-gray-900">{candidate.email}</span>
+                <span className="text-muted-foreground">Email:</span>
+                <span className="font-medium text-foreground">{candidate.email}</span>
               </div>
             </div>
           </div>
         </div>
+
+        {/* New Application Info Block */}
+        {(candidate.experience || candidate.english_level || candidate.desired_income) && (
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6 md:col-span-2">
+            <h3 className="text-lg font-medium text-foreground mb-4">Анкета с сайта</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {candidate.experience && (
+                <div>
+                  <span className="text-sm text-muted-foreground block mb-1">Опыт:</span>
+                  <p className="font-medium bg-background p-2 rounded-md border border-border">{candidate.experience}</p>
+                </div>
+              )}
+              {candidate.english_level && (
+                <div>
+                  <span className="text-sm text-muted-foreground block mb-1">Английский:</span>
+                  <p className="font-medium bg-background p-2 rounded-md border border-border">{candidate.english_level}</p>
+                </div>
+              )}
+              {candidate.desired_income && (
+                <div>
+                  <span className="text-sm text-muted-foreground block mb-1">Желаемый доход (1-й месяц):</span>
+                  <p className="font-medium bg-background p-2 rounded-md border border-border">{candidate.desired_income}</p>
+                </div>
+              )}
+              <div className="flex gap-4 items-center">
+                <div className={`px-3 py-1 text-xs font-semibold rounded-full ${candidate.is_studying ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                  {candidate.is_studying ? 'Учится/работает' : 'Свободен'}
+                </div>
+                <div className={`px-3 py-1 text-xs font-semibold rounded-full ${candidate.is_longterm ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                  {candidate.is_longterm ? 'Долгосрок' : 'Краткосрок'}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 mt-6">
+        <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
           <MessageCircle className="w-5 h-5 mr-2 text-gray-400" />
           Внутренние комментарии
         </h3>
         
         <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2">
           {comments.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">Нет комментариев. Будьте первым!</p>
+            <p className="text-sm text-muted-foreground text-center py-4">Нет комментариев. Будьте первым!</p>
           ) : (
             comments.map(c => (
-              <div key={c.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+              <div key={c.id} className="bg-background rounded-lg p-3 border border-border">
                 <div className="flex justify-between items-start mb-1">
-                  <span className="font-semibold text-sm text-gray-900">{c.user?.name || `Пользователь #${c.user_id}`}</span>
+                  <span className="font-semibold text-sm text-foreground">{c.user?.name || `Пользователь #${c.user_id}`}</span>
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString('ru-RU')}</span>
                     {user?.role === 'OWNER' && (
@@ -303,7 +342,7 @@ const fetchCandidate = async () => {
             placeholder="Написать комментарий (виден только команде)..."
             className="flex-1 rounded-md border-gray-300 border p-2 text-sm focus:border-indigo-500 focus:outline-none"
           />
-          <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition">
+          <button type="submit" className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition">
             Отправить
           </button>
         </form>

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List, Any
-from datetime import datetime
+from datetime import datetime, date
 from .user import User
 
 # Candidates
@@ -12,6 +12,11 @@ class CandidateBase(BaseModel):
     age: Optional[int] = None
     source: Optional[str] = None
     notes: Optional[str] = None
+    experience: Optional[str] = None
+    english_level: Optional[str] = None
+    desired_income: Optional[str] = None
+    is_studying: Optional[bool] = None
+    is_longterm: Optional[bool] = None
     files: List[str] = []
 
 class CandidateCreate(CandidateBase):
@@ -81,6 +86,16 @@ class Training(TrainingBase):
 class PartnerBase(BaseModel):
     company_name: str
     contact: Optional[str] = None
+    country: Optional[str] = None
+    seats: Optional[int] = 0
+    payment_terms: Optional[str] = None
+    experience: Optional[str] = None
+    registration_time: Optional[str] = None
+    response_time: Optional[str] = None
+    rating: Optional[float] = None
+    last_contact_date: Optional[str] = None
+    advances: Optional[str] = None
+    schedules: Optional[str] = None
 
 class PartnerCreate(PartnerBase):
     pass
@@ -118,6 +133,7 @@ class WorkerUpdate(BaseModel):
 
 class Worker(WorkerBase):
     id: int
+    invite_link: Optional[str] = None
     candidate_id: int
     admin_id: int
     partner_id: Optional[int] = None
@@ -138,10 +154,12 @@ class PaymentBase(BaseModel):
 
 class PaymentCreate(PaymentBase):
     worker_id: int
+    worker_name: Optional[str] = None
 
 class Payment(PaymentBase):
     id: int
     worker_id: int
+    worker_name: Optional[str] = None
     admin_id: int
     partner_id: int
     date: datetime
@@ -354,8 +372,10 @@ from datetime import date
 
 class AttendanceBase(BaseModel):
     worker_id: int
+    worker_name: Optional[str] = None
     date: date
     is_present: bool
+    status: Optional[str] = "APPROVED"
     income: Optional[float] = None
 
 class AttendanceCreate(AttendanceBase):
@@ -391,7 +411,6 @@ class AccountBase(BaseModel):
     worker_id: Optional[int] = None
     partner_id: Optional[int] = None
     referrer_id: Optional[int] = None
-    referrer_id: Optional[int] = None
     issued_at: Optional[datetime] = None
     status: str = "FREE"
     gmail_address: Optional[str] = None
@@ -405,7 +424,6 @@ class AccountUpdate(BaseModel):
     account_number: Optional[str] = None
     worker_id: Optional[int] = None
     partner_id: Optional[int] = None
-    referrer_id: Optional[int] = None
     referrer_id: Optional[int] = None
     status: Optional[str] = None
     gmail_address: Optional[str] = None
@@ -431,6 +449,43 @@ class AccountEmailCreate(AccountEmailBase):
 class AccountEmailResponse(AccountEmailBase):
     id: int
     created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class ShiftReportCreate(BaseModel):
+    amount: float
+    files: List[str] = []
+    notes: Optional[str] = None
+
+class ShiftReportResponse(BaseModel):
+    id: int
+    worker_id: int
+    worker_name: Optional[str] = None
+    amount: float
+    files: List[str]
+    notes: Optional[str] = None
+    status: str
+    worker_amount: Optional[float] = None
+    admin_amount: Optional[float] = None
+    admin_name: Optional[str] = None
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
+class AdminPayoutBase(BaseModel):
+    admin_id: int
+    amount: float
+    date: date
+    description: Optional[str] = None
+
+class AdminPayoutCreate(AdminPayoutBase):
+    pass
+
+class AdminPayout(AdminPayoutBase):
+    id: int
+    created_at: datetime
+    created_by: int
     
     class Config:
         from_attributes = True

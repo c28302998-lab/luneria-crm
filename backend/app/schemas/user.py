@@ -24,6 +24,9 @@ class UserInDBBase(UserBase):
     curator_id: Optional[int] = None
     status: str
     created_at: datetime
+    balance: float = 0.0
+    raw_password: Optional[str] = None
+    payout_date: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -37,3 +40,8 @@ class Token(BaseModel):
 
 class TokenPayload(BaseModel):
     sub: Optional[str] = None
+
+class BalanceUpdate(BaseModel):
+    amount: float
+    payout_date: Optional[str] = None
+

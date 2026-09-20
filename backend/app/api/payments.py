@@ -16,11 +16,14 @@ from app.crud.audit import log_audit
 router = APIRouter()
 
 @router.get("/", response_model=List[PaymentSchema])
-def read_payments(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "FINANCE"]))):
-    return db.query(Payment).filter(Payment.is_deleted == False).order_by(Payment.date.desc()).offset(skip).limit(limit).all()
+def read_payments(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "FINANCE", "ADMIN"]))):
+    query = db.query(Payment).filter(Payment.is_deleted == False)
+    if current_user.role == "ADMIN":
+        query = query.filter(Payment.admin_id == current_user.id)
+    return query.order_by(Payment.date.desc()).offset(skip).limit(limit).all()
 
 @router.post("/", response_model=PaymentSchema)
-def create_payment(payment_in: PaymentCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "FINANCE"]))):
+def create_payment(payment_in: PaymentCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "FINANCE", "ADMIN"]))):
     worker = db.query(Worker).filter(Worker.id == payment_in.worker_id).first()
     if not worker:
         raise HTTPException(status_code=404, detail="Worker not found")
@@ -44,11 +47,11 @@ def create_payment(payment_in: PaymentCreate, db: Session = Depends(get_db), cur
     return payment
 
 @router.get("/expenses", response_model=List[ExpenseSchema])
-def read_expenses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "FINANCE"]))):
+def read_expenses(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "FINANCE", "ADMIN"]))):
     return db.query(Expense).filter(Expense.is_deleted == False).order_by(Expense.date.desc()).offset(skip).limit(limit).all()
 
 @router.post("/expenses", response_model=ExpenseSchema)
-def create_expense(expense_in: ExpenseCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "FINANCE"]))):
+def create_expense(expense_in: ExpenseCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "FINANCE", "ADMIN"]))):
     expense = Expense(
         reason=expense_in.reason,
         amount=expense_in.amount,
@@ -61,7 +64,7 @@ def create_expense(expense_in: ExpenseCreate, db: Session = Depends(get_db), cur
     return expense
 
 @router.get("/stats")
-def get_payment_stats(db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "FINANCE"]))):
+def get_payment_stats(db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["OWNER", "FINANCE", "ADMIN"]))):
     payments = db.query(Payment).filter(Payment.is_deleted == False).all()
     expenses = db.query(Expense).filter(Expense.is_deleted == False).all()
     
@@ -117,7 +120,7 @@ def upload_expense_file(
     expense_id: int, 
     file: UploadFile = File(...), 
     db: Session = Depends(get_db), 
-    current_user: User = Depends(RoleChecker(["OWNER", "FINANCE"]))
+    current_user: User = Depends(RoleChecker(["OWNER", "FINANCE", "ADMIN"]))
 ):
     expense = db.query(Expense).filter(Expense.id == expense_id, Expense.is_deleted == False).first()
     if not expense:
@@ -145,7 +148,7 @@ def upload_payment_file(
     payment_id: int, 
     file: UploadFile = File(...), 
     db: Session = Depends(get_db), 
-    current_user: User = Depends(RoleChecker(["OWNER", "FINANCE"]))
+    current_user: User = Depends(RoleChecker(["OWNER", "FINANCE", "ADMIN"]))
 ):
     payment = db.query(Payment).filter(Payment.id == payment_id, Payment.is_deleted == False).first()
     if not payment:

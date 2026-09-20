@@ -1,3 +1,4 @@
+from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument, DocumentAttributeAudio, DocumentAttributeVideo
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -19,15 +20,19 @@ from typing import Optional
 @router.get("/my-accounts")
 async def get_my_accounts(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     query = db.query(TelegramAccount).filter(TelegramAccount.is_deleted == False).filter(TelegramAccount.status == TelegramAccountStatus.ACTIVE, TelegramAccount.is_deleted == False)
-    if user.role != "OWNER":
+    if user.role in ["WORKER", "CANDIDATE"]:
+        query = query.filter(TelegramAccount.assigned_worker_id == user.id)
+    elif user.role == "ADMIN":
         query = query.filter(TelegramAccount.assigned_user_id == user.id)
     accs = query.all()
-    return [{"id": a.id, "name": a.name, "phone": a.phone, "setup_checklist": a.setup_checklist, "issue_request_status": a.issue_request_status, "two_fa_password": a.two_fa_password if a.issue_request_status == "APPROVED" else None} for a in accs]
+    return [{"id": a.id, "name": a.name, "phone": a.phone, "username": a.username, "setup_checklist": a.setup_checklist, "issue_request_status": a.issue_request_status, "two_fa_password": a.two_fa_password if a.issue_request_status == "APPROVED" else None} for a in accs]
 
 
 async def get_user_account(account_id: Optional[int] = None, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     query = db.query(TelegramAccount).filter(TelegramAccount.is_deleted == False)
-    if user.role != "OWNER":
+    if user.role in ["WORKER", "CANDIDATE"]:
+        query = query.filter(TelegramAccount.assigned_worker_id == user.id)
+    elif user.role == "ADMIN":
         query = query.filter(TelegramAccount.assigned_user_id == user.id)
     if account_id:
         query = query.filter(TelegramAccount.id == account_id)
@@ -39,7 +44,7 @@ async def get_user_account(account_id: Optional[int] = None, user: User = Depend
 from fastapi import Response
 
 @router.get("/accounts/{account_id}/chats/{chat_id}/messages/{message_id}/media")
-async def get_message_media(account_id: int, chat_id: str, message_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_message_media(account_id: int, chat_id: str, message_id: int, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     acc = await get_user_account(account_id, user, db)
     
     try:
@@ -48,10 +53,18 @@ async def get_message_media(account_id: int, chat_id: str, message_id: int, user
         peer_id = chat_id
         
     try:
-        data = await telegram_manager.download_message_media(acc.id, peer_id, message_id)
+        data = await telegram_manager.download_message_media(acc.id, peer_id, message_id, acc.session_string)
         if not data:
             raise HTTPException(status_code=404, detail="Media not found or could not be downloaded")
-        return Response(content=data)
+        
+        # We can guess content type based on URL parameter ?type=voice
+        mt = "application/octet-stream"
+        if request.query_params.get("type") == "voice":
+            mt = "audio/ogg"
+        elif request.query_params.get("type") == "photo":
+            mt = "image/jpeg"
+            
+        return Response(content=data, media_type=mt)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -80,9 +93,13 @@ async def get_chats(request: Request, db: Session = Depends(get_db), acc: Telegr
             aliases[a.tg_chat_id] = a.custom_name
         
         chats = []
+        me = await client.get_me()
         for d in dialogs:
             chat_id_str = str(d.id)
             chat_name = d.name
+            
+            if d.entity and d.entity.id == me.id:
+                chat_name = "Избранное"
             
             is_masked = False
             custom_name = aliases.get(chat_id_str)
@@ -112,11 +129,30 @@ async def get_chats(request: Request, db: Session = Depends(get_db), acc: Telegr
                 "message": d.message.text if d.message else "",
                 "date": d.date.isoformat() if d.date else None,
                 "is_masked": is_masked,
-                "original_name": d.name if user.role == "OWNER" else None
+                "original_name": d.name if user.role == "OWNER" else None,
+                "archived": getattr(d, 'archived', False)
             })
             
         return chats
     except Exception as e:
+        # Automations: Detect FloodWait
+        if "FloodWaitError" in type(e).__name__ or "flood wait" in str(e).lower():
+            from app.models.models import Task, User
+            admin_id = acc.responsible_admin_id or acc.assigned_user_id
+            if not admin_id:
+                owner = db.query(User).filter(User.role == "OWNER").first()
+                admin_id = owner.id if owner else 1
+            task = Task(
+                title=f"Автоматизация: FloodWait на аккаунте {acc.name}",
+                description=f"Аккаунт получил спам-блок или FloodWait. Ошибка: {str(e)}",
+                priority="HIGH",
+                assigned_user_id=admin_id,
+                creator_id=1,
+                status="NEW"
+            )
+            db.add(task)
+            db.commit()
+            
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/messages/{chat_id}")
@@ -141,21 +177,61 @@ async def get_messages(chat_id: str, request: Request, db: Session = Depends(get
         except:
             peer_id = chat_id
             
-        msgs = await client.get_messages(peer_id, limit=50)
+        try:
+            msgs = await client.get_messages(peer_id, limit=50)
+        except ValueError as e:
+            if "entity" in str(e).lower() or "find" in str(e).lower():
+                await client.get_dialogs(limit=200)
+                msgs = await client.get_messages(peer_id, limit=50)
+            else:
+                raise e
         
         messages = []
         for m in msgs:
+            media_type = None
+            if getattr(m, 'media', None):
+                if isinstance(m.media, MessageMediaPhoto):
+                    media_type = "photo"
+                elif isinstance(m.media, MessageMediaDocument):
+                    if hasattr(m.media.document, 'attributes'):
+                        for attr in m.media.document.attributes:
+                            if isinstance(attr, DocumentAttributeAudio):
+                                media_type = "voice" if getattr(attr, 'voice', False) else "audio"
+                            elif isinstance(attr, DocumentAttributeVideo):
+                                media_type = "video"
+                    if not media_type:
+                        media_type = "document"
+
             messages.append({
                 "id": m.id,
                 "sender_id": str(m.sender_id) if m.sender_id else None,
                 "text": m.text,
                 "date": m.date.isoformat() if m.date else None,
                 "is_reply": m.is_reply,
-                "out": m.out
+                "out": m.out,
+                "media_type": media_type
             })
             
         return messages
     except Exception as e:
+        # Automations: Detect FloodWait
+        if "FloodWaitError" in type(e).__name__ or "flood wait" in str(e).lower():
+            from app.models.models import Task, User
+            admin_id = acc.responsible_admin_id or acc.assigned_user_id
+            if not admin_id:
+                owner = db.query(User).filter(User.role == "OWNER").first()
+                admin_id = owner.id if owner else 1
+            task = Task(
+                title=f"Автоматизация: FloodWait на аккаунте {acc.name}",
+                description=f"Аккаунт получил спам-блок или FloodWait. Ошибка: {str(e)}",
+                priority="HIGH",
+                assigned_user_id=admin_id,
+                creator_id=1,
+                status="NEW"
+            )
+            db.add(task)
+            db.commit()
+            
         raise HTTPException(status_code=400, detail=str(e))
 
 class SendMessageRequest(BaseModel):
@@ -172,7 +248,15 @@ async def send_message(req: SendMessageRequest, request: Request, db: Session = 
         except:
             peer_id = req.chat_id
             
-        sent = await client.send_message(peer_id, req.text)
+        try:
+            sent = await client.send_message(peer_id, req.text)
+        except ValueError as e:
+            if "entity" in str(e).lower() or "find" in str(e).lower():
+                # Cache missing on this worker. Fetch dialogs to populate cache.
+                await client.get_dialogs(limit=200)
+                sent = await client.send_message(peer_id, req.text)
+            else:
+                raise e
         
         # Audit Log
         log = TelegramAuditLog(
@@ -188,6 +272,24 @@ async def send_message(req: SendMessageRequest, request: Request, db: Session = 
         
         return {"status": "success", "message_id": sent.id}
     except Exception as e:
+        # Automations: Detect FloodWait
+        if "FloodWaitError" in type(e).__name__ or "flood wait" in str(e).lower():
+            from app.models.models import Task, User
+            admin_id = acc.responsible_admin_id or acc.assigned_user_id
+            if not admin_id:
+                owner = db.query(User).filter(User.role == "OWNER").first()
+                admin_id = owner.id if owner else 1
+            task = Task(
+                title=f"Автоматизация: FloodWait на аккаунте {acc.name}",
+                description=f"Аккаунт получил спам-блок или FloodWait. Ошибка: {str(e)}",
+                priority="HIGH",
+                assigned_user_id=admin_id,
+                creator_id=1,
+                status="NEW"
+            )
+            db.add(task)
+            db.commit()
+            
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -271,3 +373,78 @@ async def finish_issue(account_id: int, user: User = Depends(get_current_user), 
         return {"status": "success", "message": "Password rotated"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to change 2FA: {str(e)}")
+
+@router.get("/resolve")
+async def resolve_entity(query: str, db: Session = Depends(get_db), acc: TelegramAccount = Depends(get_user_account), user: User = Depends(get_current_user)):
+    try:
+        chat = await telegram_manager.resolve_entity(acc.id, query, acc.session_string)
+        return chat
+    except Exception as e:
+        # Automations: Detect FloodWait
+        if "FloodWaitError" in type(e).__name__ or "flood wait" in str(e).lower():
+            from app.models.models import Task, User
+            admin_id = acc.responsible_admin_id or acc.assigned_user_id
+            if not admin_id:
+                owner = db.query(User).filter(User.role == "OWNER").first()
+                admin_id = owner.id if owner else 1
+            task = Task(
+                title=f"Автоматизация: FloodWait на аккаунте {acc.name}",
+                description=f"Аккаунт получил спам-блок или FloodWait. Ошибка: {str(e)}",
+                priority="HIGH",
+                assigned_user_id=admin_id,
+                creator_id=1,
+                status="NEW"
+            )
+            db.add(task)
+            db.commit()
+            
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+import os
+import hashlib
+
+@router.get("/accounts/{account_id}/avatar/{entity_id}")
+async def get_avatar(account_id: int, entity_id: int, db: Session = Depends(get_db)):
+    try:
+        cache_dir = "uploads/avatars"
+        os.makedirs(cache_dir, exist_ok=True)
+        cache_path = os.path.join(cache_dir, f"{account_id}_{entity_id}.jpg")
+        
+        if os.path.exists(cache_path):
+            with open(cache_path, "rb") as f:
+                data = f.read()
+            if not data:
+                return {"error": "No avatar"}
+        else:
+            acc = db.query(TelegramAccount).get(account_id)
+            if not acc: return {"error": "No avatar"}
+            data = await telegram_manager.get_profile_photo(account_id, entity_id, acc.session_string)
+            with open(cache_path, "wb") as f:
+                f.write(data if data else b"")
+                
+        if data:
+            from fastapi.responses import Response
+            return Response(content=data, media_type="image/jpeg")
+        return {"error": "No avatar"}
+    except Exception as e:
+        # Automations: Detect FloodWait
+        if "FloodWaitError" in type(e).__name__ or "flood wait" in str(e).lower():
+            from app.models.models import Task, User
+            admin_id = acc.responsible_admin_id or acc.assigned_user_id
+            if not admin_id:
+                owner = db.query(User).filter(User.role == "OWNER").first()
+                admin_id = owner.id if owner else 1
+            task = Task(
+                title=f"Автоматизация: FloodWait на аккаунте {acc.name}",
+                description=f"Аккаунт получил спам-блок или FloodWait. Ошибка: {str(e)}",
+                priority="HIGH",
+                assigned_user_id=admin_id,
+                creator_id=1,
+                status="NEW"
+            )
+            db.add(task)
+            db.commit()
+            
+        raise HTTPException(status_code=400, detail=str(e))
+

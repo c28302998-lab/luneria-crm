@@ -1,6 +1,6 @@
 import os
 
-base_dir = "/Users/thf/.gemini/antigravity/scratch/luneria/backend/app/api"
+base_dir = "/Users/thf/.gemini/antigravity/scratch/lunery/backend/app/api"
 
 files = {
     "trainings.py": """from fastapi import APIRouter, Depends, HTTPException

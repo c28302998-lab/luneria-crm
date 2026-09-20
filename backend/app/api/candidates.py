@@ -12,7 +12,7 @@ from app.crud.audit import log_audit
 router = APIRouter()
 
 @router.get("/", response_model=List[CandidateSchema])
-def read_candidates(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def read_candidates(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if current_user.role == "OWNER":
         candidates = db.query(Candidate).filter(Candidate.is_deleted == False).offset(skip).limit(limit).all()
     elif current_user.role == "CURATOR":
@@ -23,6 +23,43 @@ def read_candidates(skip: int = 0, limit: int = 100, db: Session = Depends(get_d
     else:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return candidates
+
+@router.post("/apply", response_model=CandidateSchema)
+def apply_candidate(candidate_in: CandidateCreate, db: Session = Depends(get_db)):
+    # Find any owner to be the default admin_id
+    owner = db.query(User).filter(User.role == "OWNER").first()
+    owner_id = owner.id if owner else None
+    
+    new_candidate = Candidate(
+        first_name=candidate_in.first_name,
+        telegram=candidate_in.telegram,
+        email=candidate_in.email,
+        country=candidate_in.country,
+        age=candidate_in.age,
+        source=candidate_in.source or "Website",
+        notes=candidate_in.notes,
+        experience=candidate_in.experience,
+        english_level=candidate_in.english_level,
+        desired_income=candidate_in.desired_income,
+        is_studying=candidate_in.is_studying,
+        is_longterm=candidate_in.is_longterm,
+        admin_id=owner_id,
+        status="NEW"
+    )
+    db.add(new_candidate)
+    db.commit()
+    db.refresh(new_candidate)
+    
+    # Add history record
+    history = CandidateHistory(
+        candidate_id=new_candidate.id,
+        new_status="NEW",
+        comment="Заявка с сайта",
+        changed_by=owner_id
+    )
+    db.add(history)
+    db.commit()
+    return new_candidate
 
 @router.post("/", response_model=CandidateSchema)
 def create_candidate(candidate_in: CandidateCreate, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["ADMIN", "OWNER"]))):
