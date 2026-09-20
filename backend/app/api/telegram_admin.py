@@ -211,9 +211,20 @@ async def assign_account(acc_id: int, req: AssignAccountRequest, db: Session = D
             AccountAssignment.revoked_at == None
         ).first()
         
+
         if active_assignment:
             active_assignment.revoked_at = datetime.utcnow()
             active_assignment.reason = "REASSIGNED"
+            
+        if req.worker_id is None and acc.assigned_worker_id is not None:
+            # Create AccountReview if unassigned manually
+            from app.models.telegram import AccountReview
+            review = AccountReview(
+                account_id=acc.id,
+                previous_worker_id=acc.assigned_worker_id,
+                created_by=f"Admin {current_user.id}"
+            )
+            db.add(review)
             
         new_assignment = AccountAssignment(
             account_id=acc.id,
