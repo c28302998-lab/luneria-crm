@@ -50,12 +50,12 @@ def migrate_old_reports(db: Session = Depends(get_db)):
                 status=status_map.get(r.status, "PENDING_REVIEW"),
                 report_data={
                     "amount": r.amount,
-                    "screenshots": r.files,
-                    "comment": r.notes,
+                    "screenshot": r.files[0] if r.files else None,
+                    "notes": r.notes,
                     "worker_amount": r.worker_amount,
                     "admin_amount": r.admin_amount
                 },
-                stats={}
+                stats={"balance": r.amount}
             )
             db.add(s)
             count += 1
