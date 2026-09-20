@@ -58,6 +58,9 @@ def migrate_old_reports(db: Session = Depends(get_db)):
                 stats={"balance": r.amount}
             )
             db.add(s)
+        else:
+            existing.report_data = {"amount": r.amount, "screenshot": r.files[0] if r.files else None, "notes": r.notes, "worker_amount": r.worker_amount, "admin_amount": r.admin_amount}
+            existing.stats = {"balance": r.amount}
             count += 1
     db.commit()
     return {"migrated": count, "total": len(reports)}
