@@ -85,6 +85,7 @@ const getNavigation = (role: string) => {
     return [
       { group: 'Главное', items: base },
       { group: 'Моя команда', items: [
+        { name: 'Смены (Отчеты)', href: '/dashboard/shifts', icon: ClipboardCheck },
         { name: 'Мои Кандидаты', href: '/dashboard/candidates', icon: Users },
         { name: 'Мои Работники', href: '/dashboard/workers', icon: Briefcase },
       ]},
